@@ -58,11 +58,11 @@ int main(int argc, char **argv) {
 
     map<int, map<int, double>> expected_p0 {
         {0,     { {0, 1},   {10, 1},    {100, .5} } },
-        {10,    { {0, 0},   {10, 0},    {100, .5} } },
+        {20,    { {0, 0},   {10, 0},    {100, .5} } },
         {100,   { {0, .66}, {10, .66},  {100, .5} } },
     };
 
-    vector<vector<int>> indexes {{0, 10, 100}, {0, 10, 100}};
+    vector<vector<int>> indexes {{0, 20, 100}, {0, 10, 100}};
     for (const auto &l : product(indexes)) {
         assert(l.size() == 2);
         auto x1 = l.at(0);
