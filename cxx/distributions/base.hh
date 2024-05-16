@@ -18,6 +18,6 @@ public:
     // A sample from the distribution we have accumulated so far.
     virtual double sample() = 0;
 
-    ~Distribution(){};
+    virtual ~Distribution() = default;
 };
 
