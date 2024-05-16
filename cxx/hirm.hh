@@ -425,7 +425,7 @@ public:
                 i_list = {0};
             } else {
                 auto tables_weights = domain->tables_weights();
-                auto Z = log(1 + domain->crp.N);
+                auto Z = log(domain->crp.alpha + domain->crp.N);
                 int idx = 0;
                 for (const auto &[t, w] : tables_weights) {
                     t_list.push_back(t);
@@ -621,7 +621,7 @@ public:
                     i_list = {0};
                 } else {
                     auto tables_weights = domain->tables_weights();
-                    auto Z = log(1 + domain->crp.N);
+                    auto Z = log(domain->crp.alpha + domain->crp.N);
                     int idx = 0;
                     for (const auto &[t, w] : tables_weights) {
                         t_list.push_back(t);
