@@ -10,6 +10,15 @@
 
 class Normal : public Distribution {
 public:
+    // Hyperparameters:
+    // The conjugate prior to a normal distribution is a
+    // normal-inverse-gamma distribution, which we parameterize following
+    // https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution .
+    double mu = 0;
+    double lambda = 1.0;
+    double alpha = 1.0;
+    double beta = 1.0;
+
     // We use Welford's algorithm for computing the mean and variance
     // of streaming data in a numerically stable way.  See Knuth's
     // Art of Computer Programming vol. 2, 3rd edition, page 232.
@@ -43,8 +52,10 @@ public:
     }
 
     double logp_score() const {
-        // TODO(thomaswc): This.
-        return 0.0;
+        double y = mean - mu;
+        return 0.5 * log(lambda) - 0.5 * log(var) - 0.5 * log(M_2PI)
+               - alpha * log(beta) - lgamma(alpha) - (alpha + 1) * log(var)
+               - (2 * beta + lambda * y * y) / (2.0 * var);
     }
 
     double sample() {
