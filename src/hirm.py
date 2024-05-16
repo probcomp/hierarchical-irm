@@ -331,7 +331,7 @@ class Relation:
                 i_list = [0]
             else:
                 tables_weights = domain.tables_weights()
-                Z = math.log(1 + domain.crp.N)
+                Z = math.log(domain.crp.alpha + domain.crp.N)
                 t_list = tuple(tables_weights.keys())
                 w_list = tuple(math.log(x) - Z for x in tables_weights.values())
                 i_list = tuple(range(len(tables_weights)))
@@ -593,7 +593,7 @@ def logp_observations(observations):
             else:
                 tables_weights = domain.tables_weights()
                 t_list = tuple(tables_weights.keys())
-                Z = math.log(1 + domain.crp.N)
+                Z = math.log(domain.crp.alpha + domain.crp.N)
                 w_list = tuple(math.log(x) - Z for x in tables_weights.values())
                 i_list = tuple(range(len(tables_weights)))
             item_universe.add((domain.name, item))
