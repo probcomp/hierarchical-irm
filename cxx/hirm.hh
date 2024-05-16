@@ -187,6 +187,8 @@ public:
     const string                                            name;
     // list of domain pointers
     const vector<Domain*>                                   domains;
+    // Distribution over the relation's codomain.
+    const string                                            distribution;
     // map from cluster multi-index to Distribution pointer
     umap<const vector<int>, Distribution*, VectorIntHash>   clusters;
     // map from item to observed data
@@ -196,8 +198,10 @@ public:
     umap<string, umap<T_item, uset<T_items, H_items>>>      data_r;
     PRNG                                                    *prng;
 
-    Relation(const string &name, const vector<Domain*> &domains, PRNG *prng)
+    Relation(const string &name, const string &distribution,
+             const vector<Domain*> &domains, PRNG *prng)
             :   name(name),
+                distribution(distribution),
                 domains(domains) {
         assert(domains.size() > 0);
         assert(name.size() > 0);
@@ -211,6 +215,23 @@ public:
         for (auto [z, cluster] : clusters) {
             delete cluster;
         }
+    }
+
+    T_relation get_T_relation() {
+      printf("In get_T_relation()\n");
+      T_relation trel;
+      trel.distribution = distribution;
+      printf("Assigned distribution\n");
+      printf("There are %d domains.\n", domains.size());
+      for (const auto &d : domains) {
+        printf("  domain %s\n", d->name.c_str());
+      }
+      for (const auto &d : domains) {
+        printf("About to push %s\n", d->name.c_str());
+        trel.domains.push_back(d->name);
+      }
+      printf("About to leave get_T_relation()\n");
+      return trel;
     }
 
     void incorporate(const T_items &items, double value) {
@@ -514,8 +535,8 @@ public:
 
     IRM(const T_schema &schema, PRNG *prng) {
         this->prng = prng;
-        for (const auto &[r, ds] : schema) {
-            this->add_relation(r, ds);
+        for (const auto &[name, relation] : schema) {
+            this->add_relation(name, relation);
         }
     }
 
@@ -684,40 +705,42 @@ public:
         return logp_score_crp + logp_score_relation;
     }
 
-    void add_relation(const string &r, const vector<string> &ds) {
-        assert(schema.count(r) == 0);
-        assert(relations.count(r) == 0);
+    void add_relation(const string &name, const T_relation &relation) {
+        assert(schema.count(name) == 0);
+        assert(relations.count(name) == 0);
         vector<Domain*> doms;
-        for (const auto &d : ds) {
+        for (const auto &d : relation.domains) {
             if (domains.count(d) == 0) {
                 assert(domain_to_relations.count(d) == 0);
+                printf("Adding new domain with name %s\n", d.c_str());
                 domains[d] = new Domain(d, prng);
                 domain_to_relations[d] = uset<string>();
             }
-            domain_to_relations.at(d).insert(r);
+            domain_to_relations.at(d).insert(name);
             doms.push_back(domains.at(d));
         }
-        relations[r] = new Relation(r, doms, prng);
-        schema[r] = ds;
+        relations[name] = new Relation(name, relation.distribution, doms, prng);
+        schema[name] = relation;
     }
 
-    void remove_relation(const string &r) {
+    void remove_relation(const string &name) {
         uset<string> ds;
-        for (const auto &domain : relations.at(r)->domains) {
+        for (const auto &domain : relations.at(name)->domains) {
             ds.insert(domain->name);
         }
         for (const auto &d : ds) {
-            domain_to_relations.at(d).erase(r);
+            domain_to_relations.at(d).erase(name);
             // TODO: Remove r from domains.at(d)->items
             if (domain_to_relations.at(d).size() == 0) {
+                printf("Removing domain with name %s\n", d.c_str());
                 domain_to_relations.erase(d);
                 delete domains.at(d);
                 domains.erase(d);
             }
         }
-        delete relations.at(r);
-        relations.erase(r);
-        schema.erase(r);
+        delete relations.at(name);
+        relations.erase(name);
+        schema.erase(name);
     }
 
     // Disable copying.
@@ -737,8 +760,8 @@ public:
 
     HIRM(const T_schema &schema, PRNG *prng) : crp(prng) {
         this->prng = prng;
-        for (const auto &[r, ds] : schema) {
-            this->add_relation(r, ds);
+        for (const auto &[name, relation] : schema) {
+            this->add_relation(name, relation);
         }
     }
 
@@ -780,10 +803,6 @@ public:
         auto table_current = crp.assignments.at(rc);
         auto relation = get_relation(r);
         auto crp_dist = crp.tables_weights_gibbs(table_current);
-        vector<string> domains;
-        for (const auto &d : relation->domains) {
-            domains.push_back(d->name);
-        }
         vector<int> tables;
         vector<double> logps;
         int * table_aux = NULL;
@@ -802,7 +821,7 @@ public:
                 irm = irms.at(table);
             }
             if (table != table_current) {
-                irm->add_relation(r, domains);
+                irm->add_relation(r, relation->get_T_relation());
                 for (const auto &[items, value] : relation->data) {
                     irm->incorporate(r, items, value);
                 }
@@ -851,18 +870,17 @@ public:
     }
 
     void set_cluster_assignment_gibbs(const string &r, int table) {
+        printf("in set_cluster_assignment_gibbs\n");
         assert(irms.size() == crp.tables.size());
         auto rc = relation_to_code.at(r);
         auto table_current = crp.assignments.at(rc);
         auto relation = get_relation(r);
         auto irm = relation_to_irm(r);
         auto observations = relation->data;
-        vector<string> domains;
-        for (const auto &d : relation->domains) {
-            domains.push_back(d->name);
-        }
         // Remove from current IRM.
+        printf("about to remove relation\n");
         irm->remove_relation(r);
+        printf("removed relation\n");
         if (irm->relations.size() == 0) {
             irms.erase(table_current);
             delete irm;
@@ -873,7 +891,12 @@ public:
             irms[table] = irm;
         }
         irm = irms.at(table);
-        irm->add_relation(r, domains);
+        printf("about to add relation\n");
+        T_relation trel = relation->get_T_relation();
+        printf("ran get_T_relation\n");
+        // irm->add_relation(r, relation->get_T_relation());
+        irm->add_relation(r, trel);
+        printf("added relation\n");
         for (const auto &[items, value] : observations) {
             irm->incorporate(r, items, value);
         }
@@ -886,9 +909,9 @@ public:
         }
     }
 
-    void add_relation(string const &r, const vector<string> &ds) {
-        assert(schema.count(r) == 0);
-        schema[r] = ds;
+    void add_relation(string const &name, const T_relation &rel) {
+        assert(schema.count(name) == 0);
+        schema[name] = rel;
         auto offset = (code_to_relation.size() == 0) ? 0
             : std::max_element(
                 code_to_relation.begin(),
@@ -897,29 +920,29 @@ public:
         auto table = crp.sample();
         crp.incorporate(rc, table);
         if (irms.count(table) == 1) {
-           irms.at(table)->add_relation(r, ds);
+           irms.at(table)->add_relation(name, rel);
         } else {
-           irms[table] = new IRM({{r, ds}}, prng);
+           irms[table] = new IRM({{name, rel}}, prng);
         }
-        assert(relation_to_code.count(r) == 0);
+        assert(relation_to_code.count(name) == 0);
         assert(code_to_relation.count(rc) == 0);
-        relation_to_code[r] = rc;
-        code_to_relation[rc] = r;
+        relation_to_code[name] = rc;
+        code_to_relation[rc] = name;
     }
-    void remove_relation(string const &r) {
-        schema.erase(r);
-        auto rc = relation_to_code.at(r);
+    void remove_relation(string const &name) {
+        schema.erase(name);
+        auto rc = relation_to_code.at(name);
         auto table = crp.assignments.at(rc);
         auto singleton = crp.tables.at(table).size() == 1;
         crp.unincorporate(rc);
-        irms.at(table)->remove_relation(r);
+        irms.at(table)->remove_relation(name);
         if (singleton) {
             auto irm = irms.at(table);
             assert(irm->relations.size() == 0);
             irms.erase(table);
             delete irm;
         }
-        relation_to_code.erase(r);
+        relation_to_code.erase(name);
         code_to_relation.erase(rc);
     }
 

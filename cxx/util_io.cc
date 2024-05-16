@@ -12,22 +12,21 @@ T_schema load_schema(const string &path) {
     std::ifstream fp (path, std::ifstream::in);
     assert(fp.good());
 
-    map<string, vector<string>> schema;
+    T_schema schema;
     string line;
     while (std::getline(fp, line)) {
         std::istringstream stream (line);
+        T_relation relation;
 
-        string dist;
         string relname;
-        vector<string> domains;
 
-        stream >> dist;
+        stream >> relation.distribution;
         stream >> relname;
         for (string w; stream >> w; ) {
-            domains.push_back(w);
+            relation.domains.push_back(w);
         }
-        assert(domains.size() > 0);
-        schema[relname] = domains;
+        assert(relation.domains.size() > 0);
+        schema[relname] = relation;
     }
     fp.close();
     return schema;
@@ -67,8 +66,8 @@ T_encoding encode_observations(const T_schema &schema,
     T_encoding_f item_to_code;
     T_encoding_r code_to_item;
     // Create a counter of items for each domain.
-    for (const auto &[r, domains]: schema) {
-        for (const auto &domain : domains) {
+    for (const auto &[r, relation]: schema) {
+        for (const auto &domain : relation.domains) {
             domain_item_counter[domain] = 0;
             item_to_code[domain] = map<string, T_item>();
             code_to_item[domain] = map<T_item, string>();
@@ -81,7 +80,7 @@ T_encoding encode_observations(const T_schema &schema,
         int counter = 0;
         for (const auto &item : items) {
             // Obtain domain that item belongs to.
-            auto domain = schema.at(relation).at(counter);
+            auto domain = schema.at(relation).domains.at(counter);
             counter += 1;
             // Compute its code, if necessary.
             if (item_to_code.at(domain).count(item) == 0) {
@@ -102,7 +101,7 @@ void incorporate_observations(IRM &irm, const T_encoding &encoding,
         int counter = 0;
         T_items items_e;
         for (const auto &item : items) {
-            auto domain = irm.schema.at(relation)[counter];
+            auto domain = irm.schema.at(relation).domains[counter];
             counter += 1;
             int code = item_to_code.at(domain).at(item);
             items_e.push_back(code);
@@ -119,7 +118,7 @@ void incorporate_observations(HIRM &hirm, const T_encoding &encoding,
         int counter = 0;
         T_items items_e;
         for (const auto &item : items) {
-            auto domain = hirm.schema.at(relation)[counter];
+            auto domain = hirm.schema.at(relation).domains[counter];
             counter += 1;
             int code = item_to_code.at(domain).at(item);
             items_e.push_back(code);

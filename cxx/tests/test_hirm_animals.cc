@@ -20,11 +20,16 @@ int main(int argc, char **argv) {
 
     printf("== HIRM == \n");
     auto schema_unary = load_schema(path_schema);
+    printf("--- loaded schema --- \n");
     auto observations_unary = load_observations(path_obs);
+    printf("--- loaded observations --- \n");
     auto encoding_unary = encode_observations(schema_unary, observations_unary);
+    printf("--- encoded observations --- \n");
 
     HIRM hirm (schema_unary, &prng);
+    printf("--- initialized HIRM --- \n");
     incorporate_observations(hirm, encoding_unary, observations_unary);
+    printf("--- incorporated observations --- \n");
     int n_obs_unary = 0;
     for (const auto &[z, irm] : hirm.irms) {
         for (const auto &[r, relation] : irm->relations) {
@@ -35,8 +40,10 @@ int main(int argc, char **argv) {
 
     hirm.transition_cluster_assignments_all();
     hirm.transition_cluster_assignments_all();
+    printf("--- made transition cluster assignments --- \n");
     hirm.set_cluster_assignment_gibbs("solitary", 120);
     hirm.set_cluster_assignment_gibbs("water", 741);
+    printf("--- set cluster assignments --- \n");
     for (int i = 0; i < 20; i++) {
         hirm.transition_cluster_assignments_all();
         for (const auto &[t, irm] : hirm.irms) {
