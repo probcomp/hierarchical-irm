@@ -8,25 +8,29 @@ class DirichletCategorical : public Distribution {
 public:
     double alpha = 1;  // hyperparameter (applies to all categories)
     std::vector<int> counts;  // counts of observed categories
+    int n;  // Total number of observations.
     PRNG *prng;
 
     DirichletCategorical(PRNG *prng, int k) {  // k is number of categories
         this->prng = prng;
         counts = std::vector<int>(k, 0);
+        n = 0;
     }
     void incorporate(double x) {
         assert(x >= 0 && x < counts.size());
         counts[size_t(x)] += 1;
+        ++n;
     }
     void unincorporate(double x) {
         const size_t y = x;
         assert(y < counts.size());
         counts[y] -= 1;
+        --n;
         assert(0 <= counts[y]);
+        assert(0 <= n);
     }
     double logp(double x) const {
         assert(x >= 0 && x < counts.size());
-        const int n = std::accumulate(counts.cbegin(), counts.cend(), 0);
         const double numer = log(alpha + counts[size_t(x)]);
         const double denom = log(n + alpha * counts.size());
         return numer - denom;
@@ -34,7 +38,6 @@ public:
     double logp_score() const {
         const size_t k = counts.size();
         const double a = alpha * k;
-        const int n = std::accumulate(counts.cbegin(), counts.cend(), 0);
         const double lg = std::transform_reduce(
             counts.cbegin(), 
             counts.cend(), 
