@@ -8,7 +8,7 @@
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-class Normal : public Distribution {
+class Normal : public Distribution<double> {
 public:
     // We use Welford's algorithm for computing the mean and variance
     // of streaming data in a numerically stable way.  See Knuth's
