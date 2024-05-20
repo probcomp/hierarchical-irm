@@ -46,12 +46,21 @@ public:
         var -= (x - mean) * (x - old_mean);
     }
 
+    // P(x | data)
+    // = \int_{mean, var} P(x | mean, var) P(mean, var | data) dmean dvar
+    // = \int_{mean, var} N(x | mean, var) P(data | mean, var) P(mean, var) /
+    // P(data) dmean dvar
+    // = \int_{mean, var} \prod_i N( data_i | mean, var) Prior(mean, var) /
+    // P(data) dmean dvar
+    // with the convention that data_0 = x.
     double logp(double x) const {
         double y = (x - mean);
         return -0.5 * (y * y / var + log(var) + log(M_2PI));
     }
 
     double logp_score() const {
+        // Based on
+        // https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Probability_density_function
         double y = mean - mu;
         return 0.5 * log(lambda) - 0.5 * log(var) - 0.5 * log(M_2PI)
                - alpha * log(beta) - lgamma(alpha) - (alpha + 1) * log(var)

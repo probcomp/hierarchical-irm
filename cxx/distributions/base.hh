@@ -16,12 +16,16 @@ public:
     // have been previously passed to incorporate().
     virtual void unincorporate(double x) = 0;
 
-    // The log probability of x according to the distribution we have
-    // accumulated so far.
+    // The log probability of x according to the posterior predictive
+    // distribution:  log P(x | incorporated_data), where P(x | data) =
+    // \integral_{theta} P(x | theta ) P(theta | data) dtheta
+    // and theta are the parameters of the distribution.
     virtual double logp(double x) const = 0;
 
     // The log probability of the data we have accumulated so far according
-    // to the prior.
+    // to the prior:  log P(data | alpha) where alpha is the vector of
+    // hyperparameters of the prior and P(data)
+    // = \integral_{theta} P(data | theta) P(theta | alpha) dtheta.
     virtual double logp_score() const = 0;
 
     // A sample from the distribution we have accumulated so far.
