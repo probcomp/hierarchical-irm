@@ -85,9 +85,18 @@ public:
     }
 
     double sample() {
-      // TODO(thomaswc): These should actually be samples from the predictive
-      // distribution.
-      std::normal_distribution<double> d(mean, var);
+      double rn = r + N;
+      double nu = v + N;
+      double mdelta = r * (m - mean) / (r + N);
+      double mn = mean + mdelta;
+      double sp = sprime();
+      std::gamma_distribution<double> rho_dist(nu / 2.0, 2.0 / sp);
+      double rho = rho_dist(*prng);
+      std::normal_distribution<double> mean_dist(mn, 1.0 / sqrt(rho * rn));
+      double smean = mean_dist(*prng);
+      double std_dev = 1.0 / sqrt(rho);
+
+      std::normal_distribution<double> d(smean, std_dev);
       return d(*prng);
     }
 
