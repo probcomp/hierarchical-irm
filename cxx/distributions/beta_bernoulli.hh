@@ -2,9 +2,7 @@
 // See LICENSE.txt
 
 #pragma once
-#include "globals.hh"
-#include "util_math.hh"
-#include "distributions/base.hh"
+#include "base.hh"
 
 class BetaBernoulli : public Distribution<double> {
 public:

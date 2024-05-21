@@ -30,7 +30,7 @@ The [examples/](examples) are run using the Python (slower) backend, and in
 several cases for fewer MCMC iterations (e.g., <=20) than are needed for
 chains to converge. To invoke all the examples, first clone this repository
 then run
-
+    
     $ ./check.sh examples
 
 The outputs and plots are written to [examples/assets](examples/assets).
@@ -47,18 +47,9 @@ The binary can be installed by first cloning this repository and then writing
     $ cd cxx
     $ make hirm.out
 
-The integration test suite can be invoked from the same directory via
+The test suite can be invoked via
 
     $ make tests
-
-The unit tests require [https://www.boost.org/](Boost), which can be installed
-with
-
-    $ make boost
-
-After installing Boost, the unit tests can be run with
-
-    $ make unittests
 
 A command-line interface to the HIRM is provided under `cxx/hirm.out`.
 

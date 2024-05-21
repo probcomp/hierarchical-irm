@@ -3,5 +3,3 @@
 *.o
 *.out
 *.prof
-boost*
-unittests
