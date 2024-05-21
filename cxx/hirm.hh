@@ -7,6 +7,7 @@
 #include "util_math.hh"
 #include "distributions/base.hh"
 #include "distributions/beta_bernoulli.hh"
+#include "distributions/bigram.hh"
 #include "distributions/dirichlet_categorical.hh"
 
 typedef int T_item;

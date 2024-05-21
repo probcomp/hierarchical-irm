@@ -22,14 +22,14 @@ public:
         this->prng = prng;
     }
 
-    void incorporate(double x){
+    void incorporate(const double& x){
         N += 1;
         double old_mean = mean;
         mean += (x - mean) / N;
         var += (x - mean) * (x - old_mean);
     }
 
-    void unincorporate(double x) {
+    void unincorporate(const double& x) {
         int old_N = N;
         N -= 1;
         double old_mean = mean;
@@ -37,7 +37,7 @@ public:
         var -= (x - mean) * (x - old_mean);
     }
 
-    double logp(double x) const {
+    double logp(const double& x) const {
         double y = (x - mean);
         return -0.5 * (y * y / var + log(var) + log(M_2PI));
     }
