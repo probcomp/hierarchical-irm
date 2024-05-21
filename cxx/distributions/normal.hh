@@ -8,7 +8,7 @@
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-class Normal : public Distribution {
+class Normal : public Distribution<double> {
 public:
     // Hyperparameters:
     // The conjugate prior to a normal distribution is a
