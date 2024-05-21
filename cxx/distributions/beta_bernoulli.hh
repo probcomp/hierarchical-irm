@@ -4,7 +4,7 @@
 #pragma once
 #include "base.hh"
 
-class BetaBernoulli : public Distribution {
+class BetaBernoulli : public Distribution<double> {
 public:
     double  alpha = 1;       // hyperparameter
     double  beta = 1;        // hyperparameter

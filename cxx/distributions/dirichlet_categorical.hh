@@ -4,7 +4,7 @@
 #pragma once
 #include "base.hh"
 
-class DirichletCategorical : public Distribution {
+class DirichletCategorical : public Distribution<double> {
 public:
     double alpha = 1;  // hyperparameter (applies to all categories)
     std::vector<int> counts;  // counts of observed categories
