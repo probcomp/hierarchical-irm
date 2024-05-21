@@ -7,6 +7,7 @@
 #include "util_math.hh"
 #include "distributions/base.hh"
 #include "distributions/beta_bernoulli.hh"
+#include "distributions/dirichlet_categorical.hh"
 
 typedef int T_item;
 typedef vector<T_item> T_items;
@@ -188,7 +189,7 @@ public:
     // list of domain pointers
     const vector<Domain*>                                   domains;
     // map from cluster multi-index to Distribution pointer
-    umap<const vector<int>, Distribution*, VectorIntHash>   clusters;
+    umap<const vector<int>, Distribution<double>*, VectorIntHash>   clusters;
     // map from item to observed data
     umap<const T_items, double, H_items>                    data;
     // map from domain name to reverse map from item to
@@ -366,7 +367,7 @@ public:
         auto z = get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
         BetaBernoulli aux (prng);
-        Distribution * cluster = clusters.count(z) > 0 ? clusters.at(z) : &aux;
+        Distribution<double> * cluster = clusters.count(z) > 0 ? clusters.at(z) : &aux;
         // auto cluster = self.clusters.get(z, self.aux())
         auto logp0 = cluster->logp_score();
         for (const auto &items : items_list) {
@@ -425,7 +426,7 @@ public:
                 i_list = {0};
             } else {
                 auto tables_weights = domain->tables_weights();
-                auto Z = log(1 + domain->crp.N);
+                auto Z = log(domain->crp.alpha + domain->crp.N);
                 int idx = 0;
                 for (const auto &[t, w] : tables_weights) {
                     t_list.push_back(t);
@@ -450,7 +451,7 @@ public:
                 logp_w += wi;
             }
             BetaBernoulli aux (prng);
-            Distribution * cluster = clusters.count(z) > 0 ? clusters.at(z) : &aux;
+            Distribution<double> * cluster = clusters.count(z) > 0 ? clusters.at(z) : &aux;
             auto logp_z = cluster->logp(value);
             auto logp_zw = logp_z + logp_w;
             logps.push_back(logp_zw);
@@ -621,7 +622,7 @@ public:
                     i_list = {0};
                 } else {
                     auto tables_weights = domain->tables_weights();
-                    auto Z = log(1 + domain->crp.N);
+                    auto Z = log(domain->crp.alpha + domain->crp.N);
                     int idx = 0;
                     for (const auto &[t, w] : tables_weights) {
                         t_list.push_back(t);
@@ -662,7 +663,7 @@ public:
                     z.push_back(t);
                 }
                 BetaBernoulli aux (prng);
-                Distribution * cluster = relation->clusters.count(z) > 0 \
+                Distribution<double> * cluster = relation->clusters.count(z) > 0 \
                     ? relation->clusters.at(z)
                     : &aux;
                 logp_indexes += cluster->logp(value);
