@@ -1,6 +1,6 @@
 #pragma once
 
-template <typename SampleType = SampleType> class Distribution {
+template <typename SampleType = double> class Distribution {
 // Abstract base class for probability distributions in HIRM.
 // These probability distributions are generative, and so must come with
 // a prior (usually a conjugate prior) over the parameters implied by
@@ -28,7 +28,7 @@ public:
     // = \integral_{theta} P(data | theta) P(theta | alpha) dtheta.
     virtual SampleType logp_score() const = 0;
 
-    // A sample from the distribution we have accumulated so far.
+    // A sample from the predictive distribution.
     // TODO(thomaswc): Consider refactoring so that this takes a
     // PRNG parameter.
     virtual SampleType sample() = 0;
