@@ -2,7 +2,8 @@
 // See LICENSE.txt
 
 #pragma once
-#include "base.hh"
+#include "globals.hh"
+#include "distributions/base.hh"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288419716939937510
@@ -12,7 +13,7 @@
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-double logZ(r, v, s) {
+double logZ(double r, double v, double s) {
   return (v + 1.0) / 2.0 * log(2.0)
       + 0.5 * log(M_PI)
       - 0.5 * log(r)
@@ -20,7 +21,7 @@ double logZ(r, v, s) {
       + lgamma(0.5 * v);
 }
 
-class Normal : public Distribution {
+class Normal : public Distribution<double> {
 public:
     // Hyperparameters:
     // The conjugate prior to a normal distribution is a
@@ -61,12 +62,12 @@ public:
     double sprime() const {
       // r' = r + N
       // m' = (r m + N mean) / (r + N)
-      // C = N (variance + mean^2)
+      // C = N (var + mean^2)
       // s' = s + C + r m^2 - r' m' m'
       double mdelta = r * (m - mean) / (r + N);
       double mprime = mean + mdelta;
       return s + r * (m * m - mprime * mprime)
-          + N * (variance - 2 * mean * mdelta - mdelta * mdelta);
+          + N * (var - 2 * mean * mdelta - mdelta * mdelta);
     }
 
     double logp(double x) const {
@@ -79,8 +80,8 @@ public:
       double sp = sprime();
       double mdelta = r * (m - mean) / (r + N);
       return -logZ(r + N, v + N, sp)
-          - 0.5 * (v + N - 1) * log(variance)
-          - 0.5 * ((r + N) * mdelta * mdelta + sp)/ variance;
+          - 0.5 * (v + N - 1) * log(var)
+          - 0.5 * ((r + N) * mdelta * mdelta + sp)/ var;
     }
 
     double sample() {
