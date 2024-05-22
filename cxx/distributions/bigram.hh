@@ -32,14 +32,14 @@ private:
 public:
     double alpha = 1;  // hyperparameter for all transition distributions.
     size_t num_chars = '~' - ' ' + 1;  // printable ASCII without DEL.
-    std::vector<DirichletCategorical> transition_dists;
+    mutable std::vector<DirichletCategorical> transition_dists;
     PRNG *prng;
 
     Bigram(PRNG *prng) {
         this->prng = prng;
         const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
 
-        // The distribution at index `i` represents `p(x_{i+1} | x_i)`.
+        // The distribution at index `i` represents `p(X_{j+1} | X_j == char_i)`.
         transition_dists.reserve(total_chars);
         for (size_t i = 0; i != total_chars; ++i) {
             transition_dists.emplace_back(prng, total_chars);
@@ -62,6 +62,12 @@ public:
         double total_logp = 0.0;
         for (size_t i = 0; i != indices.size() - 1; ++i) {
             total_logp += transition_dists[indices[i]].logp(indices[i + 1]);
+            // Incorporate each value so that subsequent probabilities are
+            // conditioned on it.
+            transition_dists[indices[i]].incorporate(indices[i + 1]);
+        }
+        for (size_t i = 0; i != indices.size() - 1; ++i) {
+            transition_dists[indices[i]].unincorporate(indices[i + 1]);
         }
         return total_logp;
     }
@@ -76,13 +82,25 @@ public:
     }
     std::string sample() {
         std::string sampled_string;
+        // TODO(emilyaf): Reconsider the reserved length and maybe enforce a
+        // max length.
+        sampled_string.reserve(30);
         // Sample the first character conditioned on the stop/start symbol.
-        size_t current_ind = transition_dists[num_chars].sample();
+        size_t current_ind = num_chars;
+        size_t next_ind = transition_dists[current_ind].sample();
+        transition_dists[current_ind].incorporate(next_ind);
+        current_ind = next_ind;
+
         // Sample additional characters until the stop/start symbol is sampled.
+        // Incorporate the sampled character at each loop iteration so that
+        // subsequent samples are conditioned on its observation.
         while (current_ind != num_chars) {
             sampled_string += index_to_char(current_ind);
-            current_ind = transition_dists[current_ind].sample();
+            next_ind = transition_dists[current_ind].sample();
+            transition_dists[current_ind].incorporate(next_ind);
+            current_ind = next_ind;
         }
+        unincorporate(sampled_string);
         return sampled_string;
     }
 };
