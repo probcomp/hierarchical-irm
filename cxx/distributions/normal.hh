@@ -59,40 +59,47 @@ public:
         var -= (x - mean) * (x - old_mean);
     }
 
-    double sprime() const {
+    void posterior_hypers(double *mprime, double *sprime) {
       // r' = r + N
       // m' = (r m + N mean) / (r + N)
       // C = N (var + mean^2)
       // s' = s + C + r m^2 - r' m' m'
       double mdelta = r * (m - mean) / (r + N);
-      double mprime = mean + mdelta;
-      return s + r * (m * m - mprime * mprime)
+      *mprime = mean + mdelta;
+      *sprime = s + r * (m * m - *mprime * *mprime)
           + N * (var - 2 * mean * mdelta - mdelta * mdelta);
     }
 
     double logp(double x) const {
-      return -0.5 * N * log(M_2PI)
-          + logZ(r + N, v + N, sprime())
-          - logZ(r, v, s);
+      // Based on equation (13) of GaussianInverseGamma.pdf
+      double unused_mprime, sprime;
+      incorporate(x);
+      posterior_hypers(&unused_mprime, &sprime);
+      unincorporate(x);
+      double sprime2;
+      posterior_hypers(&unused_mprime, &sprime2);
+      return -0.5 * log(M_2PI)
+          + logZ(r + N + 1, v + N + 1, sprime)
+          - logZ(r + N, v + N, sprime2);
     }
 
     double logp_score() const {
-      double sp = sprime();
-      double mdelta = r * (m - mean) / (r + N);
-      return -logZ(r + N, v + N, sp)
-          - 0.5 * (v + N - 1) * log(var)
-          - 0.5 * ((r + N) * mdelta * mdelta + sp)/ var;
+      // Based on equation (11) of GaussianInverseGamma.pdf
+      double unused_mprime, sprime;
+      posterior_hypers(&unused_mprime, &sprime);
+      return -0.5 * N * log(M_2PI)
+          + logZ(r + N, v + N, sprime)
+          - logZ(r, v, s);
     }
 
     double sample() {
       double rn = r + N;
       double nu = v + N;
-      double mdelta = r * (m - mean) / (r + N);
-      double mn = mean + mdelta;
-      double sp = sprime();
-      std::gamma_distribution<double> rho_dist(nu / 2.0, 2.0 / sp);
+      double mprime, sprime;
+      posterior_hypers(&mprime, &sprime);
+      std::gamma_distribution<double> rho_dist(nu / 2.0, 2.0 / sprime);
       double rho = rho_dist(*prng);
-      std::normal_distribution<double> mean_dist(mn, 1.0 / sqrt(rho * rn));
+      std::normal_distribution<double> mean_dist(mprime, 1.0 / sqrt(rho * rn));
       double smean = mean_dist(*prng);
       double std_dev = 1.0 / sqrt(rho);
 
