@@ -73,6 +73,13 @@ boost:
 	tar --bzip2 -xvf boost_1_82_0.tar.bz2
 
 UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
-unittests: $(UNITTEST_SOURCES) util_math.o
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o unittests $(UNITTEST_SOURCES)
-	./unittests
+
+%test.out : %test.cc util_math.o
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
+
+%test.log : %test.out
+	./$< 2>&1 | tee $@
+
+.PHONY: unittests
+unittests: $(UNITTEST_SOURCES:.cc=.log)
+	@echo "All test logs are up to date"
