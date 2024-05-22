@@ -77,6 +77,9 @@ UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
 %test.out : %test.cc util_math.o
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
 
+%test.log : %test.out
+	./$< 2>&1 | tee $@
+
 .PHONY: unittests
-unittests: $(UNITTEST_SOURCES:.cc=.out)
-	$(foreach test, $^, $(test))
+unittests: $(UNITTEST_SOURCES:.cc=.log)
+	echo "Ran all tests"
