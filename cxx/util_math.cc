@@ -41,12 +41,20 @@ vector<double> log_normalize(const std::vector<double> &weights){
 }
 
 double logsumexp(const vector<double> &weights) {
-    double m = *std::max_element(weights.begin(), weights.end());
+    // Get the max index.
+    int max_index = std::distance(
+        weights.begin(), std::max_element(weights.begin(), weights.end()));
+    double m = weights[max_index];
     double s = 0;
-    for (auto w : weights) {
-        s += exp(w - m);
+    for (int i = 0; i < weights.size(); ++i) {
+      if (i == max_index) {
+        continue;
+      }
+      if (std::isfinite(weights[i])) {
+        s += exp(weights[i] - m);
+      }
     }
-    return log(s) + m;
+    return log1p(s) + m;
 }
 
 int choice(const std::vector<double> &weights, PRNG *prng) {

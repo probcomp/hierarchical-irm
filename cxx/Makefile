@@ -37,8 +37,8 @@ LTEST		= $(wildcard $(TEST_DIR)/*.cc)
 %.out : %.cc $(LOBJECT)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $(LOBJECT) $<
 
-.PHONY: tests
-tests: $(LTEST:.cc=.out) hirm.out
+.PHONY: integration_tests
+integration_tests: $(LTEST:.cc=.out) hirm.out
 	./tests/test_misc.out
 	./tests/test_hirm_animals.out
 	./tests/test_irm_two_relations.out
@@ -48,7 +48,7 @@ tests: $(LTEST:.cc=.out) hirm.out
 
 # Make sure -pg is not in CXXFLAGS
 # since valgrind finds leaks from gmon
-.PHONY: leak-check clean
+.PHONY: boost clean leak-check
 leak-check: $(TEST_DIR)/test_misc.out
 ifdef HIRMDEBUG
 $(error ERROR: Cannot run Valgrind with HIRMDEBUG)
@@ -67,12 +67,18 @@ clean:
 
 BOOST_ROOT = boost_1_82_0
 
-.PHONY: boost
 boost:
 	wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.bz2
 	tar --bzip2 -xvf boost_1_82_0.tar.bz2
 
 UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
-unittests: $(UNITTEST_SOURCES) util_math.o
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o unittests $(UNITTEST_SOURCES)
-	./unittests
+
+%test.out : %test.cc util_math.o
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
+
+%test.log : %test.out
+	./$< 2>&1 | tee $@
+
+.PHONY: unittests
+unittests: $(UNITTEST_SOURCES:.cc=.log)
+	echo "Ran all tests"
