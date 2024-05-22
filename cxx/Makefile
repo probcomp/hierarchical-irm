@@ -82,4 +82,4 @@ UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
 
 .PHONY: unittests
 unittests: $(UNITTEST_SOURCES:.cc=.log)
-	echo "Ran all tests"
+	@echo "All test logs are up to date"
