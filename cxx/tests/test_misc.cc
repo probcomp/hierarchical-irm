@@ -32,6 +32,30 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
+    DirichletCategorical dc (&prng, 8);
+    dc.incorporate(1);
+    dc.incorporate(1);
+    dc.incorporate(3);
+    dc.unincorporate(1);
+    printf("%f\n", exp(dc.logp(5)));
+    printf("%f\n", exp(dc.logp_score()));
+    for (int i = 0; i < 100; i++) {
+        printf("%1.f ", dc.sample());
+    }
+    printf("\n");
+
+    Bigram bg (&prng);
+    bg.incorporate("foo");
+    bg.incorporate("foo");
+    bg.incorporate("_Hello!~");
+    bg.unincorporate("foo");
+    printf("%f\n", exp(bg.logp("bar")));
+    printf("%f\n", exp(bg.logp_score()));
+    for (int i = 0; i < 10; i++) {
+        printf("%s\n", bg.sample().c_str());
+    }
+    printf("\n");
+
     CRP crp (&prng);
     crp.alpha = 1.5;
     printf("starting crp\n");

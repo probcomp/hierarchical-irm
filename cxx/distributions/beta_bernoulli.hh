@@ -4,7 +4,7 @@
 #pragma once
 #include "base.hh"
 
-class BetaBernoulli : public Distribution {
+class BetaBernoulli : public Distribution<double> {
 public:
     double  alpha = 1;       // hyperparameter
     double  beta = 1;        // hyperparameter
@@ -14,19 +14,19 @@ public:
     BetaBernoulli(PRNG *prng) {
         this->prng = prng;
     }
-    void incorporate(double x){
+    void incorporate(const double& x){
         assert(x == 0 || x == 1);
         N += 1;
         s += x;
     }
-    void unincorporate(double x) {
+    void unincorporate(const double& x) {
         assert(x == 0 || x ==1);
         N -= 1;
         s -= x;
         assert(0 <= s);
         assert(0 <= N);
     }
-    double logp(double x) const {
+    double logp(const double& x) const {
         double log_denom = log(N + alpha + beta);
         if (x == 1) { return log(s + alpha) - log_denom; }
         if (x == 0) { return log(N - s + beta) - log_denom; }

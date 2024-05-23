@@ -57,13 +57,20 @@ int main(int argc, char **argv) {
     std::cout << "writing clusters to " << path_clusters << std::endl;
     to_txt(path_clusters, irm, encoding);
 
+    auto item_to_code = std::get<0>(encoding);
+    auto code_item_0_D1 = item_to_code.at("D1").at("0");
+    auto code_item_10_D1 = item_to_code.at("D1").at("10");
+    auto code_item_0_D2 = item_to_code.at("D2").at("0");
+    auto code_item_10_D2 = item_to_code.at("D2").at("10");
+    auto code_item_novel = 100;
+
     map<int, map<int, double>> expected_p0 {
-        {0,     { {0, 1},   {10, 1},    {100, .5} } },
-        {10,    { {0, 0},   {10, 0},    {100, .5} } },
-        {100,   { {0, .66}, {10, .66},  {100, .5} } },
+        {code_item_0_D1,     { {code_item_0_D2, 1},   {code_item_10_D2, 1},    {code_item_novel, .5} } },
+        {code_item_10_D1,    { {code_item_0_D2, 0},   {code_item_10_D2, 0},    {code_item_novel, .5} } },
+        {code_item_novel,    { {code_item_0_D2, .66}, {code_item_10_D2, .66},  {code_item_novel, .5} } },
     };
 
-    vector<vector<int>> indexes {{0, 10, 100}, {0, 10, 100}};
+    vector<vector<int>> indexes {{code_item_0_D1, code_item_10_D1, code_item_novel}, {code_item_0_D1, code_item_10_D2, code_item_novel}};
     for (const auto &l : product(indexes)) {
         assert(l.size() == 2);
         auto x1 = l.at(0);

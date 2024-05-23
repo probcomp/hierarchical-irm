@@ -65,3 +65,22 @@ clean:
 	rm -rf tests/*.out
 	rm -rf assets/*.irm
 	rm -rf assets/*.hirm
+
+BOOST_ROOT = boost_1_82_0
+
+.PHONY: boost
+boost:
+	wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.bz2
+	tar --bzip2 -xvf boost_1_82_0.tar.bz2
+
+UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
+
+%test.out : %test.cc util_math.o
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
+
+%test.log : %test.out
+	./$< 2>&1 | tee $@
+
+.PHONY: unittests
+unittests: $(UNITTEST_SOURCES:.cc=.log)
+	@echo "All test logs are up to date"
