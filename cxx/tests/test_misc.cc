@@ -44,6 +44,18 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
+    Bigram bg (&prng);
+    bg.incorporate("foo");
+    bg.incorporate("foo");
+    bg.incorporate("_Hello!~");
+    bg.unincorporate("foo");
+    printf("%f\n", exp(bg.logp("bar")));
+    printf("%f\n", exp(bg.logp_score()));
+    for (int i = 0; i < 10; i++) {
+        printf("%s\n", bg.sample().c_str());
+    }
+    printf("\n");
+
     CRP crp (&prng);
     crp.alpha = 1.5;
     printf("starting crp\n");

@@ -16,12 +16,12 @@ public:
         counts = std::vector<int>(k, 0);
         n = 0;
     }
-    void incorporate(double x) {
+    void incorporate(const double& x) {
         assert(x >= 0 && x < counts.size());
         counts[size_t(x)] += 1;
         ++n;
     }
-    void unincorporate(double x) {
+    void unincorporate(const double& x) {
         const size_t y = x;
         assert(y < counts.size());
         counts[y] -= 1;
@@ -29,7 +29,7 @@ public:
         assert(0 <= counts[y]);
         assert(0 <= n);
     }
-    double logp(double x) const {
+    double logp(const double& x) const {
         assert(x >= 0 && x < counts.size());
         const double numer = log(alpha + counts[size_t(x)]);
         const double denom = log(n + alpha * counts.size());
@@ -43,7 +43,7 @@ public:
             counts.cend(), 
             0, 
             std::plus{},
-            [&](size_t y) -> double {return lgamma(counts[y] + alpha); }
+            [&](size_t y) -> double {return lgamma(y + alpha); }
         );
         return lgamma(a) - lgamma(a + n) + lg - k * lgamma(alpha);
     }
@@ -58,8 +58,4 @@ public:
         int idx = choice(weights, prng);
         return double(idx);
     }
-
-    // Disable copying.
-    DirichletCategorical & operator=(const DirichletCategorical&) = delete;
-    DirichletCategorical(const DirichletCategorical&) = delete;
 };
