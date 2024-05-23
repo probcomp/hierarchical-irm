@@ -220,19 +220,11 @@ public:
     }
 
     T_relation get_T_relation() {
-      printf("In get_T_relation()\n");
       T_relation trel;
       trel.distribution = distribution;
-      printf("Assigned distribution\n");
-      printf("There are %d domains.\n", domains.size());
       for (const auto &d : domains) {
-        printf("  domain %s\n", d->name.c_str());
-      }
-      for (const auto &d : domains) {
-        printf("About to push %s\n", d->name.c_str());
         trel.domains.push_back(d->name);
       }
-      printf("About to leave get_T_relation()\n");
       return trel;
     }
 
@@ -714,7 +706,6 @@ public:
         for (const auto &d : relation.domains) {
             if (domains.count(d) == 0) {
                 assert(domain_to_relations.count(d) == 0);
-                printf("Adding new domain with name %s\n", d.c_str());
                 domains[d] = new Domain(d, prng);
                 domain_to_relations[d] = uset<string>();
             }
@@ -734,7 +725,6 @@ public:
             domain_to_relations.at(d).erase(name);
             // TODO: Remove r from domains.at(d)->items
             if (domain_to_relations.at(d).size() == 0) {
-                printf("Removing domain with name %s\n", d.c_str());
                 domain_to_relations.erase(d);
                 delete domains.at(d);
                 domains.erase(d);
@@ -804,6 +794,7 @@ public:
         auto rc = relation_to_code.at(r);
         auto table_current = crp.assignments.at(rc);
         auto relation = get_relation(r);
+        auto t_relation = relation->get_T_relation();
         auto crp_dist = crp.tables_weights_gibbs(table_current);
         vector<int> tables;
         vector<double> logps;
@@ -823,7 +814,7 @@ public:
                 irm = irms.at(table);
             }
             if (table != table_current) {
-                irm->add_relation(r, relation->get_T_relation());
+                irm->add_relation(r, t_relation);
                 for (const auto &[items, value] : relation->data) {
                     irm->incorporate(r, items, value);
                 }
@@ -872,17 +863,15 @@ public:
     }
 
     void set_cluster_assignment_gibbs(const string &r, int table) {
-        printf("in set_cluster_assignment_gibbs\n");
         assert(irms.size() == crp.tables.size());
         auto rc = relation_to_code.at(r);
         auto table_current = crp.assignments.at(rc);
         auto relation = get_relation(r);
+        T_relation trel = relation->get_T_relation();
         auto irm = relation_to_irm(r);
         auto observations = relation->data;
         // Remove from current IRM.
-        printf("about to remove relation\n");
         irm->remove_relation(r);
-        printf("removed relation\n");
         if (irm->relations.size() == 0) {
             irms.erase(table_current);
             delete irm;
@@ -893,12 +882,7 @@ public:
             irms[table] = irm;
         }
         irm = irms.at(table);
-        printf("about to add relation\n");
-        T_relation trel = relation->get_T_relation();
-        printf("ran get_T_relation\n");
-        // irm->add_relation(r, relation->get_T_relation());
         irm->add_relation(r, trel);
-        printf("added relation\n");
         for (const auto &[items, value] : observations) {
             irm->incorporate(r, items, value);
         }
