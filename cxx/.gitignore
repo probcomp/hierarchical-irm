@@ -1,5 +1,6 @@
 *.hirm
 *.irm
+*.log
 *.o
 *.out
 *.prof
