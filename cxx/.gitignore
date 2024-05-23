@@ -4,5 +4,4 @@
 *.o
 *.out
 *.prof
-boost*
-unittests
+boost_1_82_0/

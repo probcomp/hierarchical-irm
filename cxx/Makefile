@@ -32,7 +32,7 @@ LTEST		= $(wildcard $(TEST_DIR)/*.cc)
 .SECONDARY: $(LOBJECT)
 
 %.o : %.cc $(LHEADER)
-	$(CXX) -c $(CXXFLAGS) $(INCFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 %.out : %.cc $(LOBJECT)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $(LOBJECT) $<
