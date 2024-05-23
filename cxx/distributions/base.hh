@@ -7,17 +7,17 @@ public:
     int N = 0;
 
     // Accumulate x.
-    virtual void incorporate(SampleType& x) = 0;
+    virtual void incorporate(const SampleType& x) = 0;
 
     // Undo the accumulation of x.  Should only be called with x's that
     // have been previously passed to incorporate().
-    virtual void unincorporate(SampleType& x) = 0;
+    virtual void unincorporate(const SampleType& x) = 0;
 
     // The log probability of x according to the posterior predictive
     // distribution:  log P(x | incorporated_data), where P(x | data) =
     // \integral_{theta} P(x | theta ) P(theta | data) dtheta
     // and theta are the parameters of the distribution.
-    virtual double logp(SampleType& x) const = 0;
+    virtual double logp(const SampleType& x) const = 0;
 
     // The log probability of the data we have accumulated so far according
     // to the prior:  log P(data | alpha) where alpha is the vector of

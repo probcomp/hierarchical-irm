@@ -59,7 +59,7 @@ public:
         var -= (x - mean) * (x - old_mean);
     }
 
-    void posterior_hypers(double *mprime, double *sprime) {
+    void posterior_hypers(double *mprime, double *sprime) const {
       // r' = r + N
       // m' = (r m + N mean) / (r + N)
       // C = N (var + mean^2)
@@ -73,9 +73,9 @@ public:
     double logp(const double& x) const {
       // Based on equation (13) of GaussianInverseGamma.pdf
       double unused_mprime, sprime;
-      incorporate(x);
+      const_cast<Normal*>(this)->incorporate(x);
       posterior_hypers(&unused_mprime, &sprime);
-      unincorporate(x);
+      const_cast<Normal*>(this)->unincorporate(x);
       double sprime2;
       posterior_hypers(&unused_mprime, &sprime2);
       return -0.5 * log(M_2PI)
