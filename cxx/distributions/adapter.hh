@@ -15,16 +15,16 @@ public:
     // The underlying distribution that is being adapted.
     Distribution<SampleType> *d;
 
-    DistributionAdapter(Distribution<SampleType> *dd): d(dd);
+    DistributionAdapter(Distribution<SampleType> *dd): d(dd) {};
 
-    SampleType adapt(const string& x) {
+    SampleType adapt(const string& x) const {
       SampleType s;
-      stringstream(x) >> s;
+      std::stringstream(x) >> s;
       return s;
     }
 
-    string unadapt(const SampleType& s) {
-      ostringstream os;
+    string unadapt(const SampleType& s) const {
+      std::ostringstream os;
       os << s;
       return os.str();
     }
@@ -52,4 +52,4 @@ public:
       SampleType s = d->sample();
       return unadapt(s);
     }
-}
+};
