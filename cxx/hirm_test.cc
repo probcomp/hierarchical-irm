@@ -1,6 +1,6 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#define BOOST_TEST_MODULE test BetaBernoulli
+#define BOOST_TEST_MODULE test HIRM
 
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>

@@ -49,7 +49,7 @@ The binary can be installed by first cloning this repository and then writing
 
 The integration test suite can be invoked from the same directory via
 
-    $ make tests
+    $ make integration_tests
 
 The unit tests require [https://www.boost.org/](Boost), which can be installed
 with
