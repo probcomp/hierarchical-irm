@@ -49,7 +49,7 @@ The binary can be installed by first cloning this repository and then writing
 
 The test suite can be invoked via
 
-    $ make tests
+    $ make integration_tests
 
 A command-line interface to the HIRM is provided under `cxx/hirm.out`.
 
