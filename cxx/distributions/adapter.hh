@@ -17,30 +17,30 @@ public:
 
     DistributionAdapter(Distribution<SampleType> *dd): d(dd) {};
 
-    SampleType adapt(const string& x) const {
+    SampleType from_string(const string& x) const {
       SampleType s;
-      std::stringstream(x) >> s;
+      std::istringstream(x) >> s;
       return s;
     }
 
-    string unadapt(const SampleType& s) const {
+    string to_string(const SampleType& s) const {
       std::ostringstream os;
       os << s;
       return os.str();
     }
 
     void incorporate(const string& x) {
-      SampleType s = adapt(x);
+      SampleType s = from_string(x);
       d->incorporate(s);
     }
 
     void unincorporate(const string& x) {
-      SampleType s = adapt(x);
+      SampleType s = from_string(x);
       d->unincorporate(s);
     }
 
     double logp(const string& x) const {
-      SampleType s = adapt(x);
+      SampleType s = from_string(x);
       return d->logp(s);
     }
 
@@ -50,6 +50,6 @@ public:
 
     string sample() {
       SampleType s = d->sample();
-      return unadapt(s);
+      return to_string(s);
     }
 };
