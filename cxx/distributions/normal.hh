@@ -2,8 +2,8 @@
 // See LICENSE.txt
 
 #pragma once
-#include "globals.hh"
-#include "distributions/base.hh"
+#include <random>
+#include "base.hh"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288419716939937510
@@ -35,17 +35,17 @@ public:
     // We use Welford's algorithm for computing the mean and variance
     // of streaming data in a numerically stable way.  See Knuth's
     // Art of Computer Programming vol. 2, 3rd edition, page 232.
-    int     mean = 0;         // Mean of observed values
-    int     var = 0;          // Variance of observed values, 1 / precision.
+    int mean = 0;         // Mean of observed values
+    int var = 0;          // Variance of observed values
 
-    PRNG    *prng;
+    std::mt19937 *prng;
 
-    Normal(PRNG *prng) {
+    Normal(std::mt19937 *prng) {
         this->prng = prng;
     }
 
     void incorporate(const double& x){
-        N += 1;
+        ++N;
         double old_mean = mean;
         mean += (x - mean) / N;
         var += (x - mean) * (x - old_mean);
@@ -53,7 +53,7 @@ public:
 
     void unincorporate(const double& x) {
         int old_N = N;
-        N -= 1;
+        --N;
         double old_mean = mean;
         mean = (mean * old_N - x) / N;
         var -= (x - mean) * (x - old_mean);

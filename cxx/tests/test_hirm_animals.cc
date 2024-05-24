@@ -12,9 +12,9 @@
 int main(int argc, char **argv) {
 
     srand(1);
-    PRNG prng (1);
+    std::mt19937 prng (1);
 
-    string path_base    = "assets/animals.unary";
+    std::string path_base    = "assets/animals.unary";
     auto path_schema    = path_base + ".schema";
     auto path_obs       = path_base + ".obs";
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     // hirm.add_relation("solitary", {"animal"});
     // hirm.transition_cluster_assignments_all();
 
-    string path_clusters = path_base + ".hirm";
+    std::string path_clusters = path_base + ".hirm";
     to_txt(path_clusters, hirm, encoding_unary);
 
     auto &enc = std::get<0>(encoding_unary);

@@ -10,7 +10,7 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_crp)
 {
-  PRNG prng;
+  std::mt19937 prng;
   auto crp = CRP(&prng);
   double alpha = 1.;
   crp.incorporate(0, 0);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_crp)
 
 BOOST_AUTO_TEST_CASE(test_crp_sample)
 {
-  PRNG prng;
+  std::mt19937 prng;
   auto crp = CRP(&prng);
   for (int i = 0; i < 10; ++i) {
     crp.incorporate(i, 0);

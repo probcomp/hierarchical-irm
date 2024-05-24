@@ -3,16 +3,17 @@
 
 #pragma once
 
-#include "globals.hh"
+#include <random>
+#include <vector>
 
 double lbeta(int z, int w);
 
-vector<double> linspace(double start, double stop, int num, bool endpoint);
-vector<double> log_linspace(double start, double stop, int num, bool endpoint);
-vector<double> log_normalize(const vector<double> &weights);
-double logsumexp(const vector<double> &weights);
+std::vector<double> linspace(double start, double stop, int num, bool endpoint);
+std::vector<double> log_linspace(double start, double stop, int num, bool endpoint);
+std::vector<double> log_normalize(const std::vector<double> &weights);
+double logsumexp(const std::vector<double> &weights);
 
-int choice(const vector<double> &weights, PRNG *prng);
-int log_choice(const vector<double> &weights, PRNG *prng);
+int choice(const std::vector<double> &weights, std::mt19937 *prng);
+int log_choice(const std::vector<double> &weights, std::mt19937 *prng);
 
-vector<vector<int>> product(const vector<vector<int>> &lists);
+std::vector<std::vector<int>> product(const std::vector<std::vector<int>> &lists);

@@ -2,6 +2,7 @@
 // See LICENSE.txt
 
 #pragma once
+#include <algorithm>
 #include "base.hh"
 
 class DirichletCategorical : public Distribution<double> {
@@ -9,9 +10,9 @@ public:
     double alpha = 1;  // hyperparameter (applies to all categories)
     std::vector<int> counts;  // counts of observed categories
     int n;  // Total number of observations.
-    PRNG *prng;
+    std::mt19937 *prng;
 
-    DirichletCategorical(PRNG *prng, int k) {  // k is number of categories
+    DirichletCategorical(std::mt19937 *prng, int k) {  // k is number of categories
         this->prng = prng;
         counts = std::vector<int>(k, 0);
         n = 0;
@@ -48,7 +49,7 @@ public:
         return lgamma(a) - lgamma(a + n) + lg - k * lgamma(alpha);
     }
     double sample() {
-        vector<double> weights(counts.size());
+        std::vector<double> weights(counts.size());
         std::transform(
             counts.begin(), 
             counts.end(), 

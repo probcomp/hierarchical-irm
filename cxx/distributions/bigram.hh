@@ -33,9 +33,9 @@ public:
     double alpha = 1;  // hyperparameter for all transition distributions.
     size_t num_chars = '~' - ' ' + 1;  // printable ASCII without DEL.
     mutable std::vector<DirichletCategorical> transition_dists;
-    PRNG *prng;
+    std::mt19937 *prng;
 
-    Bigram(PRNG *prng) {
+    Bigram(std::mt19937 *prng) {
         this->prng = prng;
         const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
 

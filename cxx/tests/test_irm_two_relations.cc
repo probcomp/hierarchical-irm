@@ -11,19 +11,18 @@
 #include <string>
 #include <vector>
 
-#include "globals.hh"
 #include "hirm.hh"
 #include "util_io.hh"
 #include "util_math.hh"
 
 int main(int argc, char **argv) {
-    string path_base = "assets/two_relations";
+    std::string path_base = "assets/two_relations";
     int seed = 1;
     int iters = 2;
 
-    PRNG prng (seed);
+    std::mt19937 prng (seed);
 
-    string path_schema = path_base + ".schema";
+    std::string path_schema = path_base + ".schema";
     std::cout << "loading schema from " << path_schema << std::endl;
     auto schema = load_schema(path_schema);
     for (auto const &[relation_name, relation] : schema) {
@@ -36,7 +35,7 @@ int main(int argc, char **argv) {
         printf("\n");
     }
 
-    string path_obs = path_base + ".obs";
+    std::string path_obs = path_base + ".obs";
     std::cout << "loading observations from " << path_obs << std::endl;
     auto observations = load_observations(path_obs);
     T_encoding encoding = encode_observations(schema, observations);
@@ -53,7 +52,7 @@ int main(int argc, char **argv) {
         printf("iter %d, score %f\n", i, x);
     }
 
-    string path_clusters = path_base + ".irm";
+    std::string path_clusters = path_base + ".irm";
     std::cout << "writing clusters to " << path_clusters << std::endl;
     to_txt(path_clusters, irm, encoding);
 
@@ -64,13 +63,13 @@ int main(int argc, char **argv) {
     auto code_item_10_D2 = item_to_code.at("D2").at("10");
     auto code_item_novel = 100;
 
-    map<int, map<int, double>> expected_p0 {
+    std::map<int, std::map<int, double>> expected_p0 {
         {code_item_0_D1,     { {code_item_0_D2, 1},   {code_item_10_D2, 1},    {code_item_novel, .5} } },
         {code_item_10_D1,    { {code_item_0_D2, 0},   {code_item_10_D2, 0},    {code_item_novel, .5} } },
         {code_item_novel,    { {code_item_0_D2, .66}, {code_item_10_D2, .66},  {code_item_novel, .5} } },
     };
 
-    vector<vector<int>> indexes {{code_item_0_D1, code_item_10_D1, code_item_novel}, {code_item_0_D1, code_item_10_D2, code_item_novel}};
+    std::vector<std::vector<int>> indexes {{code_item_0_D1, code_item_10_D1, code_item_novel}, {code_item_0_D1, code_item_10_D2, code_item_novel}};
     for (const auto &l : product(indexes)) {
         assert(l.size() == 2);
         auto x1 = l.at(0);
@@ -84,7 +83,7 @@ int main(int argc, char **argv) {
         assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
     }
 
-    for (const auto &l : vector<vector<int>> {{0, 10, 100}, {110, 10, 100}}) {
+    for (const auto &l : std::vector<std::vector<int>> {{0, 10, 100}, {110, 10, 100}}) {
         auto x1 = l.at(0);
         auto x2 = l.at(1);
         auto x3 = l.at(2);

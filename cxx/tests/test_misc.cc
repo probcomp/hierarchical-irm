@@ -21,7 +21,7 @@
 int main(int argc, char **argv) {
 
     srand(1);
-    PRNG prng (1);
+    std::mt19937 prng (1);
 
     BetaBernoulli bb (&prng);
     bb.incorporate(1);
@@ -102,8 +102,8 @@ int main(int argc, char **argv) {
 
     printf("=== DOMAIN === \n");
     Domain d ("foo", &prng);
-    string relation1 = "ali";
-    string relation2 = "mubarak";
+    std::string relation1 = "ali";
+    std::string relation2 = "mubarak";
     T_item salman = 1;
     T_item mansour = 2;
     d.incorporate(salman);
@@ -124,9 +124,9 @@ int main(int argc, char **argv) {
     // assert (d.items.size() == 0);
     // d.items[01].insert("foo");
 
-    umap<int, uset<int>> m;
+    std::unordered_map<int, std::unordered_set<int>> m;
     m[1].insert(10);
-    m[1] = uset<int>();
+    m[1] = std::unordered_set<int>();
     for (auto &ir: m) {
         printf("%d\n", ir.first);
         for (auto &x : ir.second) {
@@ -178,16 +178,16 @@ int main(int argc, char **argv) {
     printf("%lu\n", R1.data.size());
 
     printf("== HASHING UTIL == \n");
-    std::unordered_map<const vector<int>, int, VectorIntHash> map_int;
+    std::unordered_map<const std::vector<int>, int, VectorIntHash> map_int;
     map_int[{1, 2}] = 7;
     printf("%d\n", map_int.at({1,2}));
-    std::unordered_map<const vector<string>, int, VectorStringHash> map_str;
+    std::unordered_map<const std::vector<std::string>, int, VectorStringHash> map_str;
     map_str[{"1", "2", "3"}] = 7;
     printf("%d\n", map_str.at({"1","2", "3"}));
 
 
     printf("===== IRM ====\n");
-    map<string, T_relation> schema1 {
+    std::map<std::string, T_relation> schema1 {
         {"R1", T_relation{{"D1", "D1"}, "beta_bernoulli"}},
         {"R2", T_relation{{"D1", "D2"}, "beta_bernoulli"}},
         {"R3", T_relation{{"D3", "D1"}, "beta_bernoulli"}},
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
         printf("iter %d, score %f\n", i, x);
     }
 
-    string path_clusters = "assets/animals.binary.irm";
+    std::string path_clusters = "assets/animals.binary.irm";
     to_txt(path_clusters, irm3, encoding);
 
     auto rel = irm3.relations.at("has");

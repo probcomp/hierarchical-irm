@@ -9,9 +9,9 @@
 namespace tt = boost::test_tools;
 
 
-vector<double> check_linspace(
+std::vector<double> check_linspace(
     double start, double stop, int num, bool endpoint, bool log_space) {
-  vector<double> l;
+  std::vector<double> l;
   if (log_space) {
     l = log_linspace(start, stop, num, endpoint);
   } else {
@@ -25,7 +25,7 @@ vector<double> check_linspace(
 }
 
 
-vector<double> check_log_linspace(
+std::vector<double> check_log_linspace(
     double start, double stop, int num, bool endpoint) {
   auto l = check_linspace(start, stop, num, endpoint, /*log_space=*/ true);
   return l;
@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE(test_linspace)
   check_linspace(0., 0.2, 3, true, /*log_space=*/ false);
   check_linspace(0., 0.2, 3, false, /*log_space=*/ false);
   auto l = check_linspace(0., 1., 11, true, /*log_space=*/ false);
-  vector<double> expected_vector1 = {
+  std::vector<double> expected_vector1 = {
     0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.};
   BOOST_TEST(l == expected_vector1, tt::tolerance(1e-3) << tt::per_element());
   l = check_linspace(0., 1., 11, false, /*log_space=*/ false);
-  vector<double> expected_vector2 = {
+  std::vector<double> expected_vector2 = {
     0., 1/11., 2/11., 3/11., 4/11., 5/11., 6/11., 7/11., 8/11., 9/11., 10/11.};
   BOOST_TEST(l == expected_vector2, tt::tolerance(1e-3) << tt::per_element());
 }
@@ -78,19 +78,19 @@ BOOST_AUTO_TEST_CASE(test_log_linspace)
 
 BOOST_AUTO_TEST_CASE(test_log_normalize)
 {
-  vector <double> example1 = {-0.1, -5., -2., 1., 3.7, 4.};
-  vector<double> normalized = log_normalize(example1);
-  vector<double> exp_normalized;
+  std::vector<double> example1 = {-0.1, -5., -2., 1., 3.7, 4.};
+  std::vector<double> normalized = log_normalize(example1);
+  std::vector<double> exp_normalized;
 
   boost::range::transform(normalized, std::back_inserter(exp_normalized), exp);
   double sum = boost::accumulate(exp_normalized, 0.);
   BOOST_CHECK_CLOSE(sum, 1., 1e-6);
 
-  vector <double> example2 = {
+  std::vector<double> example2 = {
     -std::numeric_limits<double>::infinity(),
     -3., -2., 0.4, 0.6, 1., 3.7, 4., 8.};
-  vector<double> normalized2 = log_normalize(example2);
-  vector<double> exp_normalized2;
+  std::vector<double> normalized2 = log_normalize(example2);
+  std::vector<double> exp_normalized2;
 
   boost::range::transform(
       normalized2, std::back_inserter(exp_normalized2), exp);
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(test_logsumexp)
 
 BOOST_AUTO_TEST_CASE(test_product)
 {
-  vector<vector<int> > product_result = product({{1, 2}, {3, 4, 5}});
-  vector<vector<int> > expected_result = {
+  std::vector<std::vector<int>> product_result = product({{1, 2}, {3, 4, 5}});
+  std::vector<std::vector<int>> expected_result = {
     {1, 3}, {1, 4}, {1, 5}, {2, 3}, {2, 4}, {2, 5}};
   BOOST_TEST(expected_result.size() == 6);
   for (int i = 0; i < expected_result.size(); ++i) {
