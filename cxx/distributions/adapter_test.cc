@@ -4,14 +4,13 @@
 #define BOOST_TEST_MODULE test Normal
 
 #include <boost/test/included/unit_test.hpp>
-#include "globals.hh"
 #include "distributions/adapter.hh"
 #include "distributions/normal.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(adapt_normal)
 {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd(&prng);
   DistributionAdapter<double> ad(&nd);
 
@@ -24,5 +23,5 @@ BOOST_AUTO_TEST_CASE(adapt_normal)
   BOOST_TEST(ad.logp("6.0") == -3.1331256657870137, tt::tolerance(1e-6));
   BOOST_TEST(ad.logp_score() == -4.7494000141508543, tt::tolerance(1e-6));
 
-  string samp = ad.sample();
+  std::string samp = ad.sample();
 }

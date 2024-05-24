@@ -11,9 +11,9 @@ endif
 CXX=g++
 
 ifdef HIRMDEBUG
-CXXFLAGS= -O0 -pg -g -std=c++17
+CXXFLAGS= -O0 -pg -g -std=c++20
 else
-CXXFLAGS= -O3 -std=c++17
+CXXFLAGS= -O3 -std=c++20
 endif
 
 INCDIR=$(shell pwd)

@@ -8,7 +8,7 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(simple)
 {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd(&prng);
 
   nd.incorporate(5.0);
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(simple)
 
 BOOST_AUTO_TEST_CASE(logp_before_incorporate)
 {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd(&prng);
 
   BOOST_TEST(nd.logp(6.0) == -4.4357424552958129, tt::tolerance(1e-6));
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(logp_before_incorporate)
 
 BOOST_AUTO_TEST_CASE(sample)
 {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd(&prng);
 
   for (int i = 0; i < 1000; ++i) {
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(sample)
 }
 
 BOOST_AUTO_TEST_CASE(incorporate_raises_logp) {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd(&prng);
 
   double old_lp = nd.logp(10.0);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(incorporate_raises_logp) {
 }
 
 BOOST_AUTO_TEST_CASE(prior_prefers_origin) {
-  PRNG prng;
+  std::mt19937 prng;
   Normal nd1(&prng), nd2(&prng);
 
   for (int i = 0; i < 100; ++i) {

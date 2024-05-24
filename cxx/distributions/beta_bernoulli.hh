@@ -2,35 +2,37 @@
 // See LICENSE.txt
 
 #pragma once
-#include "base.hh"
+#include <cassert>
+#include "util_math.hh"
+#include "distributions/base.hh"
 
 class BetaBernoulli : public Distribution<double> {
 public:
-    double  alpha = 1;       // hyperparameter
-    double  beta = 1;        // hyperparameter
-    int     s = 0;           // sum of observed values
-    PRNG    *prng;
+    double alpha = 1;  // hyperparameter
+    double beta = 1;  // hyperparameter
+    int s = 0;  // sum of observed values
+    std::mt19937 *prng;
 
-    BetaBernoulli(PRNG *prng) {
+    BetaBernoulli(std::mt19937 *prng) {
         this->prng = prng;
     }
     void incorporate(const double& x){
         assert(x == 0 || x == 1);
-        N += 1;
+        ++N;
         s += x;
     }
     void unincorporate(const double& x) {
         assert(x == 0 || x ==1);
-        N -= 1;
+        --N;
         s -= x;
         assert(0 <= s);
         assert(0 <= N);
     }
     double logp(const double& x) const {
+        assert(x == 0 || x == 1);
         double log_denom = log(N + alpha + beta);
-        if (x == 1) { return log(s + alpha) - log_denom; }
-        if (x == 0) { return log(N - s + beta) - log_denom; }
-        assert(false);
+        double log_numer = x ? log(s + alpha) : log(N - s + beta);
+        return log_numer - log_denom;
     }
     double logp_score() const {
         double v1 = lbeta(s + alpha, N - s + beta);
@@ -39,13 +41,9 @@ public:
     }
     double sample() {
         double p = exp(logp(1));
-        vector<int> items {0, 1};
-        vector<double> weights {1-p, p};
-        auto idx = choice(weights, prng);
+        std::vector<int> items {0, 1};
+        std::vector<double> weights {1-p, p};
+        int idx = choice(weights, prng);
         return items[idx];
     }
-
-    // Disable copying.
-    BetaBernoulli & operator=(const BetaBernoulli&) = delete;
-    BetaBernoulli(const BetaBernoulli&) = delete;
 };

@@ -6,12 +6,12 @@
 #include <iostream>
 
 #include "cxxopts.hpp"
-#include "globals.hh"
 #include "hirm.hh"
 #include "util_io.hh"
 
 #define GET_ELAPSED(t) double(clock() - t) / CLOCKS_PER_SEC
 
+// TODO(emilyaf): Refactor as a function for readibility/maintainability.
 #define CHECK_TIMEOUT(\
         timeout, \
         t_begin) \
@@ -23,6 +23,7 @@
         } \
     }
 
+// TODO(emilyaf): Refactor as a function for readibility/maintainability.
 #define REPORT_SCORE(\
         var_verbose, \
         var_t, \
@@ -39,18 +40,18 @@
 void inference_irm(IRM * irm, int iters, int timeout, bool verbose) {
     clock_t t_begin = clock();
     double t_total = 0;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < iters; ++i) {
         CHECK_TIMEOUT(timeout, t_begin);
         // TRANSITION ASSIGNMENTS.
         for (const auto &[d, domain] : irm->domains) {
-            for (auto item : domain->items) {
+            for (const auto item : domain->items) {
                 clock_t t = clock();
                 irm->transition_cluster_assignment_item(d, item);
                 REPORT_SCORE(verbose, t, t_total, irm);
             }
         }
         // TRANSITION ALPHA.
-        for (auto const &[d, domain] : irm->domains) {
+        for (const auto &[d, domain] : irm->domains) {
             clock_t t = clock();
             domain->crp.transition_alpha();
             REPORT_SCORE(verbose, t, t_total, irm);
@@ -61,7 +62,7 @@ void inference_irm(IRM * irm, int iters, int timeout, bool verbose) {
 void inference_hirm(HIRM * hirm, int iters, int timeout, bool verbose) {
     clock_t t_begin = clock();
     double t_total = 0;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < iters; ++i) {
         CHECK_TIMEOUT(timeout, t_begin);
         // TRANSITION RELATIONS.
         for (const auto &[r, rc] : hirm->relation_to_code) {
@@ -80,7 +81,7 @@ void inference_hirm(HIRM * hirm, int iters, int timeout, bool verbose) {
                 }
             }
             // TRANSITION ALPHA.
-            for (auto const &[d, domain] : irm->domains) {
+            for (const auto &[d, domain] : irm->domains) {
                 clock_t t = clock();
                 domain->crp.transition_alpha();
                 REPORT_SCORE(verbose, t, t_total, irm);
@@ -101,7 +102,7 @@ int main(int argc, char **argv) {
         ("timeout", "number of seconds of inference", cxxopts::value<int>()->default_value("0"))
         ("load", "path to .[h]irm file with initial clusters", cxxopts::value<std::string>()->default_value(""))
         ("path", "base name of the .schema file", cxxopts::value<std::string>())
-        ("rest", "rest", cxxopts::value<vector<string>>()->default_value({}));
+        ("rest", "rest", cxxopts::value<std::vector<std::string>>()->default_value({}));
     options.parse_positional({"path", "rest"});
     options.positional_help("<path>");
 
@@ -115,13 +116,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    string path_base = result["path"].as<std::string>();
+    std::string path_base = result["path"].as<std::string>();
     int seed = result["seed"].as<int>();
     int iters = result["iters"].as<int>();
     int timeout = result["timeout"].as<int>();
     bool verbose = result["verbose"].as<bool>();
-    string path_clusters = result["load"].as<string>();
-    string mode = result["mode"].as<string>();
+    std::string path_clusters = result["load"].as<std::string>();
+    std::string mode = result["mode"].as<std::string>();
 
     if (mode != "hirm" && mode != "irm") {
         std::cout << options.help() << std::endl;
@@ -129,12 +130,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    string path_obs = path_base + ".obs";
-    string path_schema = path_base + ".schema";
-    string path_save = path_base + "." + std::to_string(seed);
+    std::string path_obs = path_base + ".obs";
+    std::string path_schema = path_base + ".schema";
+    std::string path_save = path_base + "." + std::to_string(seed);
 
     printf("setting seed to %d\n", seed);
-    PRNG prng (seed);
+    std::mt19937 prng (seed);
 
     std::cout << "loading schema from " << path_schema << std::endl;
     auto schema = load_schema(path_schema);
