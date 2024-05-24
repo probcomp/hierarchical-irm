@@ -21,7 +21,9 @@ INCFLAGS=-I$(INCDIR)
 
 # https://www.gnu.org/software/make/manual/html_node/Catalogue-of-Rules.html
 LHEADER 	= $(wildcard *.hh)
-LSOURCE 	= $(filter-out hirm.cc,$(wildcard *.cc))
+LSOURCE1 	= $(filter-out hirm.cc,$(wildcard *.cc))
+# Remove unit tests from LSOURCE.
+LSOURCE         = $(filter-out $(wildcard *test.cc),$(LSOURCE1))
 LOBJECT 	= $(LSOURCE:.cc=.o)
 
 TEST_DIR=tests
