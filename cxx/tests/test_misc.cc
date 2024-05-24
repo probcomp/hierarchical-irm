@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
     D1.incorporate(0);
     D2.incorporate(1);
     D3.incorporate(3);
-    Relation R1 ("R1", {&D1, &D2, &D3}, &prng);
+    Relation R1 ("R1", "beta_bernoulli", {&D1, &D2, &D3}, &prng);
     printf("arity %ld\n", R1.domains.size());
     R1.incorporate({0, 1, 3}, 1);
     R1.incorporate({1, 1, 3}, 1);
@@ -187,10 +187,10 @@ int main(int argc, char **argv) {
 
 
     printf("===== IRM ====\n");
-    map<string, vector<string>> schema1 {
-        {"R1", {"D1", "D1"}},
-        {"R2", {"D1", "D2"}},
-        {"R3", {"D3", "D1"}},
+    map<string, T_relation> schema1 {
+        {"R1", T_relation{{"D1", "D1"}, "beta_bernoulli"}},
+        {"R2", T_relation{{"D1", "D2"}, "beta_bernoulli"}},
+        {"R3", T_relation{{"D3", "D1"}, "beta_bernoulli"}},
     };
     IRM irm(schema1, &prng);
 
@@ -213,8 +213,9 @@ int main(int argc, char **argv) {
     auto schema = load_schema("assets/animals.binary.schema");
     for (auto const &i : schema) {
         printf("relation: %s\n", i.first.c_str());
+        printf("distribution: %s\n", i.second.distribution.c_str());
         printf("domains: ");
-        for (auto const &j : i.second) {
+        for (auto const &j : i.second.domains) {
             printf("%s ", j.c_str());
         }
         printf("\n");
@@ -233,7 +234,7 @@ int main(int argc, char **argv) {
         int counter = 0;
         T_items items_code;
         for (auto const &item : std::get<1>(i)) {
-            auto domain = schema.at(relation)[counter];
+            auto domain = schema.at(relation).domains[counter];
             counter += 1;
             auto code = item_to_code.at(domain).at(item);
             printf("%s(%d) ", item.c_str(), code);

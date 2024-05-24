@@ -26,10 +26,11 @@ int main(int argc, char **argv) {
     string path_schema = path_base + ".schema";
     std::cout << "loading schema from " << path_schema << std::endl;
     auto schema = load_schema(path_schema);
-    for (auto const &[relation, domains] : schema) {
-        printf("relation: %s, ", relation.c_str());
+    for (auto const &[relation_name, relation] : schema) {
+        printf("relation: %s, ", relation_name.c_str());
+        printf("distribution: %s, ", relation.distribution.c_str());
         printf("domains: ");
-        for (auto const &domain : domains) {
+        for (auto const &domain : relation.domains) {
             printf("%s ", domain.c_str());
         }
         printf("\n");

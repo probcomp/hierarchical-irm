@@ -25,6 +25,19 @@ using std::vector;
 // https://stackoverflow.com/q/2241327/
 typedef std::mt19937 PRNG;
 
-typedef map<string, vector<string>> T_schema;
+// T_relation is the text we get from reading a line of the schema file;
+// hirm.hh:Relation is the object that does the work.
+class T_relation {
+ public:
+  // The relation is a map from the domains to the space .distribution
+  // is a distribution over.
+  vector<string> domains;
+
+  // Must be the name of a distribution in distributions/.
+  string distribution;
+};
+
+// Map from names to T_relation's.
+typedef map<string, T_relation> T_schema;
 
 extern const double INF;
