@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(sample)
   PRNG prng;
   Normal nd(&prng);
 
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 1000; ++i) {
     nd.incorporate(42.0);
   }
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(incorporate_raises_logp) {
   Normal nd(&prng);
 
   double old_lp = nd.logp(10.0);
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 10; ++i) {
     nd.incorporate(10.0);
     double lp = nd.logp(10.0);
     BOOST_TEST(lp > old_lp);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(prior_prefers_origin) {
   PRNG prng;
   Normal nd1(&prng), nd2(&prng);
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 100; ++i) {
     nd1.incorporate(0.0);
     nd2.incorporate(50.0);
   }
