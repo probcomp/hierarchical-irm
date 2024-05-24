@@ -85,7 +85,6 @@ T_encoding encode_observations(const T_schema &schema,
         for (const std::string &item : items) {
             // Obtain domain that item belongs to.
             std::string domain = schema.at(relation).domains.at(counter);
-            counter += 1;
             // Compute its code, if necessary.
             if (!item_to_code.at(domain).contains(item)) {
                 int code = domain_item_counter[domain];
