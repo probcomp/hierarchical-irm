@@ -49,8 +49,7 @@ tests: $(LTEST:.cc=.out) hirm.out
 # Make sure -pg is not in CXXFLAGS
 # since valgrind finds leaks from gmon
 .PHONY: leak-check clean
-#leak-check: $(TEST_DIR)/test_misc.out
-leak-check: $(TEST_DIR)/test_hirm_animals.out
+leak-check: $(TEST_DIR)/test_misc.out
 ifdef HIRMDEBUG
 $(error ERROR: Cannot run Valgrind with HIRMDEBUG)
 endif
