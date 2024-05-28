@@ -2,6 +2,7 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
 #include <algorithm>
+#include <cmath>
 #include <random>
 
 #include "util_math.hh"
@@ -93,3 +94,13 @@ std::vector<std::vector<int>> product(const std::vector<std::vector<int>> &lists
       }
       return result;
     }
+
+int sample_from_logps(const std::vector<double> &log_probs, std::mt19937 *prng) {
+  double max_lp = *std::max_element(log_probs.begin(), log_probs.end());
+  std::vector<double> weights;
+  for (auto lp : log_probs) {
+    weights.push_back(exp(lp - max_lp));
+  }
+  std::discrete_distribution<int> dd(weights.begin(), weights.end());
+  return dd(*prng);
+}

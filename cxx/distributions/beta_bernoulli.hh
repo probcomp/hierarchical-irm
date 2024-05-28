@@ -13,8 +13,13 @@ public:
     int s = 0;  // sum of observed values
     std::mt19937 *prng;
 
+    std::vector<double> alpha_grid;
+    std::vector<double> beta_grid;
+
     BetaBernoulli(std::mt19937 *prng) {
         this->prng = prng;
+        alpha_grid = log_linspace(1e-4, 1e4, 10, true);
+        beta_grid = log_linspace(1e-4, 1e4, 10, true);
     }
     void incorporate(const double& x){
         assert(x == 0 || x == 1);
@@ -45,5 +50,17 @@ public:
         std::vector<double> weights {1-p, p};
         int idx = choice(weights, prng);
         return items[idx];
+    }
+    void transition_hyperparameters() {
+      std::vector<double> logps;
+      for (alpha : alpha_grid) {
+        for (beta : beta_grid) {
+          logps.push_back(logp_score());
+        }
+      }
+      int i = sample_from_logps(logps, prng);
+      int N = beta_grid.size();
+      alpha = alpha_grid[i / N];
+      beta = beta_grid[i % N];
     }
 };

@@ -52,4 +52,8 @@ public:
       SampleType s = d->sample();
       return to_string(s);
     }
+
+    void transition_hyperparameters() {
+      d->transition_hyperparameters();
+    }
 };

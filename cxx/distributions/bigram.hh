@@ -103,4 +103,7 @@ public:
         unincorporate(sampled_string);
         return sampled_string;
     }
+    void transition_hyperparameters() {
+      // TODO(thomaswc): Implement this.
+    }
 };

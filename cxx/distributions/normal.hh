@@ -107,6 +107,10 @@ public:
       return d(*prng);
     }
 
+    void transition_hyperparameters() {
+      // TODO(thomaswc): Implement this.
+    }
+
     // Disable copying.
     Normal & operator=(const Normal&) = delete;
     Normal(const Normal&) = delete;

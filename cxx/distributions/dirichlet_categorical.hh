@@ -59,4 +59,7 @@ public:
         int idx = choice(weights, prng);
         return double(idx);
     }
+    void transition_hyperparameters() {
+      // TODO(thomaswc): Implement this.
+    }
 };
