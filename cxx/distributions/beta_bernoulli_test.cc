@@ -8,7 +8,7 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_simple)
 {
-  PRNG prng;
+  std::mt19937 prng;
   BetaBernoulli bb(&prng);
 
   bb.incorporate(1);
