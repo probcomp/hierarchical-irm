@@ -53,17 +53,21 @@ public:
     }
     void transition_hyperparameters() {
       std::vector<double> logps;
+      std::vector<std::pair<double, double>> hypers;
       // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
       for (double alphat : alpha_grid) {
         for (double betat : beta_grid) {
           alpha = alphat;
           beta = betat;
-          logps.push_back(logp_score());
+          double lp = logp_score();
+          if (!std::isnan(lp)) {
+            logps.push_back(logp_score());
+            hypers.push_back(std::make_pair(alpha, beta));
+          }
         }
       }
       int i = sample_from_logps(logps, prng);
-      int N = beta_grid.size();
-      alpha = alpha_grid[i / N];
-      beta = beta_grid[i % N];
+      alpha = hypers[i].first;
+      beta = hypers[i].second;
     }
 };
