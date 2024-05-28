@@ -53,8 +53,11 @@ public:
     }
     void transition_hyperparameters() {
       std::vector<double> logps;
-      for (alpha : alpha_grid) {
-        for (beta : beta_grid) {
+      // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
+      for (double alphat : alpha_grid) {
+        for (double betat : beta_grid) {
+          alpha = alphat;
+          beta = betat;
           logps.push_back(logp_score());
         }
       }
