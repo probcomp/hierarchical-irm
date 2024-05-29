@@ -17,7 +17,7 @@ root=$(cd -- "$(dirname -- "$0")" && pwd)
     if [ $# -eq 0 ]; then
         # (Default) Run tests/
         ./pythenv.sh "$PYTHON" -m pytest --pyargs hirm
-        cd cxx && make tests
+        cd cxx && bazel test :all
     elif [ ${1} = 'coverage' ]; then
         # Generate coverage report.
         ./pythenv.sh coverage run --source=build/ -m pytest --pyargs hirm
