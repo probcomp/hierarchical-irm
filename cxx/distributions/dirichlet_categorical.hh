@@ -3,7 +3,9 @@
 
 #pragma once
 #include <algorithm>
+#include <random>
 #include "base.hh"
+#include "util_math.hh"
 
 class DirichletCategorical : public Distribution<double> {
 public:
@@ -40,9 +42,9 @@ public:
         const size_t k = counts.size();
         const double a = alpha * k;
         const double lg = std::transform_reduce(
-            counts.cbegin(), 
-            counts.cend(), 
-            0, 
+            counts.cbegin(),
+            counts.cend(),
+            0,
             std::plus{},
             [&](size_t y) -> double {return lgamma(y + alpha); }
         );
@@ -51,9 +53,9 @@ public:
     double sample() {
         std::vector<double> weights(counts.size());
         std::transform(
-            counts.begin(), 
-            counts.end(), 
-            weights.begin(), 
+            counts.begin(),
+            counts.end(),
+            weights.begin(),
             [&](size_t y) -> double { return y + alpha; }
         );
         int idx = choice(weights, prng);
