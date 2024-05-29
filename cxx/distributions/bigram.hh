@@ -74,9 +74,9 @@ public:
     }
     double logp_score() const {
         return std::transform_reduce(
-            transition_dists.cbegin(), 
-            transition_dists.cend(), 
-            0, 
+            transition_dists.cbegin(),
+            transition_dists.cend(),
+            0,
             std::plus{},
             [&](auto d) -> double {return d.logp_score(); }
         );
@@ -103,5 +103,12 @@ public:
         }
         unincorporate(sampled_string);
         return sampled_string;
+    }
+
+    void set_alpha(double alphat) {
+       alpha = alphat;
+       for (auto &trans_dist : transition_dists) {
+         trans_dist.alpha = alpha;
+       }
     }
 };
