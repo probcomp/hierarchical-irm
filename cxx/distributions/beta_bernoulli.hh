@@ -13,6 +13,7 @@ public:
     int s = 0;  // sum of observed values
     std::mt19937 *prng;
 
+    // BetaBernoulli does not take ownership of prng.
     BetaBernoulli(std::mt19937 *prng) {
         this->prng = prng;
     }

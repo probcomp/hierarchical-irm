@@ -62,7 +62,10 @@ endif
 		--verbose \
 		./$<
 clean:
-	rm -rf **.o *.out *.gch
+	rm -rf *.gch
+	rm -rf *.o */*.o
+	rm -rf *.out */*.out
+	rm -rf *.log */*.log
 	rm -rf tests/*.out
 	rm -rf assets/*.irm
 	rm -rf assets/*.hirm
@@ -75,7 +78,7 @@ boost:
 
 UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
 
-%test.out : %test.cc util_math.o
+%_test.out : %_test.cc %.hh util_math.o
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
 
 %test.log : %test.out

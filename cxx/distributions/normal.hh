@@ -40,6 +40,7 @@ public:
 
     std::mt19937 *prng;
 
+    // Normal does not take ownership of prng.
     Normal(std::mt19937 *prng) {
         this->prng = prng;
     }

@@ -12,7 +12,8 @@
 
 template <typename SampleType = double> class DistributionAdapter : Distribution<std::string> {
 public:
-    // The underlying distribution that is being adapted.
+    // The underlying distribution that is being adapted.  We own the
+    // underlying Distribution.
     Distribution<SampleType> *d;
 
     DistributionAdapter(Distribution<SampleType> *dd): d(dd) {};
@@ -51,5 +52,9 @@ public:
     std::string sample() {
       SampleType s = d->sample();
       return to_string(s);
+    }
+
+    ~DistributionAdapter() {
+      delete d;
     }
 };

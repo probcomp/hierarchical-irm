@@ -35,6 +35,7 @@ public:
     mutable std::vector<DirichletCategorical> transition_dists;
     std::mt19937 *prng;
 
+    // Bigram does not take ownership of prng.
     Bigram(std::mt19937 *prng) {
         this->prng = prng;
         const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
