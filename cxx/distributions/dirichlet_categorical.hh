@@ -12,6 +12,7 @@ public:
     int n;  // Total number of observations.
     std::mt19937 *prng;
 
+    // DirichletCategorical does not take ownership of prng.
     DirichletCategorical(std::mt19937 *prng, int k) {  // k is number of categories
         this->prng = prng;
         counts = std::vector<int>(k, 0);

@@ -11,8 +11,7 @@ namespace tt = boost::test_tools;
 BOOST_AUTO_TEST_CASE(adapt_normal)
 {
   std::mt19937 prng;
-  Normal nd(&prng);
-  DistributionAdapter<double> ad(&nd);
+  DistributionAdapter<double> ad(new Normal(&prng));
 
   ad.incorporate("5.0");
   ad.incorporate("-2.0");
