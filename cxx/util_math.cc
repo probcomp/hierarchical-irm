@@ -22,7 +22,7 @@ std::vector<double> linspace(double start, double stop, int num, bool endpoint) 
 
 std::vector<double> log_linspace(double start, double stop, int num, bool endpoint) {
     auto v = linspace(log(start), log(stop), num, endpoint);
-    for (int i = 0; i < v.size(); i++) {
+    for (int i = 0; i < std::ssize(v); i++) {
         v[i] = exp(v[i]);
     }
     return v;
@@ -31,7 +31,7 @@ std::vector<double> log_linspace(double start, double stop, int num, bool endpoi
 std::vector<double> log_normalize(const std::vector<double> &weights){
     double Z = logsumexp(weights);
     std::vector<double> result(weights.size());
-    for (int i = 0; i < weights.size(); i++) {
+    for (int i = 0; i < std::ssize(weights); i++) {
         result[i] = weights[i] - Z;
     }
     return result;
@@ -43,7 +43,7 @@ double logsumexp(const std::vector<double> &weights) {
         weights.cbegin(), std::max_element(weights.cbegin(), weights.cend()));
     double m = weights[max_index];
     double s = 0;
-    for (int i = 0; i < weights.size(); ++i) {
+    for (int i = 0; i < std::ssize(weights); ++i) {
       if (i == max_index) {
         continue;
       }

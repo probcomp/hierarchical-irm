@@ -5,3 +5,9 @@
 *.out
 *.prof
 boost_1_82_0/
+bazel-bin
+bazel-cxx
+bazel-out
+bazel-testlogs
+boost_1_82_0.tar.bz2
+MODULE.bazel.lock

@@ -196,10 +196,10 @@ class Relation {
 public:
     // human-readable name
     const std::string name;
-    // list of domain pointers
-    const std::vector<Domain*>                                   domains;
     // Distribution over the relation's codomain.
     const std::string                                            distribution;
+    // list of domain pointers
+    const std::vector<Domain*>                                   domains;
     // map from cluster multi-index to Distribution pointer
     std::unordered_map<const std::vector<int>, Distribution<double>*, VectorIntHash> clusters;
     // map from item to observed data
@@ -240,7 +240,7 @@ public:
     void incorporate(const T_items &items, double value) {
         assert(!data.contains(items));
         data[items] = value;
-        for (int i = 0; i < domains.size(); ++i) {
+        for (int i = 0; i < std::ssize(domains); ++i) {
             domains[i]->incorporate(items[i]);
             if (!data_r.at(domains[i]->name).contains(items[i])) {
                 data_r.at(domains[i]->name)[items[i]] = std::unordered_set<T_items, H_items>();
@@ -284,7 +284,7 @@ public:
     std::vector<int> get_cluster_assignment(const T_items &items) const {
         assert(items.size() == domains.size());
         std::vector<int> z(domains.size());
-        for (int i = 0; i < domains.size(); ++i) {
+        for (int i = 0; i < std::ssize(domains); ++i) {
             z[i] = domains[i]->get_cluster_assignment(items[i]);
         }
         return z;
@@ -295,7 +295,7 @@ public:
         assert(items.size() == domains.size());
         std::vector<int> z(domains.size());
         int hits = 0;
-        for (int i = 0; i < domains.size(); ++i) {
+        for (int i = 0; i < std::ssize(domains); ++i) {
             if ((domains[i]->name == domain.name) && (items[i] == item)) {
                 z[i] = table;
                 ++hits;
@@ -342,8 +342,7 @@ public:
 
     double logp_gibbs_approx(const Domain &domain, const T_item &item, int table) {
         int table_current = domain.get_cluster_assignment(item);
-        double logp;
-        return table_current == table 
+        return table_current == table
             ? logp_gibbs_approx_current(domain, item)
             : logp_gibbs_approx_variant(domain, item, table);
             }
@@ -355,7 +354,6 @@ public:
     get_cluster_to_items_list(Domain const &domain, const T_item &item) {
         std::unordered_map<const std::vector<int>, std::vector<T_items>, VectorIntHash> m;
         for (const T_items &items : data_r.at(domain.name).at(item)) {
-            double x = data.at(items);
             T_items z = get_cluster_assignment(items);
             m[z].push_back(items);
         }
@@ -414,10 +412,9 @@ public:
         for (const int &table : tables) {
             double lp_table = 0;
             for (const auto &[z, items_list] : cluster_to_items_list) {
-                lp_cluster = (table == table_current) 
-                    ? logp_gibbs_exact_current(items_list) 
-                    : lp_cluster = logp_gibbs_exact_variant(
-                        domain, item, table, items_list);
+                lp_cluster = (table == table_current)
+                    ? logp_gibbs_exact_current(items_list)
+                    : logp_gibbs_exact_variant(domain, item, table, items_list);
                 lp_table += lp_cluster;
             }
             logps.push_back(lp_table);
@@ -432,7 +429,7 @@ public:
         std::vector<std::vector<T_item>> tabl_list;
         std::vector<std::vector<double>> wght_list;
         std::vector<std::vector<int>> indx_list;
-        for (int i = 0; i < domains.size(); ++i) {
+        for (int i = 0; i < std::ssize(domains); ++i) {
             Domain* domain = domains.at(i);
             T_item item = items.at(i);
             std::vector<T_item> t_list;
@@ -452,7 +449,7 @@ public:
                     w_list.push_back(log(w) - Z);
                     i_list.push_back(idx++);
                 }
-                assert(idx == t_list.size());
+                assert(idx == std::ssize(t_list));
             }
             tabl_list.push_back(t_list);
             wght_list.push_back(w_list);
@@ -464,7 +461,7 @@ public:
             std::vector<int> z;
             z.reserve(domains.size());
             double logp_w = 0;
-            for (int i = 0; i < domains.size(); ++i) {
+            for (int i = 0; i < std::ssize(domains); ++i) {
                 T_item zi = tabl_list.at(i).at(indexes[i]);
                 double wi = wght_list.at(i).at(indexes[i]);
                 z.push_back(zi);
@@ -587,7 +584,7 @@ public:
                 std::vector<double> lp_relation = relation->logp_gibbs_exact(*domain, item, tables);
                 assert(lp_relation.size() == tables.size());
                 assert(lp_relation.size() == logps.size());
-                for (int i = 0; i < logps.size(); ++i) {  // FIXME rewrite with transform
+                for (int i = 0; i < std::ssize(logps); ++i) {  // FIXME rewrite with transform
                     logps[i] += lp_relation[i];
                 }
             }
@@ -622,8 +619,8 @@ public:
             relation_items_seen[r].insert(items);
             // Process each (domain, item) in the observations.
             Relation* relation = relations.at(r);
-            size_t arity = relation->domains.size();
-            assert(items.size() == arity);
+            int arity = relation->domains.size();
+            assert(std::ssize(items) == arity);
             for (int i = 0; i < arity; ++i) {
                 // Skip if (domain, item) processed.
                 Domain* domain = relation->domains.at(i);
@@ -675,7 +672,7 @@ public:
             double logp_indexes = 0;
             // Compute weight of cluster assignments.
             double weight = 0.0;
-            for (int i = 0; i < indexes.size(); ++i) {
+            for (int i = 0; i < std::ssize(indexes); ++i) {
                 weight += weight_universe.at(i).at(indexes[i]);
             }
             logp_indexes += weight;
@@ -684,7 +681,7 @@ public:
                 Relation* relation = relations.at(r);
                 std::vector<int> z;
                 z.reserve(domains.size());
-                for (int i = 0; i < relation->domains.size(); ++i) {
+                for (int i = 0; i < std::ssize(relation->domains); ++i) {
                     Domain* domain = relation->domains.at(i);
                     T_item item = items.at(i);
                     auto &[loc, t_list] = cluster_universe.at(domain->name).at(item);
@@ -813,15 +810,15 @@ public:
         auto crp_dist = crp.tables_weights_gibbs(table_current);
         std::vector<int> tables;
         std::vector<double> logps;
-        int * table_aux = NULL;
-        IRM * irm_aux = NULL;
+        int * table_aux = nullptr;
+        IRM * irm_aux = nullptr;
         // Compute probabilities of each table.
         for (const auto &[table, n_customers] : crp_dist) {
             IRM * irm;
             if (!irms.contains(table)) {
                 irm = new IRM({}, prng);
-                assert(table_aux == NULL);
-                assert(irm_aux == NULL);
+                assert(table_aux == nullptr);
+                assert(irm_aux == nullptr);
                 table_aux = (int *) malloc(sizeof(*table_aux));
                 *table_aux = table;
                 irm_aux = irm;
@@ -842,10 +839,7 @@ public:
         // Sample new table.
         int idx = log_choice(logps, prng);
         T_item choice = tables[idx];
-        int new_size = 0;
-        if (crp.tables.contains(choice)) {
-            new_size = crp.tables.at(choice).size();
-        }
+
         // Remove relation from all other tables.
         for (const auto &[table, customers] : crp.tables) {
             IRM* irm = irms.at(table);
@@ -861,8 +855,8 @@ public:
             }
         }
         // Add auxiliary table if necessary.
-        if ((table_aux != NULL) && (choice == *table_aux)) {
-            assert(irm_aux != NULL);
+        if ((table_aux != nullptr) && (choice == *table_aux)) {
+            assert(irm_aux != nullptr);
             irms[choice] = irm_aux;
         } else {
             delete irm_aux;
