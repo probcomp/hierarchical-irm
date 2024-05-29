@@ -38,6 +38,7 @@ cc_library(
 cc_library(
     name = "util_io",
     srcs = ["util_io.cc"],
+    visibility = [":__subpackages__"],
     hdrs = [
         "hirm.hh",
         "util_io.hh",
