@@ -116,7 +116,6 @@ void incorporate_observations(IRM &irm, const T_encoding &encoding,
 
 void incorporate_observations(HIRM &hirm, const T_encoding &encoding,
         const T_observations &observations) {
-    int j = 0;
     T_encoding_f item_to_code = std::get<0>(encoding);
     for (const auto &[relation, items, value] : observations) {
         int counter = 0;
@@ -143,7 +142,7 @@ void to_txt(std::ostream &fp, const IRM &irm, const T_encoding &encoding) {
             int i = 1;
             for (const T_item &item : items) {
                 fp << code_to_item.at(domain->name).at(item);
-                if (i++ < items.size()) {
+                if (i++ < std::ssize(items)) {
                     fp << " ";
                 }
             }
@@ -162,7 +161,7 @@ void to_txt(std::ostream &fp, const HIRM &hirm, const T_encoding &encoding){
         int i = 1;
         for (const T_item rc : rcs) {
             fp << hirm.code_to_relation.at(rc);
-            if (i ++ < rcs.size()) {
+            if (i++ < std::ssize(rcs)) {
                 fp << " ";
             }
         }
@@ -175,7 +174,7 @@ void to_txt(std::ostream &fp, const HIRM &hirm, const T_encoding &encoding){
         const IRM* const irm = hirm.irms.at(table);
         fp << "irm=" << table << "\n";
         to_txt(fp, *irm, encoding);
-        if (j < tables.size() - 1) {
+        if (j < std::ssize(tables) - 1) {
             fp << "\n";
             j += 1;
         }
@@ -271,7 +270,7 @@ load_clusters_hirm(const std::string &path) {
 
         // Parse an irm= line.
         if (first.rfind("irm=", 0) == 0) {
-            assert(irmc = -1);
+            assert(irmc == -1);
             assert(first.size() > 4);
             std::string x = first.substr(4);
             irmc = std::stoi(x);

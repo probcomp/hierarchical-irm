@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_product)
   std::vector<std::vector<int>> expected_result = {
     {1, 3}, {1, 4}, {1, 5}, {2, 3}, {2, 4}, {2, 5}};
   BOOST_TEST(expected_result.size() == 6);
-  for (int i = 0; i < expected_result.size(); ++i) {
+  for (int i = 0; i < std::ssize(expected_result); ++i) {
     BOOST_TEST(product_result[i] == expected_result[i]);
   }
 }

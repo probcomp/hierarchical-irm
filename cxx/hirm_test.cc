@@ -66,9 +66,6 @@ BOOST_AUTO_TEST_CASE(test_crp_sample)
   // table. This corresponds to a new customer having probability 10 / 16 for
   // the first table, 5 / 16 for the second table, and 1 / 16 for the next
   // table. Check that these frequencies are approximately matched.
-  int first_table = 0;
-  int second_table = 0;
-  int new_table = 0;
   std::map<int, int> table_count;
   const int num_draws = 3000;
   for (int i = 0; i < num_draws; ++i) {
