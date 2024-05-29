@@ -4,6 +4,7 @@
 #pragma once
 #include <random>
 #include "base.hh"
+#include "util_math.hh"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288419716939937510
@@ -12,6 +13,11 @@
 #ifndef M_2PI
 #define M_2PI 6.28318530717958647692528676655
 #endif
+
+#define R_GRID {0.1, 1.0, 10.0}
+#define V_GRID {0.5, 1.0, 2.0, 5.0}
+#define M_GRID {-1.0, 0.0, 1.0}
+#define S_GRID {0.5, 1.0, 2.0}
 
 double logZ(double r, double v, double s) {
   return (v + 1.0) / 2.0 * log(2.0)
@@ -108,7 +114,31 @@ public:
     }
 
     void transition_hyperparameters() {
-      // TODO(thomaswc): Implement this.
+      std::vector<double> logps;
+      std::vector<std::tuple<double, double, double, double>> hypers;
+      for (double rt : R_GRID) {
+        for (double vt : V_GRID) {
+          for (double mt : M_GRID) {
+            for (double st : S_GRID) {
+              r = rt;
+              v = vt;
+              m = mt;
+              s = st;
+              double lp = logp_score();
+              if (!std::isnan(lp)) {
+                logps.push_back(logp_score());
+                hypers.push_back(std::make_tuple(r, v, m, s));
+              }
+            }
+          }
+        }
+      }
+
+      int i = sample_from_logps(logps, prng);
+      r = std::get<0>(hypers[i]);
+      v = std::get<1>(hypers[i]);
+      m = std::get<2>(hypers[i]);
+      s = std::get<3>(hypers[i]);
     }
 
     // Disable copying.

@@ -75,3 +75,17 @@ BOOST_AUTO_TEST_CASE(prior_prefers_origin) {
 
   BOOST_TEST(nd1.logp_score() > nd2.logp_score());
 }
+
+BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
+  std::mt19937 prng;
+  Normal nd(&prng);
+
+  nd.transition_hyperparameters();
+
+  for (int i = 0; i < 100; ++i) {
+    nd.incorporate(5.0);
+  }
+
+  nd.transition_hyperparameters();
+  BOOST_TEST(nd.m > 0.0);
+}
