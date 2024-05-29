@@ -13,6 +13,10 @@
 #include <unordered_set>
 #include <vector>
 
+#include "distributions/beta_bernoulli.hh"
+#include "distributions/bigram.hh"
+#include "distributions/dirichlet_categorical.hh"
+#include "distributions/normal.hh"
 #include "hirm.hh"
 #include "util_hash.hh"
 #include "util_io.hh"
@@ -143,13 +147,15 @@ int main(int argc, char **argv) {
     D3.incorporate(3);
     Relation R1 ("R1", "beta_bernoulli", {&D1, &D2, &D3}, &prng);
     printf("arity %ld\n", R1.domains.size());
-    R1.incorporate({0, 1, 3}, 1);
-    R1.incorporate({1, 1, 3}, 1);
-    R1.incorporate({3, 1, 3}, 1);
-    R1.incorporate({4, 1, 3}, 1);
-    R1.incorporate({5, 1, 3}, 1);
-    R1.incorporate({0, 1, 4}, 0);
-    R1.incorporate({0, 1, 6}, 1);
+    std::string zero = "0.0";
+    std::string one = "1.0";
+    R1.incorporate({0, 1, 3}, one);
+    R1.incorporate({1, 1, 3}, one);
+    R1.incorporate({3, 1, 3}, one);
+    R1.incorporate({4, 1, 3}, one);
+    R1.incorporate({5, 1, 3}, one);
+    R1.incorporate({0, 1, 4}, zero);
+    R1.incorporate({0, 1, 6}, one);
     auto z1 = R1.get_cluster_assignment({0, 1, 3});
     for (int x : z1) {
         printf("%d,", x);
@@ -259,8 +265,8 @@ int main(int argc, char **argv) {
 
     auto rel = irm3.relations.at("has");
     auto &enc = std::get<0>(encoding);
-    auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0);
-    auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1);
+    auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, "0");
+    auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, "1");
     auto lp_01 = logsumexp({lp0, lp1});
     assert(abs(lp_01) < 1e-5);
     printf("log prob of has(tail, bat)=0 is %1.2f\n", lp0);

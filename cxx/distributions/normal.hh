@@ -5,21 +5,11 @@
 #include <random>
 #include "base.hh"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327950288419716939937510
-#endif
-
 #ifndef M_2PI
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-double logZ(double r, double v, double s) {
-  return (v + 1.0) / 2.0 * log(2.0)
-      + 0.5 * log(M_PI)
-      - 0.5 * log(r)
-      - 0.5 * v * log(s)
-      + lgamma(0.5 * v);
-}
+double logZ(double r, double v, double s);
 
 class Normal : public Distribution<double> {
 public:

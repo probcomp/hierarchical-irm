@@ -40,12 +40,12 @@ T_observations load_observations(const std::string &path) {
     std::ifstream fp (path, std::ifstream::in);
     assert(fp.good());
 
-    std::vector<std::tuple<std::string, std::vector<std::string>, double>> observations;
+    std::vector<std::tuple<std::string, std::vector<std::string>, T_column>> observations;
     std::string line;
     while (std::getline(fp, line)) {
         std::istringstream stream (line);
 
-        double value;
+        T_column value;
         std::string relname;
         std::vector<std::string> items;
 

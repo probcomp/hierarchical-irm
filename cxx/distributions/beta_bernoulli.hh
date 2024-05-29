@@ -3,6 +3,7 @@
 
 #pragma once
 #include <cassert>
+#include <iostream>
 #include "util_math.hh"
 #include "distributions/base.hh"
 
@@ -14,9 +15,17 @@ public:
     std::mt19937 *prng;
 
     BetaBernoulli(std::mt19937 *prng) {
+        std::cout << "CONSTRUCTING BetaBernoulli" << std::endl;
         this->prng = prng;
     }
-    void incorporate(const double& x){
+    void incorporate(const double& x) override {  // making this too `virtual` does not help
+        std::cerr << "in bb incorporate after get cluster, value is " << x << std::endl;
+        assert(x == 0 || x == 1);
+        ++N;
+        s += x;
+    }
+        void incorporate_BB(const double& x) {
+        std::cerr << "in bb incorporate after get cluster, value is " << x << std::endl;
         assert(x == 0 || x == 1);
         ++N;
         s += x;

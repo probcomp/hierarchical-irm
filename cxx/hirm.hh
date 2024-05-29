@@ -2,19 +2,19 @@
 // See LICENSE.txt
 
 #pragma once
+#include <algorithm>
+#include <cassert>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include "util_hash.hh"
 #include "util_math.hh"
-#include "distributions/base.hh"
-#include "distributions/beta_bernoulli.hh"
-#include "distributions/bigram.hh"
-#include "distributions/dirichlet_categorical.hh"
+#include "distributions/adapter.hh"
 
 typedef int T_item;
 typedef std::vector<T_item> T_items;
 typedef VectorIntHash H_items;
+typedef std::string T_column;
 
 // T_relation is the text we get from reading a line of the schema file;
 // hirm.hh:Relation is the object that does the work.
@@ -201,9 +201,9 @@ public:
     // Distribution over the relation's codomain.
     const std::string                                            distribution;
     // map from cluster multi-index to Distribution pointer
-    std::unordered_map<const std::vector<int>, Distribution<double>*, VectorIntHash> clusters;
+    std::unordered_map<const std::vector<int>, Distribution<T_column>*, VectorIntHash> clusters;
     // map from item to observed data
-    std::unordered_map<const T_items, double, H_items> data;
+    std::unordered_map<const T_items, T_column, H_items> data;
     // map from domain name to reverse map from item to
     // set of items that include that item
     std::unordered_map<std::string, std::unordered_map<T_item, std::unordered_set<T_items, H_items>>> data_r;
@@ -237,9 +237,10 @@ public:
       return trel;
     }
 
-    void incorporate(const T_items &items, double value) {
+    void incorporate(const T_items &items, T_column value) {
         assert(!data.contains(items));
         data[items] = value;
+        std::cerr << "in incorporate, value is " << value << std::endl;
         for (int i = 0; i < domains.size(); ++i) {
             domains[i]->incorporate(items[i]);
             if (!data_r.at(domains[i]->name).contains(items[i])) {
@@ -247,15 +248,21 @@ public:
             }
             data_r.at(domains[i]->name).at(items[i]).insert(items);
         }
+        std::cerr << "in incorporate after loop, value is " << value << std::endl;
         T_items z = get_cluster_assignment(items);
+        std::cerr << "in incorporate after get cluster, value is " << value << std::endl;
         if (!clusters.contains(z)) {
             // Invalid discussion as using pointers now;
             //      Cannot use clusters[z] because BetaBernoulli
             //      does not have a default constructor, whereas operator[]
             //      calls default constructor when the key does not exist.
-            clusters[z] = new BetaBernoulli(prng);
+            std::cerr << "in incorporate after if, value is " << value << std::endl;
+            clusters[z] = get_distribution(distribution);
+            std::cerr << "in incorporate after get dist is " << value << std::endl;
         }
+        std::cerr << "in incorporate before returnin, value is " << value << std::endl;
         clusters.at(z)->incorporate(value);
+        std::cerr << "in incorporate returnin, value is " << value << std::endl;
     }
 
     void unincorporate(const T_items &items) {
@@ -312,7 +319,7 @@ public:
     double logp_gibbs_approx_current(const Domain &domain, const T_item &item) {
         double logp = 0.;
         for (const T_items &items : data_r.at(domain.name).at(item)) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             T_items z = get_cluster_assignment(items);
             auto cluster = clusters.at(z);
             cluster->unincorporate(x);
@@ -326,12 +333,13 @@ public:
     double logp_gibbs_approx_variant(const Domain &domain, const T_item &item, int table) {
         double logp = 0.;
         for (const T_items &items : data_r.at(domain.name).at(item)) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
             double lp;
             if (!clusters.contains(z)){
-                BetaBernoulli cluster (prng);
-                lp = cluster.logp(x);
+                // pass prng too.
+                auto cluster = get_distribution(distribution);
+                lp = cluster->logp(x);
             } else {
                 lp = clusters.at(z)->logp(x);
             }
@@ -355,7 +363,7 @@ public:
     get_cluster_to_items_list(Domain const &domain, const T_item &item) {
         std::unordered_map<const std::vector<int>, std::vector<T_items>, VectorIntHash> m;
         for (const T_items &items : data_r.at(domain.name).at(item)) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             T_items z = get_cluster_assignment(items);
             m[z].push_back(items);
         }
@@ -368,13 +376,13 @@ public:
         auto cluster = clusters.at(z);
         double logp0 = cluster->logp_score();
         for (const T_items &items : items_list) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             // assert(z == get_cluster_assignment(items));
             cluster->unincorporate(x);
         }
         double logp1 = cluster->logp_score();
         for (const T_items &items : items_list) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             cluster->incorporate(x);
         }
         assert(cluster->logp_score() == logp0);
@@ -386,18 +394,18 @@ public:
         assert(!items_list.empty());
         T_items z = get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
-        BetaBernoulli aux (prng);
-        Distribution<double>* cluster = clusters.contains(z) ? clusters.at(z) : &aux;
+        auto aux = get_distribution(distribution);
+        auto cluster = clusters.contains(z) ? clusters.at(z) : aux;
         // auto cluster = self.clusters.get(z, self.aux())
         double logp0 = cluster->logp_score();
         for (const T_items &items : items_list) {
             // assert(z == get_cluster_assignment_gibbs(items, domain, item, table));
-            double x = data.at(items);
+            T_column x = data.at(items);
             cluster->incorporate(x);
         }
         const double logp1 = cluster->logp_score();
         for (const T_items &items : items_list) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             cluster->unincorporate(x);
         }
         assert(cluster->logp_score() == logp0);
@@ -425,7 +433,7 @@ public:
         return logps;
     }
 
-    double logp(const T_items &items, double value) {
+    double logp(const T_items &items, T_column value) {
         // TODO: Falsely assumes cluster assignments of items
         // from same domain are identical, see note in hirm.py
         assert(items.size() == domains.size());
@@ -470,8 +478,8 @@ public:
                 z.push_back(zi);
                 logp_w += wi;
             }
-            BetaBernoulli aux (prng);
-            Distribution<double>* cluster = clusters.contains(z) ? clusters.at(z) : &aux;
+            auto aux = get_distribution(distribution);
+            Distribution<T_column>* cluster = clusters.contains(z) ? clusters.at(z) : aux;
             double logp_z = cluster->logp(value);
             double logp_zw = logp_z + logp_w;
             logps.push_back(logp_zw);
@@ -492,7 +500,7 @@ public:
         int table_current = domain.get_cluster_assignment(item);
         assert(table != table_current);
         for (const T_items &items : data_r.at(domain.name).at(item)) {
-            double x = data.at(items);
+            T_column x = data.at(items);
             // Remove from current cluster.
             T_items z_prev = get_cluster_assignment(items);
             auto cluster_prev = clusters.at(z_prev);
@@ -505,7 +513,7 @@ public:
             T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
             if (!clusters.contains(z_new)) {
                 // Move to fresh cluster.
-                clusters[z_new] = new BetaBernoulli(prng);
+                clusters[z_new] = get_distribution(distribution);
                 clusters.at(z_new)->incorporate(x);
             } else {
                 // Move to existing cluster.
@@ -545,7 +553,7 @@ public:
         for (auto [r, relation] : relations) { delete relation; }
     }
 
-    void incorporate(const std::string &r, const T_items &items, double value) {
+    void incorporate(const std::string &r, const T_items &items, T_column value) {
         relations.at(r)->incorporate(items, value);
     }
 
@@ -608,7 +616,7 @@ public:
         }
     }
 
-    double logp(const std::vector<std::tuple<std::string, T_items, double>> &observations) {
+    double logp(const std::vector<std::tuple<std::string, T_items, T_column>> &observations) {
         std::unordered_map<std::string, std::unordered_set<T_items, H_items>> relation_items_seen;
         std::unordered_map<std::string, std::unordered_set<T_item>> domain_item_seen;
         std::vector<std::tuple<std::string, T_item>> item_universe;
@@ -691,10 +699,10 @@ public:
                     T_item t = t_list.at(indexes.at(loc));
                     z.push_back(t);
                 }
-                BetaBernoulli aux (prng);
-                Distribution<double> * cluster = relation->clusters.contains(z)
+                auto aux = get_distribution(relation->distribution);
+                Distribution<T_column> * cluster = relation->clusters.contains(z)
                     ? relation->clusters.at(z)
-                    : &aux;
+                    : aux;
                 logp_indexes += cluster->logp(value);
             }
             logps.push_back(logp_indexes);
@@ -772,7 +780,7 @@ public:
         }
     }
 
-    void incorporate(const std::string &r, const T_items &items, double value) {
+    void incorporate(const std::string &r, const T_items &items, T_column value) {
         IRM* irm = relation_to_irm(r);
         irm->incorporate(r, items, value);
     }
@@ -947,8 +955,8 @@ public:
         code_to_relation.erase(rc);
     }
 
-    double logp(const std::vector<std::tuple<std::string, T_items, double>> &observations) {
-        std::unordered_map<int, std::vector<std::tuple<std::string, T_items, double>>> obs_dict;
+    double logp(const std::vector<std::tuple<std::string, T_items, T_column>> &observations) {
+        std::unordered_map<int, std::vector<std::tuple<std::string, T_items, T_column>>> obs_dict;
         for (const auto &[r, items, value] : observations) {
             int rc = relation_to_code.at(r);
             int table = crp.assignments.at(rc);

@@ -74,10 +74,10 @@ int main(int argc, char **argv) {
         assert(l.size() == 2);
         auto x1 = l.at(0);
         auto x2 = l.at(1);
-        auto p0 = irm.relations.at("R1")->logp({x1, x2}, 0);
-        auto p0_irm = irm.logp({{"R1", {x1, x2}, 0}});
+        auto p0 = irm.relations.at("R1")->logp({x1, x2}, "0");
+        auto p0_irm = irm.logp({{"R1", {x1, x2}, "0"}});
         assert(abs(p0 - p0_irm) < 1e-10);
-        auto p1 = irm.relations.at("R1")->logp({x1, x2}, 1);
+        auto p1 = irm.relations.at("R1")->logp({x1, x2}, "1");
         auto Z = logsumexp({p0, p1});
         assert(abs(Z) < 1e-10);
         assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
@@ -87,10 +87,12 @@ int main(int argc, char **argv) {
         auto x1 = l.at(0);
         auto x2 = l.at(1);
         auto x3 = l.at(2);
-        auto p00 = irm.logp({{"R1", {x1, x2}, 0}, {"R1", {x1, x3}, 0}});
-        auto p01 = irm.logp({{"R1", {x1, x2}, 0}, {"R1", {x1, x3}, 1}});
-        auto p10 = irm.logp({{"R1", {x1, x2}, 1}, {"R1", {x1, x3}, 0}});
-        auto p11 = irm.logp({{"R1", {x1, x2}, 1}, {"R1", {x1, x3}, 1}});
+        std::string zero = "zero";
+        std::string one = "one";
+        auto p00 = irm.logp({{"R1", {x1, x2}, zero}, {"R1", {x1, x3}, zero}});
+        auto p01 = irm.logp({{"R1", {x1, x2}, zero}, {"R1", {x1, x3}, one}});
+        auto p10 = irm.logp({{"R1", {x1, x2}, one}, {"R1", {x1, x3}, zero}});
+        auto p11 = irm.logp({{"R1", {x1, x2}, one}, {"R1", {x1, x3}, one}});
         auto Z = logsumexp({p00, p01, p10, p11});
         assert(abs(Z) < 1e-10);
     }
