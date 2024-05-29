@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   D1.incorporate(0);
   D2.incorporate(1);
   D3.incorporate(3);
-  Relation R1("R1", "beta_bernoulli", {&D1, &D2, &D3}, &prng);
+  Relation<BetaBernoulli> R1("R1", "bernoulli", {&D1, &D2, &D3}, &prng);
   printf("arity %ld\n", R1.domains.size());
   R1.incorporate({0, 1, 3}, 1);
   R1.incorporate({1, 1, 3}, 1);
@@ -160,15 +160,25 @@ int main(int argc, char** argv) {
   }
   printf("\n");
 
+  Relation<Bigram> R2("R1", "bigram", {&D2, &D3}, &prng);
+  printf("arity %ld\n", R1.domains.size());
+  R2.incorporate({1, 3}, "cat");
+  R2.incorporate({1, 2}, "dog");
+  R2.incorporate({1, 4}, "catt");
+  R2.incorporate({2, 6}, "fish");
+
   double lpg = R1.logp_gibbs_approx(D1, 0, 1);
   printf("logp gibbs %f\n", lpg);
   lpg = R1.logp_gibbs_approx(D1, 0, 0);
   printf("logp gibbs %f\n", lpg);
   lpg = R1.logp_gibbs_approx(D1, 0, 10);
   printf("logp gibbs %f\n", lpg);
+  lpg = R2.logp_gibbs_approx(D2, 2, 0);
+  printf("logp gibbs %f\n", lpg);
 
   printf("calling set_cluster_assignment_gibbs\n");
   R1.set_cluster_assignment_gibbs(D1, 0, 1);
+  R2.set_cluster_assignment_gibbs(D3, 3, 1);
   printf("new cluster %d\n", D1.get_cluster_assignment(0));
   D1.set_cluster_assignment_gibbs(0, 1);
 
@@ -187,22 +197,22 @@ int main(int argc, char** argv) {
 
   printf("===== IRM ====\n");
   std::map<std::string, T_relation> schema1{
-      {"R1", T_relation{{"D1", "D1"}, "beta_bernoulli"}},
-      {"R2", T_relation{{"D1", "D2"}, "beta_bernoulli"}},
-      {"R3", T_relation{{"D3", "D1"}, "beta_bernoulli"}},
+      {"R1", T_relation{{"D1", "D1"}, "bernoulli"}},
+      {"R2", T_relation{{"D1", "D2"}, "normal"}},
+      {"R3", T_relation{{"D3", "D1"}, "bigram"}},
   };
   IRM irm(schema1, &prng);
 
   for (auto const& kv : irm.domains) {
     printf("%s %s; ", kv.first.c_str(), kv.second->name.c_str());
-    for (auto const r : irm.domain_to_relations.at(kv.first)) {
+    for (auto const &r : irm.domain_to_relations.at(kv.first)) {
       printf("%s ", r.c_str());
     }
     printf("\n");
   }
   for (auto const& kv : irm.relations) {
     printf("%s ", kv.first.c_str());
-    for (auto const d : kv.second->domains) {
+    for (auto const d : std::visit([&](auto r) {return r->domains;}, kv.second)) {
       printf("%s ", d->name.c_str());
     }
     printf("\n");
@@ -256,7 +266,7 @@ int main(int argc, char** argv) {
   std::string path_clusters = "assets/animals.binary.irm";
   to_txt(path_clusters, irm3, encoding);
 
-  auto rel = irm3.relations.at("has");
+  auto rel = std::get<Relation<BetaBernoulli>*>(irm3.relations.at("has"));
   auto& enc = std::get<0>(encoding);
   auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0);
   auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1);
@@ -282,8 +292,8 @@ int main(int argc, char** argv) {
     assert(d3->crp.alpha == d4->crp.alpha);
   }
   for (const auto& r : {"has"}) {
-    auto r3 = irm3.relations.at(r);
-    auto r4 = irm4.relations.at(r);
+    auto r3 = std::get<Relation<BetaBernoulli>*>(irm3.relations.at(r));
+    auto r4 = std::get<Relation<BetaBernoulli>*>(irm4.relations.at(r));
     assert(r3->data == r4->data);
     assert(r3->data_r == r4->data_r);
     assert(r3->clusters.size() == r4->clusters.size());

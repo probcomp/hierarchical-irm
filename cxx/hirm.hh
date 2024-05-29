@@ -2,14 +2,17 @@
 // See LICENSE.txt
 
 #pragma once
+#include <functional>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 
 #include "distributions/base.hh"
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
 #include "distributions/dirichlet_categorical.hh"
+#include "distributions/normal.hh"
 #include "util_hash.hh"
 #include "util_math.hh"
 
@@ -31,6 +34,8 @@ class T_relation {
 
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;
+
+using ObservationVariant = std::variant<double, int, std::string>;
 
 // TODO(emilyaf): Make this a distribution subclass.
 class CRP {
@@ -191,8 +196,11 @@ class Domain {
   }
 };
 
+template <typename DistributionType>
 class Relation {
  public:
+  using ValueType = typename DistributionType::SampleType;
+  using DType = DistributionType;
   // human-readable name
   const std::string name;
   // Distribution over the relation's codomain.
@@ -200,11 +208,10 @@ class Relation {
   // list of domain pointers
   const std::vector<Domain*> domains;
   // map from cluster multi-index to Distribution pointer
-  std::unordered_map<const std::vector<int>, Distribution<double>*,
-                     VectorIntHash>
+  std::unordered_map<const std::vector<int>, DistributionType*, VectorIntHash>
       clusters;
   // map from item to observed data
-  std::unordered_map<const T_items, double, H_items> data;
+  std::unordered_map<const T_items, ValueType, H_items> data;
   // map from domain name to reverse map from item to
   // set of items that include that item
   std::unordered_map<
@@ -240,7 +247,7 @@ class Relation {
     return trel;
   }
 
-  void incorporate(const T_items& items, double value) {
+  void incorporate(const T_items& items, ValueType value) {
     assert(!data.contains(items));
     data[items] = value;
     for (int i = 0; i < std::ssize(domains); ++i) {
@@ -257,7 +264,7 @@ class Relation {
       //      Cannot use clusters[z] because BetaBernoulli
       //      does not have a default constructor, whereas operator[]
       //      calls default constructor when the key does not exist.
-      clusters[z] = new BetaBernoulli(prng);
+      clusters[z] = new DistributionType(prng);
     }
     clusters.at(z)->incorporate(value);
   }
@@ -318,7 +325,7 @@ class Relation {
   double logp_gibbs_approx_current(const Domain& domain, const T_item& item) {
     double logp = 0.;
     for (const T_items& items : data_r.at(domain.name).at(item)) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       T_items z = get_cluster_assignment(items);
       auto cluster = clusters.at(z);
       cluster->unincorporate(x);
@@ -333,11 +340,11 @@ class Relation {
                                    int table) {
     double logp = 0.;
     for (const T_items& items : data_r.at(domain.name).at(item)) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
       double lp;
       if (!clusters.contains(z)) {
-        BetaBernoulli cluster(prng);
+        DistributionType cluster(prng);
         lp = cluster.logp(x);
       } else {
         lp = clusters.at(z)->logp(x);
@@ -376,13 +383,13 @@ class Relation {
     auto cluster = clusters.at(z);
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       // assert(z == get_cluster_assignment(items));
       cluster->unincorporate(x);
     }
     double logp1 = cluster->logp_score();
     for (const T_items& items : items_list) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       cluster->incorporate(x);
     }
     assert(cluster->logp_score() == logp0);
@@ -396,19 +403,18 @@ class Relation {
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
-    BetaBernoulli aux(prng);
-    Distribution<double>* cluster =
-        clusters.contains(z) ? clusters.at(z) : &aux;
+    DistributionType aux(prng);
+    DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : &aux;
     // auto cluster = self.clusters.get(z, self.aux())
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
       // assert(z == get_cluster_assignment_gibbs(items, domain, item, table));
-      double x = data.at(items);
+      ValueType x = data.at(items);
       cluster->incorporate(x);
     }
     const double logp1 = cluster->logp_score();
     for (const T_items& items : items_list) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       cluster->unincorporate(x);
     }
     assert(cluster->logp_score() == logp0);
@@ -436,7 +442,7 @@ class Relation {
     return logps;
   }
 
-  double logp(const T_items& items, double value) {
+  double logp(const T_items& items, ValueType value) {
     // TODO: Falsely assumes cluster assignments of items
     // from same domain are identical, see note in hirm.py
     assert(items.size() == domains.size());
@@ -481,9 +487,8 @@ class Relation {
         z.push_back(zi);
         logp_w += wi;
       }
-      BetaBernoulli aux(prng);
-      Distribution<double>* cluster =
-          clusters.contains(z) ? clusters.at(z) : &aux;
+      DistributionType aux(prng);
+      DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : &aux;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
       logps.push_back(logp_zw);
@@ -504,7 +509,7 @@ class Relation {
     int table_current = domain.get_cluster_assignment(item);
     assert(table != table_current);
     for (const T_items& items : data_r.at(domain.name).at(item)) {
-      double x = data.at(items);
+      ValueType x = data.at(items);
       // Remove from current cluster.
       T_items z_prev = get_cluster_assignment(items);
       auto cluster_prev = clusters.at(z_prev);
@@ -517,7 +522,7 @@ class Relation {
       T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
-        clusters[z_new] = new BetaBernoulli(prng);
+        clusters[z_new] = new DistributionType(prng);
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.
@@ -537,11 +542,16 @@ class Relation {
   Relation(const Relation&) = delete;
 };
 
+using RelationVariant =
+    std::variant<Relation<BetaBernoulli>*, Relation<Bigram>*,
+                 // Relation<double, DirichletCategorical>*,
+                 Relation<Normal>*>;
+
 class IRM {
  public:
   T_schema schema;                                   // schema of relations
   std::unordered_map<std::string, Domain*> domains;  // map from name to Domain
-  std::unordered_map<std::string, Relation*>
+  std::unordered_map<std::string, RelationVariant>
       relations;  // map from name to Relation
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
@@ -559,16 +569,24 @@ class IRM {
       delete domain;
     }
     for (auto [r, relation] : relations) {
-      delete relation;
+      std::visit([](auto rel) { delete rel; }, relation);
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items, double value) {
-    relations.at(r)->incorporate(items, value);
+  void incorporate(const std::string& r, const T_items& items,
+                   ObservationVariant value) {
+    std::visit(
+        [&](auto rel) {
+          auto v = std::get<
+              typename std::remove_reference_t<decltype(*rel)>::ValueType>(
+              value);
+          rel->incorporate(items, v);
+        },
+        relations.at(r));
   }
 
   void unincorporate(const std::string& r, const T_items& items) {
-    relations.at(r)->unincorporate(items);
+    std::visit([&](auto rel) { rel->unincorporate(items); }, relations.at(r));
   }
 
   void transition_cluster_assignments_all() {
@@ -600,18 +618,19 @@ class IRM {
       tables.push_back(table);
       logps.push_back(log(n_customers));
     }
-    for (const auto& r : domain_to_relations.at(d)) {
-      Relation* relation = relations.at(r);
-      if (relation->has_observation(*domain, item)) {
+    auto accumulate_logps = [&](auto rel) {
+      if (rel->has_observation(*domain, item)) {
         std::vector<double> lp_relation =
-            relation->logp_gibbs_exact(*domain, item, tables);
+            rel->logp_gibbs_exact(*domain, item, tables);
         assert(lp_relation.size() == tables.size());
         assert(lp_relation.size() == logps.size());
-        for (int i = 0; i < std::ssize(logps);
-             ++i) {  // FIXME rewrite with transform
+        for (int i = 0; i < std::ssize(logps); ++i) {
           logps[i] += lp_relation[i];
         }
       }
+    };
+    for (const auto& r : domain_to_relations.at(d)) {
+      std::visit(accumulate_logps, relations.at(r));
     }
     // Sample new table.
     assert(tables.size() == logps.size());
@@ -619,18 +638,21 @@ class IRM {
     T_item choice = tables[idx];
     // Move to new table (if necessary).
     if (choice != domain->get_cluster_assignment(item)) {
-      for (const std::string& r : domain_to_relations.at(d)) {
-        Relation* relation = relations.at(r);
-        if (relation->has_observation(*domain, item)) {
-          relation->set_cluster_assignment_gibbs(*domain, item, choice);
+      auto set_cluster_r = [&](auto rel) {
+        if (rel->has_observation(*domain, item)) {
+          rel->set_cluster_assignment_gibbs(*domain, item, choice);
         }
+      };
+      for (const std::string& r : domain_to_relations.at(d)) {
+        std::visit(set_cluster_r, relations.at(r));
       }
       domain->set_cluster_assignment_gibbs(item, choice);
     }
   }
 
-  double logp(const std::vector<std::tuple<std::string, T_items, double>>&
-                  observations) {
+  double logp(
+      const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
+          observations) {
     std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
         relation_items_seen;
     std::unordered_map<std::string, std::unordered_set<T_item>>
@@ -648,12 +670,14 @@ class IRM {
       assert(!relation_items_seen[r].contains(items));
       relation_items_seen[r].insert(items);
       // Process each (domain, item) in the observations.
-      Relation* relation = relations.at(r);
-      int arity = relation->domains.size();
+      RelationVariant relation = relations.at(r);
+      int arity =
+          std::visit([](auto rel) { return rel->domains.size(); }, relation);
       assert(std::ssize(items) == arity);
       for (int i = 0; i < arity; ++i) {
         // Skip if (domain, item) processed.
-        Domain* domain = relation->domains.at(i);
+        Domain* domain =
+            std::visit([&](auto rel) { return rel->domains.at(i); }, relation);
         T_item item = items.at(i);
         if (domain_item_seen[domain->name].contains(item)) {
           assert(cluster_universe[domain->name].contains(item));
@@ -707,22 +731,28 @@ class IRM {
       }
       logp_indexes += weight;
       // Compute weight of data given cluster assignments.
-      for (const auto& [r, items, value] : observations) {
-        Relation* relation = relations.at(r);
+      auto f_logp = [&](auto rel, const T_items& items,
+                        const ObservationVariant& value) -> double {
         std::vector<int> z;
         z.reserve(domains.size());
-        for (int i = 0; i < std::ssize(relation->domains); ++i) {
-          Domain* domain = relation->domains.at(i);
+        for (int i = 0; i < std::ssize(rel->domains); ++i) {
+          Domain* domain = rel->domains.at(i);
           T_item item = items.at(i);
           auto& [loc, t_list] = cluster_universe.at(domain->name).at(item);
           T_item t = t_list.at(indexes.at(loc));
           z.push_back(t);
         }
-        BetaBernoulli aux(prng);
-        Distribution<double>* cluster =
-            relation->clusters.contains(z) ? relation->clusters.at(z) : &aux;
-        logp_indexes += cluster->logp(value);
-      }
+        typename std::remove_reference_t<decltype(*rel)>::DType aux(prng);
+        auto cluster = rel->clusters.contains(z) ? rel->clusters.at(z) : &aux;
+        auto v = std::get<
+            typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
+        return cluster->logp(v);
+      };
+      for (const auto& [r, items, value] : observations) {
+        auto g = std::bind(f_logp, std::placeholders::_1, items, value);
+        double logp_obs = std::visit(g, relations.at(r));
+        logp_indexes += logp_obs;
+      };
       logps.push_back(logp_indexes);
     }
     return logsumexp(logps);
@@ -735,7 +765,9 @@ class IRM {
     }
     double logp_score_relation = 0.0;
     for (const auto& [r, relation] : relations) {
-      logp_score_relation += relation->logp_score();
+      double logp_rel =
+          std::visit([](auto rel) { return rel->logp_score(); }, relation);
+      logp_score_relation += logp_rel;
     }
     return logp_score_crp + logp_score_relation;
   }
@@ -753,13 +785,29 @@ class IRM {
       domain_to_relations.at(d).insert(name);
       doms.push_back(domains.at(d));
     }
-    relations[name] = new Relation(name, relation.distribution, doms, prng);
+    if (relation.distribution == "normal") {
+      relations[name] =
+          new Relation<Normal>(name, relation.distribution, doms, prng);
+    } else if (relation.distribution == "bernoulli") {
+      relations[name] =
+          new Relation<BetaBernoulli>(name, relation.distribution, doms, prng);
+    } else if (relation.distribution == "bigram") {
+      relations[name] =
+          new Relation<Bigram>(name, relation.distribution, doms, prng);
+    } else {
+      assert(false);
+    }
+    // TODO(emilyaf): Enable Categorical. Maybe have "categorical5" e.g. for 5
+    // categories. relations[name] = new Relation<DirichletCategorical>(name,
+    // relation.distribution, doms, prng);
     schema[name] = relation;
   }
 
   void remove_relation(const std::string& name) {
     std::unordered_set<std::string> ds;
-    for (const Domain* const domain : relations.at(name)->domains) {
+    auto rel_domains =
+        std::visit([](auto r) { return r->domains; }, relations.at(name));
+    for (const Domain* const domain : rel_domains) {
       ds.insert(domain->name);
     }
     for (const auto& d : ds) {
@@ -771,7 +819,7 @@ class IRM {
         domains.erase(d);
       }
     }
-    delete relations.at(name);
+    std::visit([](auto r) { delete r; }, relations.at(name));
     relations.erase(name);
     schema.erase(name);
   }
@@ -817,7 +865,7 @@ class HIRM {
     int table = crp.assignments.at(rc);
     return irms.at(table);
   }
-  Relation* get_relation(const std::string& r) {
+  RelationVariant get_relation(const std::string& r) {
     IRM* irm = relation_to_irm(r);
     return irm->relations.at(r);
   }
@@ -835,8 +883,9 @@ class HIRM {
   void transition_cluster_assignment_relation(const std::string& r) {
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
-    Relation* relation = get_relation(r);
-    T_relation t_relation = relation->get_T_relation();
+    RelationVariant relation = get_relation(r);
+    T_relation t_relation =
+        std::visit([](auto rel) { return rel->get_T_relation(); }, relation);
     auto crp_dist = crp.tables_weights_gibbs(table_current);
     std::vector<int> tables;
     std::vector<double> logps;
@@ -857,11 +906,17 @@ class HIRM {
       }
       if (table != table_current) {
         irm->add_relation(r, t_relation);
-        for (const auto& [items, value] : relation->data) {
-          irm->incorporate(r, items, value);
-        }
+        std::visit(
+            [&](auto rel) {
+              for (const auto& [items, value] : rel->data) {
+                irm->incorporate(r, items, value);
+              }
+            },
+            relation);
       }
-      double lp_data = irm->relations.at(r)->logp_score();
+      RelationVariant rel_r = irm->relations.at(r);
+      double lp_data =
+          std::visit([](auto rel) { return rel->logp_score(); }, rel_r);
       double lp_crp = log(n_customers);
       logps.push_back(lp_crp + lp_data);
       tables.push_back(table);
@@ -905,26 +960,29 @@ class HIRM {
     assert(irms.size() == crp.tables.size());
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
-    Relation* relation = get_relation(r);
-    T_relation trel = relation->get_T_relation();
-    IRM* irm = relation_to_irm(r);
-    auto observations = relation->data;
-    // Remove from current IRM.
-    irm->remove_relation(r);
-    if (irm->relations.empty()) {
-      irms.erase(table_current);
-      delete irm;
-    }
-    // Add to target IRM.
-    if (!irms.contains(table)) {
-      irm = new IRM({}, prng);
-      irms[table] = irm;
-    }
-    irm = irms.at(table);
-    irm->add_relation(r, trel);
-    for (const auto& [items, value] : observations) {
-      irm->incorporate(r, items, value);
-    }
+    RelationVariant relation = get_relation(r);
+    auto f_obs = [&](auto rel) {
+      T_relation trel = rel->get_T_relation();
+      IRM* irm = relation_to_irm(r);
+      auto observations = rel->data;
+      // Remove from current IRM.
+      irm->remove_relation(r);
+      if (irm->relations.empty()) {
+        irms.erase(table_current);
+        delete irm;
+      }
+      // Add to target IRM.
+      if (!irms.contains(table)) {
+        irm = new IRM({}, prng);
+        irms[table] = irm;
+      }
+      irm = irms.at(table);
+      irm->add_relation(r, trel);
+      for (const auto& [items, value] : observations) {
+        irm->incorporate(r, items, value);
+      }
+    };
+    std::visit(f_obs, relation);
     // Update CRP.
     crp.unincorporate(rc);
     crp.incorporate(rc, table);
@@ -972,10 +1030,11 @@ class HIRM {
     code_to_relation.erase(rc);
   }
 
-  double logp(const std::vector<std::tuple<std::string, T_items, double>>&
-                  observations) {
-    std::unordered_map<int,
-                       std::vector<std::tuple<std::string, T_items, double>>>
+  double logp(
+      const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
+          observations) {
+    std::unordered_map<
+        int, std::vector<std::tuple<std::string, T_items, ObservationVariant>>>
         obs_dict;
     for (const auto& [r, items, value] : observations) {
       int rc = relation_to_code.at(r);

@@ -29,10 +29,10 @@ int main(int argc, char** argv) {
   printf("--- initialized HIRM --- \n");
   incorporate_observations(hirm, encoding_unary, observations_unary);
   printf("--- incorporated observations --- \n");
-  int n_obs_unary = 0;
+  size_t n_obs_unary = 0;
   for (const auto& [z, irm] : hirm.irms) {
     for (const auto& [r, relation] : irm->relations) {
-      n_obs_unary += relation->data.size();
+      n_obs_unary += std::visit([](const auto r) {return r->data.size();}, relation);
     }
   }
   assert(n_obs_unary == std::ssize(observations_unary));
@@ -136,8 +136,9 @@ int main(int argc, char** argv) {
       assert(dm->crp.alpha == dx->crp.alpha);
     }
     // Check relations agree.
-    for (const auto& [r, rm] : irm->relations) {
-      auto rx = irx->relations.at(r);
+    for (const auto& [r, rm_var] : irm->relations) {
+      auto rx = std::get<Relation<BetaBernoulli>*>(irx->relations.at(r));
+      auto rm = std::get<Relation<BetaBernoulli>*>(rm_var);
       assert(rm->data == rx->data);
       assert(rm->data_r == rx->data_r);
       assert(rm->clusters.size() == rx->clusters.size());
