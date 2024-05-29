@@ -3,7 +3,11 @@
 
 #pragma once
 #include <algorithm>
+#include <random>
 #include "base.hh"
+#include "util_math.hh"
+
+#define ALPHA_GRID {1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0}
 
 class DirichletCategorical : public Distribution<double> {
 public:
@@ -40,9 +44,9 @@ public:
         const size_t k = counts.size();
         const double a = alpha * k;
         const double lg = std::transform_reduce(
-            counts.cbegin(), 
-            counts.cend(), 
-            0, 
+            counts.cbegin(),
+            counts.cend(),
+            0,
             std::plus{},
             [&](size_t y) -> double {return lgamma(y + alpha); }
         );
@@ -51,15 +55,27 @@ public:
     double sample() {
         std::vector<double> weights(counts.size());
         std::transform(
-            counts.begin(), 
-            counts.end(), 
-            weights.begin(), 
+            counts.begin(),
+            counts.end(),
+            weights.begin(),
             [&](size_t y) -> double { return y + alpha; }
         );
         int idx = choice(weights, prng);
         return double(idx);
     }
     void transition_hyperparameters() {
-      // TODO(thomaswc): Implement this.
+      std::vector<double> logps;
+      std::vector<double> alphas;
+      // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
+      for (double alphat : ALPHA_GRID) {
+          alpha = alphat;
+          double lp = logp_score();
+          if (!std::isnan(lp)) {
+            logps.push_back(logp_score());
+            alphas.push_back(alpha);
+          }
+      }
+      int i = sample_from_logps(logps, prng);
+      alpha = alphas[i];
     }
 };
