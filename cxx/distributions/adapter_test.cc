@@ -3,13 +3,14 @@
 
 #define BOOST_TEST_MODULE test Normal
 
-#include <boost/test/included/unit_test.hpp>
 #include "distributions/adapter.hh"
+
+#include <boost/test/included/unit_test.hpp>
+
 #include "distributions/normal.hh"
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(adapt_normal)
-{
+BOOST_AUTO_TEST_CASE(adapt_normal) {
   std::mt19937 prng;
   DistributionAdapter<double> ad(new Normal(&prng));
 
