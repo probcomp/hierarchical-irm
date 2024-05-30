@@ -2,12 +2,12 @@
 
 #define BOOST_TEST_MODULE test Bigram
 
-#include <boost/test/included/unit_test.hpp>
 #include "distributions/bigram.hh"
+
+#include <boost/test/included/unit_test.hpp>
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_simple)
-{
+BOOST_AUTO_TEST_CASE(test_simple) {
   std::mt19937 prng;
   Bigram bb(&prng);
 
@@ -21,8 +21,7 @@ BOOST_AUTO_TEST_CASE(test_simple)
   BOOST_TEST(bb.logp_score() == -24, tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(test_set_alpha)
-{
+BOOST_AUTO_TEST_CASE(test_set_alpha) {
   std::mt19937 prng;
   Bigram bb(&prng);
 
