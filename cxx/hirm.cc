@@ -32,16 +32,20 @@
     fflush(stdout);                                              \
   }
 
-void inference_irm(IRM *irm, int iters, int timeout, bool verbose) {
-  clock_t t_begin = clock();
-  double t_total = 0;
-  for (int i = 0; i < iters; ++i) {
-    CHECK_TIMEOUT(timeout, t_begin);
+void single_step_irm_inference(IRM *irm, double &t_total, bool verbose) {
     // TRANSITION ASSIGNMENTS.
     for (const auto &[d, domain] : irm->domains) {
       for (const auto item : domain->items) {
         clock_t t = clock();
         irm->transition_cluster_assignment_item(d, item);
+        REPORT_SCORE(verbose, t, t_total, irm);
+      }
+    }
+    // TRANSITION DISTRIBUTION HYPERPARAMETERS.
+    for (const auto &[r, relation]: irm->relations) {
+      for (const auto &[c, distribution]: relation->clusters) {
+        clock_t t = clock();
+        distribution->transition_hyperparameters();
         REPORT_SCORE(verbose, t, t_total, irm);
       }
     }
@@ -51,6 +55,14 @@ void inference_irm(IRM *irm, int iters, int timeout, bool verbose) {
       domain->crp.transition_alpha();
       REPORT_SCORE(verbose, t, t_total, irm);
     }
+}
+
+void inference_irm(IRM *irm, int iters, int timeout, bool verbose) {
+  clock_t t_begin = clock();
+  double t_total = 0;
+  for (int i = 0; i < iters; ++i) {
+    CHECK_TIMEOUT(timeout, t_begin);
+    single_step_irm_inference(irm, t_total, verbose);
   }
 }
 
@@ -67,20 +79,7 @@ void inference_hirm(HIRM *hirm, int iters, int timeout, bool verbose) {
     }
     // TRANSITION IRMs.
     for (const auto &[t, irm] : hirm->irms) {
-      // TRANSITION ASSIGNMENTS.
-      for (const auto &[d, domain] : irm->domains) {
-        for (auto item : domain->items) {
-          clock_t t = clock();
-          irm->transition_cluster_assignment_item(d, item);
-          REPORT_SCORE(verbose, t, t_total, irm);
-        }
-      }
-      // TRANSITION ALPHA.
-      for (const auto &[d, domain] : irm->domains) {
-        clock_t t = clock();
-        domain->crp.transition_alpha();
-        REPORT_SCORE(verbose, t, t_total, irm);
-      }
+      single_step_irm_inference(irm, t_total, verbose);
     }
   }
 }
