@@ -2,14 +2,14 @@
 
 #define BOOST_TEST_MODULE test HIRM
 
+#include "hirm.hh"
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include "hirm.hh"
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_crp)
-{
+BOOST_AUTO_TEST_CASE(test_crp) {
   std::mt19937 prng;
   auto crp = CRP(&prng);
   double alpha = 1.;
@@ -51,8 +51,7 @@ BOOST_AUTO_TEST_CASE(test_crp)
   BOOST_CHECK_CLOSE(crp.logp_score(), -log(24.), 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(test_crp_sample)
-{
+BOOST_AUTO_TEST_CASE(test_crp_sample) {
   std::mt19937 prng;
   auto crp = CRP(&prng);
   for (int i = 0; i < 10; ++i) {
@@ -75,26 +74,20 @@ BOOST_AUTO_TEST_CASE(test_crp_sample)
   // Check that the count of 0's is close to 10/16 = 5/8.
   // Because these are independent bernoulli draws, we check that we are within
   // one standard deviation using the Binomial stddev.
-  BOOST_TEST(
-      table_count[0] / static_cast<double>(num_draws) <=
-      5/8. + sqrt(5/8. * 3/8. / num_draws));
-  BOOST_TEST(
-      table_count[0] / static_cast<double>(num_draws) >=
-      5/8. - sqrt(5/8. * 3/8. / num_draws));
+  BOOST_TEST(table_count[0] / static_cast<double>(num_draws) <=
+             5 / 8. + sqrt(5 / 8. * 3 / 8. / num_draws));
+  BOOST_TEST(table_count[0] / static_cast<double>(num_draws) >=
+             5 / 8. - sqrt(5 / 8. * 3 / 8. / num_draws));
 
   // Check that the count of 1's is close to 5/16.
-  BOOST_TEST(
-      table_count[1] / static_cast<double>(num_draws) <=
-      5/16. + sqrt(5/16. * 13/16. / num_draws));
-  BOOST_TEST(
-      table_count[1] / static_cast<double>(num_draws) >=
-      5/16. - sqrt(5/16. * 13/16. / num_draws));
+  BOOST_TEST(table_count[1] / static_cast<double>(num_draws) <=
+             5 / 16. + sqrt(5 / 16. * 13 / 16. / num_draws));
+  BOOST_TEST(table_count[1] / static_cast<double>(num_draws) >=
+             5 / 16. - sqrt(5 / 16. * 13 / 16. / num_draws));
 
   // Check that the count of 2's is close to 1/16.
-  BOOST_TEST(
-      table_count[2] / static_cast<double>(num_draws) <=
-      1/16. + sqrt(1/16. * 15/16. / num_draws));
-  BOOST_TEST(
-      table_count[2] / static_cast<double>(num_draws) >=
-      1/16. - sqrt(1/16. * 15/16. / num_draws));
+  BOOST_TEST(table_count[2] / static_cast<double>(num_draws) <=
+             1 / 16. + sqrt(1 / 16. * 15 / 16. / num_draws));
+  BOOST_TEST(table_count[2] / static_cast<double>(num_draws) >=
+             1 / 16. - sqrt(1 / 16. * 15 / 16. / num_draws));
 }
