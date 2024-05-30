@@ -108,6 +108,18 @@ class Bigram : public Distribution<std::string> {
   }
 
   void transition_hyperparameters() {
-    // TODO(thomaswc): Implement this.
+      std::vector<double> logps;
+      std::vector<double> alphas;
+      // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
+      for (double alphat : ALPHA_GRID) {
+          set_alpha(alphat);
+          double lp = logp_score();
+          if (!std::isnan(lp)) {
+            logps.push_back(logp_score());
+            alphas.push_back(alphat);
+          }
+      }
+      int i = sample_from_logps(logps, prng);
+      set_alpha(alphas[i]);
   }
 };
