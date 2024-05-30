@@ -40,13 +40,13 @@ LTEST		= $(wildcard $(TEST_DIR)/*.cc)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $(LOBJECT) $<
 
 .PHONY: integration_tests
-integration_tests: $(LTEST:.cc=.out) hirm.out
-	./tests/test_misc.out
-	./tests/test_hirm_animals.out
-	./tests/test_irm_two_relations.out
-	./hirm.out --mode=irm --iters=5 assets/animals.binary
-	./hirm.out --seed=1 --iters=5 assets/animals.unary
-	./hirm.out --iters=5 --load=assets/animals.unary.1.hirm assets/animals.unary
+integration_tests:
+	bazel build :hirm tests:test_hirm_animals tests:test_irm_two_relations
+	./bazel-bin/tests/test_hirm_animals
+	./bazel-bin/tests/test_irm_two_relations
+	./bazel-bin/hirm --mode=irm --iters=5 assets/animals.binary
+	./bazel-bin/hirm --seed=1 --iters=5 assets/animals.unary
+	./bazel-bin/hirm --iters=5 --load=assets/animals.unary.1.hirm assets/animals.unary
 
 # Make sure -pg is not in CXXFLAGS
 # since valgrind finds leaks from gmon
@@ -62,7 +62,10 @@ endif
 		--verbose \
 		./$<
 clean:
-	rm -rf **.o *.out *.gch
+	rm -rf *.gch
+	rm -rf *.o */*.o
+	rm -rf *.out */*.out
+	rm -rf *.log */*.log
 	rm -rf tests/*.out
 	rm -rf assets/*.irm
 	rm -rf assets/*.hirm
@@ -75,7 +78,7 @@ boost:
 
 UNITTEST_SOURCES = $(wildcard *test.cc */*test.cc)
 
-%test.out : %test.cc util_math.o
+%_test.out : %_test.cc %.hh util_math.o
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -I$(BOOST_ROOT) util_math.o -o $@ $<
 
 %test.log : %test.out

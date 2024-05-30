@@ -2,12 +2,12 @@
 
 #define BOOST_TEST_MODULE test Normal
 
-#include <boost/test/included/unit_test.hpp>
 #include "distributions/normal.hh"
+
+#include <boost/test/included/unit_test.hpp>
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(simple)
-{
+BOOST_AUTO_TEST_CASE(simple) {
   std::mt19937 prng;
   Normal nd(&prng);
 
@@ -21,8 +21,7 @@ BOOST_AUTO_TEST_CASE(simple)
   BOOST_TEST(nd.logp_score() == -4.7494000141508543, tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(logp_before_incorporate)
-{
+BOOST_AUTO_TEST_CASE(logp_before_incorporate) {
   std::mt19937 prng;
   Normal nd(&prng);
 
@@ -36,8 +35,7 @@ BOOST_AUTO_TEST_CASE(logp_before_incorporate)
   BOOST_TEST(nd.logp_score() == 0.0, tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(sample)
-{
+BOOST_AUTO_TEST_CASE(sample) {
   std::mt19937 prng;
   Normal nd(&prng);
 

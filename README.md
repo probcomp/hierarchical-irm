@@ -45,7 +45,7 @@ First obtain a GNU C++ compiler, version 7.5.0 or higher.
 The binary can be installed by first cloning this repository and then writing
 
     $ cd cxx
-    $ make hirm.out
+    $ bazel build :hirm
 
 The test suite can be invoked via
 
@@ -59,10 +59,10 @@ For an example of using the C++ library, refer to
 ## Usage: Command Line Interface
 
 First build the C++ code as described above and then run the binary in
-`cxx/hirm.out`. It shows the following synopsis
+`blaze-bin/hirm`. It shows the following synopsis
 
 ```
-$ ./hirm.out --help
+$ ./blaze-bin/hirm --help
 Run a hierarchical infinite relational model.
 Usage:
   hirm.out [OPTION...] <path>
@@ -79,7 +79,7 @@ Usage:
 We will explain the usage by way of the following example
 
     $ cd cxx
-    $ ./hirm.out assets/animals.unary
+    $ ./blaze-bin/hirm assets/animals.unary
     setting seed to 10
     loading schema from assets/animals.unary.schema
     loading observations from assets/animals.unary.obs

@@ -1,0 +1,19 @@
+cc_binary(
+    name = "test_hirm_animals",
+    srcs = ["test_hirm_animals.cc"],
+    deps = [
+        "//:headers",
+        "//:util_io",
+        "//distributions",
+    ],
+)
+
+cc_binary(
+    name = "test_irm_two_relations",
+    srcs = ["test_irm_two_relations.cc"],
+    deps = [
+        "//:headers",
+        "//:util_io",
+        "//distributions",
+    ],
+)
