@@ -34,12 +34,8 @@ int main(int argc, char** argv) {
     for (const auto& [r, relation] : irm->relations) {
       n_obs_unary += relation->data.size();
     }
-<<<<<<< HEAD
-    assert(n_obs_unary == std::ssize(observations_unary));
-=======
   }
   assert(n_obs_unary == observations_unary.size());
->>>>>>> 4100330 (Update code to be clang-formatted. This is to be compatible with later presubmits)
 
   hirm.transition_cluster_assignments_all();
   hirm.transition_cluster_assignments_all();
