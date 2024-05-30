@@ -3,6 +3,7 @@
 
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <random>
 #include "base.hh"
 #include "util_math.hh"
