@@ -117,3 +117,18 @@ BOOST_AUTO_TEST_CASE(test_product) {
     BOOST_TEST(product_result[i] == expected_result[i]);
   }
 }
+
+BOOST_AUTO_TEST_CASE(test_sample_from_logps)
+{
+  // One of these entries isn't like the others, ...
+  std::vector<double> logps = {-1.0, -2.0, 20.0, -3.0};
+  std::mt19937 prng;
+  BOOST_TEST(2 == sample_from_logps(logps, &prng));
+}
+
+BOOST_AUTO_TEST_CASE(test_sample_from_logps_all_small)
+{
+  std::vector<double> logps = {-10.0, -20.0, -30.0, -40.0, -50.0};
+  std::mt19937 prng;
+  BOOST_TEST(0 == sample_from_logps(logps, &prng));
+}

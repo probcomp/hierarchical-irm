@@ -4,10 +4,13 @@
 #include "util_math.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <random>
 
 // http://matlab.izmiran.ru/help/techdoc/ref/betaln.html
-double lbeta(int z, int w) { return lgamma(z) + lgamma(w) - lgamma(z + w); }
+double lbeta(double z, double w) {
+  return lgamma(z) + lgamma(w) - lgamma(z + w);
+}
 
 std::vector<double> linspace(double start, double stop, int num,
                              bool endpoint) {
@@ -93,4 +96,14 @@ std::vector<std::vector<int>> product(
     result = temp;
   }
   return result;
+}
+
+int sample_from_logps(const std::vector<double> &log_probs, std::mt19937 *prng) {
+  double max_lp = *std::max_element(log_probs.begin(), log_probs.end());
+  std::vector<double> weights;
+  for (auto lp : log_probs) {
+    weights.push_back(exp(lp - max_lp));
+  }
+  std::discrete_distribution<int> dd(weights.begin(), weights.end());
+  return dd(*prng);
 }
