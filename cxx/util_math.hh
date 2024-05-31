@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-double lbeta(int z, int w);
+double lbeta(double z, double w);
 
 std::vector<double> linspace(double start, double stop, int num, bool endpoint);
 std::vector<double> log_linspace(double start, double stop, int num,
