@@ -55,7 +55,10 @@ cc_library(
     name = "dirichlet_categorical",
     srcs = ["dirichlet_categorical.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//:util_math",
+    ],
 )
 
 cc_library(
@@ -84,6 +87,16 @@ cc_test(
     srcs = ["beta_bernoulli_test.cc"],
     deps = [
         ":beta_bernoulli",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "dirichlet_categorical_test",
+    srcs = ["dirichlet_categorical_test.cc"],
+    deps = [
+        ":dirichlet_categorical",
         "@boost//:algorithm",
         "@boost//:test",
     ],
