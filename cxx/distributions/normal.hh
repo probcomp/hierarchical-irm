@@ -39,8 +39,8 @@ class Normal : public Distribution<double> {
   // We use Welford's algorithm for computing the mean and variance
   // of streaming data in a numerically stable way.  See Knuth's
   // Art of Computer Programming vol. 2, 3rd edition, page 232.
-  int mean = 0;  // Mean of observed values
-  int var = 0;   // Variance of observed values
+  double mean = 0.0;  // Mean of observed values
+  double var = 0.0;   // Variance of observed values
 
   std::mt19937 *prng;
 
@@ -57,6 +57,11 @@ class Normal : public Distribution<double> {
   void unincorporate(const double &x) {
     int old_N = N;
     --N;
+    if (N == 0) {
+      mean = 0.0;
+      var = 0.0;
+      return;
+    }
     double old_mean = mean;
     mean = (mean * old_N - x) / N;
     var -= (x - mean) * (x - old_mean);
