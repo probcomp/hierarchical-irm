@@ -62,7 +62,10 @@ cc_library(
     name = "normal",
     srcs = ["normal.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//:util_math",
+    ],
 )
 
 cc_test(
