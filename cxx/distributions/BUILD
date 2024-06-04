@@ -46,6 +46,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
+        ":dirichlet_categorical",
         "//:headers",
         "//:util_math",
     ],
@@ -87,6 +88,16 @@ cc_test(
     srcs = ["beta_bernoulli_test.cc"],
     deps = [
         ":beta_bernoulli",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "bigram_test",
+    srcs = ["bigram_test.cc"],
+    deps = [
+        ":bigram",
         "@boost//:algorithm",
         "@boost//:test",
     ],
