@@ -98,7 +98,8 @@ std::vector<std::vector<int>> product(
   return result;
 }
 
-int sample_from_logps(const std::vector<double> &log_probs, std::mt19937 *prng) {
+int sample_from_logps(const std::vector<double>& log_probs,
+                      std::mt19937* prng) {
   double max_lp = *std::max_element(log_probs.begin(), log_probs.end());
   std::vector<double> weights;
   for (auto lp : log_probs) {

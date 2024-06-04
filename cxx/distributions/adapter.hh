@@ -49,14 +49,12 @@ class DistributionAdapter : Distribution<std::string> {
 
   double logp_score() const { return d->logp_score(); }
 
-    std::string sample() {
-      SampleType s = d->sample();
-      return to_string(s);
-    }
+  std::string sample() {
+    SampleType s = d->sample();
+    return to_string(s);
+  }
 
-    void transition_hyperparameters() {
-      d->transition_hyperparameters();
-    }
+  void transition_hyperparameters() { d->transition_hyperparameters(); }
 
   ~DistributionAdapter() { delete d; }
 };

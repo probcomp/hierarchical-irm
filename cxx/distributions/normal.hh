@@ -15,10 +15,14 @@
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-#define R_GRID {0.1, 1.0, 10.0}
-#define V_GRID {0.5, 1.0, 2.0, 5.0}
-#define M_GRID {-1.0, 0.0, 1.0}
-#define S_GRID {0.5, 1.0, 2.0}
+#define R_GRID \
+  { 0.1, 1.0, 10.0 }
+#define V_GRID \
+  { 0.5, 1.0, 2.0, 5.0 }
+#define M_GRID \
+  { -1.0, 0.0, 1.0 }
+#define S_GRID \
+  { 0.5, 1.0, 2.0 }
 
 double logZ(double r, double v, double s) {
   return (v + 1.0) / 2.0 * log(2.0) + 0.5 * log(M_PI) - 0.5 * log(r) -

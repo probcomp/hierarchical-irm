@@ -32,8 +32,7 @@
     fflush(stdout);                                              \
   }
 
-
-void single_step_irm_inference(IRM* irm, double &t_total, bool verbose) {
+void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
   // TRANSITION ASSIGNMENTS.
   for (const auto& [d, domain] : irm->domains) {
     for (const auto item : domain->items) {
@@ -43,8 +42,8 @@ void single_step_irm_inference(IRM* irm, double &t_total, bool verbose) {
     }
   }
   // TRANSITION DISTRIBUTION HYPERPARAMETERS.
-  for (const auto &[r, relation]: irm->relations) {
-    for (const auto &[c, distribution]: relation->clusters) {
+  for (const auto& [r, relation] : irm->relations) {
+    for (const auto& [c, distribution] : relation->clusters) {
       clock_t t = clock();
       distribution->transition_hyperparameters();
       REPORT_SCORE(verbose, t, t_total, irm);
@@ -58,7 +57,7 @@ void single_step_irm_inference(IRM* irm, double &t_total, bool verbose) {
   }
 }
 
-void inference_irm(IRM *irm, int iters, int timeout, bool verbose) {
+void inference_irm(IRM* irm, int iters, int timeout, bool verbose) {
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
@@ -79,7 +78,7 @@ void inference_hirm(HIRM* hirm, int iters, int timeout, bool verbose) {
       REPORT_SCORE(verbose, t, t_total, hirm);
     }
     // TRANSITION IRMs.
-    for (const auto &[t, irm] : hirm->irms) {
+    for (const auto& [t, irm] : hirm->irms) {
       single_step_irm_inference(irm, t_total, verbose);
     }
   }

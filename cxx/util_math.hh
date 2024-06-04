@@ -21,4 +21,4 @@ std::vector<std::vector<int>> product(
     const std::vector<std::vector<int>>& lists);
 
 // Given a vector of log probabilities, return a sample.
-int sample_from_logps(const std::vector<double> &log_probs, std::mt19937 *prng);
+int sample_from_logps(const std::vector<double>& log_probs, std::mt19937* prng);
