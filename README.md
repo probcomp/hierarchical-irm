@@ -30,7 +30,7 @@ The [examples/](examples) are run using the Python (slower) backend, and in
 several cases for fewer MCMC iterations (e.g., <=20) than are needed for
 chains to converge. To invoke all the examples, first clone this repository
 then run
-    
+
     $ ./check.sh examples
 
 The outputs and plots are written to [examples/assets](examples/assets).
@@ -42,6 +42,10 @@ To run a specific example
 ## Installation (C++)
 
 First obtain a GNU C++ compiler, version 7.5.0 or higher.
+The underlying code can be built and installed via bazel. To install bazel:
+
+    $ sudo apt-get install bazel
+
 The binary can be installed by first cloning this repository and then writing
 
     $ cd cxx
@@ -49,9 +53,9 @@ The binary can be installed by first cloning this repository and then writing
 
 The test suite can be invoked via
 
-    $ make integration_tests
+    $ bash integration_tests.sh
 
-A command-line interface to the HIRM is provided under `cxx/hirm.out`.
+A command-line interface to the HIRM is provided under `cxx/bazel-bin/hirm`.
 
 For an example of using the C++ library, refer to
 [`cxx/tests/test_hirm_animals.cc`](cxx/tests/test_hirm_animals.cc).
@@ -59,13 +63,13 @@ For an example of using the C++ library, refer to
 ## Usage: Command Line Interface
 
 First build the C++ code as described above and then run the binary in
-`blaze-bin/hirm`. It shows the following synopsis
+`bazel-bin/hirm`. It shows the following synopsis
 
 ```
-$ ./blaze-bin/hirm --help
+$ ./bazel-bin/hirm --help
 Run a hierarchical infinite relational model.
 Usage:
-  hirm.out [OPTION...] <path>
+  hirm [OPTION...] <path>
 
       --help         show help message
       --mode arg     options are {irm, hirm} (default: hirm)
@@ -79,7 +83,7 @@ Usage:
 We will explain the usage by way of the following example
 
     $ cd cxx
-    $ ./blaze-bin/hirm assets/animals.unary
+    $ ./bazel-bin/hirm assets/animals.unary
     setting seed to 10
     loading schema from assets/animals.unary.schema
     loading observations from assets/animals.unary.obs
