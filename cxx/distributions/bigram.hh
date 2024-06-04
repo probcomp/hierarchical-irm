@@ -2,6 +2,8 @@
 // See LICENSE.txt
 
 #pragma once
+#include <cassert>
+
 #include "base.hh"
 #include "dirichlet_categorical.hh"
 
