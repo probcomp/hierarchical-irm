@@ -3,6 +3,8 @@
 
 #pragma once
 #include <random>
+#include <tuple>
+#include <variant>
 
 #include "base.hh"
 #include "util_math.hh"
