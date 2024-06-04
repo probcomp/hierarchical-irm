@@ -14,8 +14,15 @@ class BetaBernoulli : public Distribution<double> {
   int s = 0;         // sum of observed values
   std::mt19937* prng;
 
+  std::vector<double> alpha_grid;
+  std::vector<double> beta_grid;
+
   // BetaBernoulli does not take ownership of prng.
-  BetaBernoulli(std::mt19937* prng) { this->prng = prng; }
+  BetaBernoulli(std::mt19937* prng) {
+    this->prng = prng;
+    alpha_grid = log_linspace(1e-4, 1e4, 10, true);
+    beta_grid = log_linspace(1e-4, 1e4, 10, true);
+  }
   void incorporate(const double& x) {
     assert(x == 0 || x == 1);
     ++N;
@@ -45,5 +52,24 @@ class BetaBernoulli : public Distribution<double> {
     std::vector<double> weights{1 - p, p};
     int idx = choice(weights, prng);
     return items[idx];
+  }
+  void transition_hyperparameters() {
+    std::vector<double> logps;
+    std::vector<std::pair<double, double>> hypers;
+    // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
+    for (double alphat : alpha_grid) {
+      for (double betat : beta_grid) {
+        alpha = alphat;
+        beta = betat;
+        double lp = logp_score();
+        if (!std::isnan(lp)) {
+          logps.push_back(logp_score());
+          hypers.push_back(std::make_pair(alpha, beta));
+        }
+      }
+    }
+    int i = sample_from_logps(logps, prng);
+    alpha = hypers[i].first;
+    beta = hypers[i].second;
   }
 };

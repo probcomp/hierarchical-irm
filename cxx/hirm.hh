@@ -40,11 +40,11 @@ class CRP {
   std::unordered_map<int, std::unordered_set<T_item>>
       tables;  // map from table id to set of customers
   std::unordered_map<T_item, int> assignments;  // map from customer to table id
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
-  CRP(std::mt19937 *prng) { this->prng = prng; }
+  CRP(std::mt19937* prng) { this->prng = prng; }
 
-  void incorporate(const T_item &item, int table) {
+  void incorporate(const T_item& item, int table) {
     assert(!assignments.contains(item));
     if (!tables.contains(table)) {
       tables[table] = std::unordered_set<T_item>();
@@ -53,7 +53,7 @@ class CRP {
     assignments[item] = table;
     ++N;
   }
-  void unincorporate(const T_item &item) {
+  void unincorporate(const T_item& item) {
     assert(assignments.contains(item));
     int table = assignments.at(item);
     tables.at(table).erase(item);
@@ -68,7 +68,7 @@ class CRP {
     std::vector<int> items(crp_dist.size());
     std::vector<double> weights(crp_dist.size());
     int i = 0;
-    for (const auto &[table, weight] : crp_dist) {
+    for (const auto& [table, weight] : crp_dist) {
       items[i] = table;
       weights[i] = weight;
       ++i;
@@ -88,7 +88,7 @@ class CRP {
   double logp_score() const {
     double term1 = tables.size() * log(alpha);
     double term2 = 0;
-    for (const auto &[table, customers] : tables) {
+    for (const auto& [table, customers] : tables) {
       term2 += lgamma(customers.size());
     }
     double term3 = lgamma(alpha);
@@ -102,7 +102,7 @@ class CRP {
       return dist;
     }
     int t_max = 0;
-    for (const auto &[table, customers] : tables) {
+    for (const auto& [table, customers] : tables) {
       dist[table] = customers.size();
       t_max = std::max(table, t_max);
     }
@@ -117,7 +117,7 @@ class CRP {
     if (dist.at(table) == 0) {
       dist.at(table) = alpha;
       int t_max = 0;
-      for (const auto &[table, weight] : dist) {
+      for (const auto& [table, weight] : dist) {
         t_max = std::max(table, t_max);
       }
       dist.erase(t_max);
@@ -130,7 +130,7 @@ class CRP {
     }
     std::vector<double> grid = log_linspace(1. / N, N + 1, 20, true);
     std::vector<double> logps;
-    for (const double &g : grid) {
+    for (const double& g : grid) {
       this->alpha = g;
       double logp_g = logp_score();
       logps.push_back(logp_g);
@@ -145,13 +145,13 @@ class Domain {
   const std::string name;            // human-readable name
   std::unordered_set<T_item> items;  // set of items
   CRP crp;                           // clustering model for items
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
-  Domain(const std::string &name, std::mt19937 *prng) : name(name), crp(prng) {
+  Domain(const std::string& name, std::mt19937* prng) : name(name), crp(prng) {
     assert(!name.empty());
     this->prng = prng;
   }
-  void incorporate(const T_item &item, int table = -1) {
+  void incorporate(const T_item& item, int table = -1) {
     if (items.contains(item)) {
       assert(table == -1);
     } else {
@@ -160,7 +160,7 @@ class Domain {
       crp.incorporate(item, t);
     }
   }
-  void unincorporate(const T_item &item) {
+  void unincorporate(const T_item& item) {
     printf("Not implemented\n");
     exit(EXIT_FAILURE);
     // assert(items.count(item) == 1);
@@ -171,11 +171,11 @@ class Domain {
     //     items.erase(item);
     // }
   }
-  int get_cluster_assignment(const T_item &item) const {
+  int get_cluster_assignment(const T_item& item) const {
     assert(items.contains(item));
     return crp.assignments.at(item);
   }
-  void set_cluster_assignment_gibbs(const T_item &item, int table) {
+  void set_cluster_assignment_gibbs(const T_item& item, int table) {
     assert(items.contains(item));
     assert(crp.assignments.at(item) != table);
     crp.unincorporate(item);
@@ -185,7 +185,7 @@ class Domain {
     return crp.tables_weights();
   }
   std::unordered_map<int, double> tables_weights_gibbs(
-      const T_item &item) const {
+      const T_item& item) const {
     int table = get_cluster_assignment(item);
     return crp.tables_weights_gibbs(table);
   }
@@ -198,9 +198,9 @@ class Relation {
   // Distribution over the relation's codomain.
   const std::string distribution;
   // list of domain pointers
-  const std::vector<Domain *> domains;
+  const std::vector<Domain*> domains;
   // map from cluster multi-index to Distribution pointer
-  std::unordered_map<const std::vector<int>, Distribution<double> *,
+  std::unordered_map<const std::vector<int>, Distribution<double>*,
                      VectorIntHash>
       clusters;
   // map from item to observed data
@@ -211,15 +211,15 @@ class Relation {
       std::string,
       std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>
       data_r;
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
-  Relation(const std::string &name, const std::string &distribution,
-           const std::vector<Domain *> &domains, std::mt19937 *prng)
+  Relation(const std::string& name, const std::string& distribution,
+           const std::vector<Domain*>& domains, std::mt19937* prng)
       : name(name), distribution(distribution), domains(domains) {
     assert(!domains.empty());
     assert(!name.empty());
     this->prng = prng;
-    for (const Domain *const d : domains) {
+    for (const Domain* const d : domains) {
       this->data_r[d->name] =
           std::unordered_map<T_item, std::unordered_set<T_items, H_items>>();
     }
@@ -234,13 +234,13 @@ class Relation {
   T_relation get_T_relation() {
     T_relation trel;
     trel.distribution = distribution;
-    for (const auto &d : domains) {
+    for (const auto& d : domains) {
       trel.domains.push_back(d->name);
     }
     return trel;
   }
 
-  void incorporate(const T_items &items, double value) {
+  void incorporate(const T_items& items, double value) {
     assert(!data.contains(items));
     data[items] = value;
     for (int i = 0; i < std::ssize(domains); ++i) {
@@ -262,7 +262,7 @@ class Relation {
     clusters.at(z)->incorporate(value);
   }
 
-  void unincorporate(const T_items &items) {
+  void unincorporate(const T_items& items) {
     printf("Not implemented\n");
     exit(EXIT_FAILURE);
     // auto x = data.at(items);
@@ -285,7 +285,7 @@ class Relation {
     // data.erase(items);
   }
 
-  std::vector<int> get_cluster_assignment(const T_items &items) const {
+  std::vector<int> get_cluster_assignment(const T_items& items) const {
     assert(items.size() == domains.size());
     std::vector<int> z(domains.size());
     for (int i = 0; i < std::ssize(domains); ++i) {
@@ -294,9 +294,9 @@ class Relation {
     return z;
   }
 
-  std::vector<int> get_cluster_assignment_gibbs(const T_items &items,
-                                                const Domain &domain,
-                                                const T_item &item,
+  std::vector<int> get_cluster_assignment_gibbs(const T_items& items,
+                                                const Domain& domain,
+                                                const T_item& item,
                                                 int table) const {
     assert(items.size() == domains.size());
     std::vector<int> z(domains.size());
@@ -315,9 +315,9 @@ class Relation {
 
   // Implementation of approximate Gibbs data probabilities (faster).
 
-  double logp_gibbs_approx_current(const Domain &domain, const T_item &item) {
+  double logp_gibbs_approx_current(const Domain& domain, const T_item& item) {
     double logp = 0.;
-    for (const T_items &items : data_r.at(domain.name).at(item)) {
+    for (const T_items& items : data_r.at(domain.name).at(item)) {
       double x = data.at(items);
       T_items z = get_cluster_assignment(items);
       auto cluster = clusters.at(z);
@@ -329,10 +329,10 @@ class Relation {
     return logp;
   }
 
-  double logp_gibbs_approx_variant(const Domain &domain, const T_item &item,
+  double logp_gibbs_approx_variant(const Domain& domain, const T_item& item,
                                    int table) {
     double logp = 0.;
-    for (const T_items &items : data_r.at(domain.name).at(item)) {
+    for (const T_items& items : data_r.at(domain.name).at(item)) {
       double x = data.at(items);
       T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
       double lp;
@@ -347,7 +347,7 @@ class Relation {
     return logp;
   }
 
-  double logp_gibbs_approx(const Domain &domain, const T_item &item,
+  double logp_gibbs_approx(const Domain& domain, const T_item& item,
                            int table) {
     int table_current = domain.get_cluster_assignment(item);
     return table_current == table
@@ -359,29 +359,29 @@ class Relation {
 
   std::unordered_map<std::vector<int> const, std::vector<T_items>,
                      VectorIntHash>
-  get_cluster_to_items_list(Domain const &domain, const T_item &item) {
+  get_cluster_to_items_list(Domain const& domain, const T_item& item) {
     std::unordered_map<const std::vector<int>, std::vector<T_items>,
                        VectorIntHash>
         m;
-    for (const T_items &items : data_r.at(domain.name).at(item)) {
+    for (const T_items& items : data_r.at(domain.name).at(item)) {
       T_items z = get_cluster_assignment(items);
       m[z].push_back(items);
     }
     return m;
   }
 
-  double logp_gibbs_exact_current(const std::vector<T_items> &items_list) {
+  double logp_gibbs_exact_current(const std::vector<T_items>& items_list) {
     assert(!items_list.empty());
     T_items z = get_cluster_assignment(items_list[0]);
     auto cluster = clusters.at(z);
     double logp0 = cluster->logp_score();
-    for (const T_items &items : items_list) {
+    for (const T_items& items : items_list) {
       double x = data.at(items);
       // assert(z == get_cluster_assignment(items));
       cluster->unincorporate(x);
     }
     double logp1 = cluster->logp_score();
-    for (const T_items &items : items_list) {
+    for (const T_items& items : items_list) {
       double x = data.at(items);
       cluster->incorporate(x);
     }
@@ -389,25 +389,25 @@ class Relation {
     return logp0 - logp1;
   }
 
-  double logp_gibbs_exact_variant(const Domain &domain, const T_item &item,
+  double logp_gibbs_exact_variant(const Domain& domain, const T_item& item,
                                   int table,
-                                  const std::vector<T_items> &items_list) {
+                                  const std::vector<T_items>& items_list) {
     assert(!items_list.empty());
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
     BetaBernoulli aux(prng);
-    Distribution<double> *cluster =
+    Distribution<double>* cluster =
         clusters.contains(z) ? clusters.at(z) : &aux;
     // auto cluster = self.clusters.get(z, self.aux())
     double logp0 = cluster->logp_score();
-    for (const T_items &items : items_list) {
+    for (const T_items& items : items_list) {
       // assert(z == get_cluster_assignment_gibbs(items, domain, item, table));
       double x = data.at(items);
       cluster->incorporate(x);
     }
     const double logp1 = cluster->logp_score();
-    for (const T_items &items : items_list) {
+    for (const T_items& items : items_list) {
       double x = data.at(items);
       cluster->unincorporate(x);
     }
@@ -415,16 +415,16 @@ class Relation {
     return logp1 - logp0;
   }
 
-  std::vector<double> logp_gibbs_exact(const Domain &domain, const T_item &item,
+  std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
                                        std::vector<int> tables) {
     auto cluster_to_items_list = get_cluster_to_items_list(domain, item);
     int table_current = domain.get_cluster_assignment(item);
     std::vector<double> logps;  // size this?
     logps.reserve(tables.size());
     double lp_cluster;
-    for (const int &table : tables) {
+    for (const int& table : tables) {
       double lp_table = 0;
-      for (const auto &[z, items_list] : cluster_to_items_list) {
+      for (const auto& [z, items_list] : cluster_to_items_list) {
         lp_cluster =
             (table == table_current)
                 ? logp_gibbs_exact_current(items_list)
@@ -436,7 +436,7 @@ class Relation {
     return logps;
   }
 
-  double logp(const T_items &items, double value) {
+  double logp(const T_items& items, double value) {
     // TODO: Falsely assumes cluster assignments of items
     // from same domain are identical, see note in hirm.py
     assert(items.size() == domains.size());
@@ -444,7 +444,7 @@ class Relation {
     std::vector<std::vector<double>> wght_list;
     std::vector<std::vector<int>> indx_list;
     for (int i = 0; i < std::ssize(domains); ++i) {
-      Domain *domain = domains.at(i);
+      Domain* domain = domains.at(i);
       T_item item = items.at(i);
       std::vector<T_item> t_list;
       std::vector<double> w_list;
@@ -458,7 +458,7 @@ class Relation {
         auto tables_weights = domain->tables_weights();
         double Z = log(domain->crp.alpha + domain->crp.N);
         int idx = 0;
-        for (const auto &[t, w] : tables_weights) {
+        for (const auto& [t, w] : tables_weights) {
           t_list.push_back(t);
           w_list.push_back(log(w) - Z);
           i_list.push_back(idx++);
@@ -470,7 +470,7 @@ class Relation {
       indx_list.push_back(i_list);
     }
     std::vector<double> logps;
-    for (const auto &indexes : product(indx_list)) {
+    for (const auto& indexes : product(indx_list)) {
       assert(indexes.size() == domains.size());
       std::vector<int> z;
       z.reserve(domains.size());
@@ -482,7 +482,7 @@ class Relation {
         logp_w += wi;
       }
       BetaBernoulli aux(prng);
-      Distribution<double> *cluster =
+      Distribution<double>* cluster =
           clusters.contains(z) ? clusters.at(z) : &aux;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
@@ -493,17 +493,17 @@ class Relation {
 
   double logp_score() const {
     double logp = 0.0;
-    for (const auto &[_, cluster] : clusters) {
+    for (const auto& [_, cluster] : clusters) {
       logp += cluster->logp_score();
     }
     return logp;
   }
 
-  void set_cluster_assignment_gibbs(const Domain &domain, const T_item &item,
+  void set_cluster_assignment_gibbs(const Domain& domain, const T_item& item,
                                     int table) {
     int table_current = domain.get_cluster_assignment(item);
     assert(table != table_current);
-    for (const T_items &items : data_r.at(domain.name).at(item)) {
+    for (const T_items& items : data_r.at(domain.name).at(item)) {
       double x = data.at(items);
       // Remove from current cluster.
       T_items z_prev = get_cluster_assignment(items);
@@ -528,28 +528,28 @@ class Relation {
     // Caller should invoke domain.set_cluster_gibbs
   }
 
-  bool has_observation(const Domain &domain, const T_item &item) {
+  bool has_observation(const Domain& domain, const T_item& item) {
     return data_r.at(domain.name).contains(item);
   }
 
   // Disable copying.
-  Relation &operator=(const Relation &) = delete;
-  Relation(const Relation &) = delete;
+  Relation& operator=(const Relation&) = delete;
+  Relation(const Relation&) = delete;
 };
 
 class IRM {
  public:
-  T_schema schema;                                    // schema of relations
-  std::unordered_map<std::string, Domain *> domains;  // map from name to Domain
-  std::unordered_map<std::string, Relation *>
+  T_schema schema;                                   // schema of relations
+  std::unordered_map<std::string, Domain*> domains;  // map from name to Domain
+  std::unordered_map<std::string, Relation*>
       relations;  // map from name to Relation
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
-  IRM(const T_schema &schema, std::mt19937 *prng) {
+  IRM(const T_schema& schema, std::mt19937* prng) {
     this->prng = prng;
-    for (const auto &[name, relation] : schema) {
+    for (const auto& [name, relation] : schema) {
       this->add_relation(name, relation);
     }
   }
@@ -563,45 +563,45 @@ class IRM {
     }
   }
 
-  void incorporate(const std::string &r, const T_items &items, double value) {
+  void incorporate(const std::string& r, const T_items& items, double value) {
     relations.at(r)->incorporate(items, value);
   }
 
-  void unincorporate(const std::string &r, const T_items &items) {
+  void unincorporate(const std::string& r, const T_items& items) {
     relations.at(r)->unincorporate(items);
   }
 
   void transition_cluster_assignments_all() {
-    for (const auto &[d, domain] : domains) {
+    for (const auto& [d, domain] : domains) {
       for (const T_item item : domain->items) {
         transition_cluster_assignment_item(d, item);
       }
     }
   }
 
-  void transition_cluster_assignments(const std::vector<std::string> &ds) {
-    for (const std::string &d : ds) {
+  void transition_cluster_assignments(const std::vector<std::string>& ds) {
+    for (const std::string& d : ds) {
       for (const T_item item : domains.at(d)->items) {
         transition_cluster_assignment_item(d, item);
       }
     }
   }
 
-  void transition_cluster_assignment_item(const std::string &d,
-                                          const T_item &item) {
-    Domain *domain = domains.at(d);
+  void transition_cluster_assignment_item(const std::string& d,
+                                          const T_item& item) {
+    Domain* domain = domains.at(d);
     auto crp_dist = domain->tables_weights_gibbs(item);
     // Compute probability of each table.
     std::vector<int> tables;
     std::vector<double> logps;
     tables.reserve(crp_dist.size());
     logps.reserve(crp_dist.size());
-    for (const auto &[table, n_customers] : crp_dist) {
+    for (const auto& [table, n_customers] : crp_dist) {
       tables.push_back(table);
       logps.push_back(log(n_customers));
     }
-    for (const auto &r : domain_to_relations.at(d)) {
-      Relation *relation = relations.at(r);
+    for (const auto& r : domain_to_relations.at(d)) {
+      Relation* relation = relations.at(r);
       if (relation->has_observation(*domain, item)) {
         std::vector<double> lp_relation =
             relation->logp_gibbs_exact(*domain, item, tables);
@@ -619,8 +619,8 @@ class IRM {
     T_item choice = tables[idx];
     // Move to new table (if necessary).
     if (choice != domain->get_cluster_assignment(item)) {
-      for (const std::string &r : domain_to_relations.at(d)) {
-        Relation *relation = relations.at(r);
+      for (const std::string& r : domain_to_relations.at(d)) {
+        Relation* relation = relations.at(r);
         if (relation->has_observation(*domain, item)) {
           relation->set_cluster_assignment_gibbs(*domain, item, choice);
         }
@@ -629,8 +629,8 @@ class IRM {
     }
   }
 
-  double logp(const std::vector<std::tuple<std::string, T_items, double>>
-                  &observations) {
+  double logp(const std::vector<std::tuple<std::string, T_items, double>>&
+                  observations) {
     std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
         relation_items_seen;
     std::unordered_map<std::string, std::unordered_set<T_item>>
@@ -643,17 +643,17 @@ class IRM {
         std::unordered_map<T_item, std::tuple<int, std::vector<int>>>>
         cluster_universe;
     // Compute all cluster combinations.
-    for (const auto &[r, items, value] : observations) {
+    for (const auto& [r, items, value] : observations) {
       // Assert observation is unique.
       assert(!relation_items_seen[r].contains(items));
       relation_items_seen[r].insert(items);
       // Process each (domain, item) in the observations.
-      Relation *relation = relations.at(r);
+      Relation* relation = relations.at(r);
       int arity = relation->domains.size();
       assert(std::ssize(items) == arity);
       for (int i = 0; i < arity; ++i) {
         // Skip if (domain, item) processed.
-        Domain *domain = relation->domains.at(i);
+        Domain* domain = relation->domains.at(i);
         T_item item = items.at(i);
         if (domain_item_seen[domain->name].contains(item)) {
           assert(cluster_universe[domain->name].contains(item));
@@ -677,7 +677,7 @@ class IRM {
           auto tables_weights = domain->tables_weights();
           double Z = log(domain->crp.alpha + domain->crp.N);
           size_t idx = 0;
-          for (const auto &[t, w] : tables_weights) {
+          for (const auto& [t, w] : tables_weights) {
             t_list.push_back(t);
             w_list.push_back(log(w) - Z);
             i_list.push_back(idx++);
@@ -698,7 +698,7 @@ class IRM {
     std::vector<T_items> items_product = product(index_universe);
     std::vector<double> logps;  // reserve size
     logps.reserve(index_universe.size());
-    for (const T_items &indexes : items_product) {
+    for (const T_items& indexes : items_product) {
       double logp_indexes = 0;
       // Compute weight of cluster assignments.
       double weight = 0.0;
@@ -707,19 +707,19 @@ class IRM {
       }
       logp_indexes += weight;
       // Compute weight of data given cluster assignments.
-      for (const auto &[r, items, value] : observations) {
-        Relation *relation = relations.at(r);
+      for (const auto& [r, items, value] : observations) {
+        Relation* relation = relations.at(r);
         std::vector<int> z;
         z.reserve(domains.size());
         for (int i = 0; i < std::ssize(relation->domains); ++i) {
-          Domain *domain = relation->domains.at(i);
+          Domain* domain = relation->domains.at(i);
           T_item item = items.at(i);
-          auto &[loc, t_list] = cluster_universe.at(domain->name).at(item);
+          auto& [loc, t_list] = cluster_universe.at(domain->name).at(item);
           T_item t = t_list.at(indexes.at(loc));
           z.push_back(t);
         }
         BetaBernoulli aux(prng);
-        Distribution<double> *cluster =
+        Distribution<double>* cluster =
             relation->clusters.contains(z) ? relation->clusters.at(z) : &aux;
         logp_indexes += cluster->logp(value);
       }
@@ -730,21 +730,21 @@ class IRM {
 
   double logp_score() const {
     double logp_score_crp = 0.0;
-    for (const auto &[d, domain] : domains) {
+    for (const auto& [d, domain] : domains) {
       logp_score_crp += domain->crp.logp_score();
     }
     double logp_score_relation = 0.0;
-    for (const auto &[r, relation] : relations) {
+    for (const auto& [r, relation] : relations) {
       logp_score_relation += relation->logp_score();
     }
     return logp_score_crp + logp_score_relation;
   }
 
-  void add_relation(const std::string &name, const T_relation &relation) {
+  void add_relation(const std::string& name, const T_relation& relation) {
     assert(!schema.contains(name));
     assert(!relations.contains(name));
-    std::vector<Domain *> doms;
-    for (const auto &d : relation.domains) {
+    std::vector<Domain*> doms;
+    for (const auto& d : relation.domains) {
       if (domains.count(d) == 0) {
         assert(domain_to_relations.count(d) == 0);
         domains[d] = new Domain(d, prng);
@@ -757,12 +757,12 @@ class IRM {
     schema[name] = relation;
   }
 
-  void remove_relation(const std::string &name) {
+  void remove_relation(const std::string& name) {
     std::unordered_set<std::string> ds;
-    for (const Domain *const domain : relations.at(name)->domains) {
+    for (const Domain* const domain : relations.at(name)->domains) {
       ds.insert(domain->name);
     }
-    for (const auto &d : ds) {
+    for (const auto& d : ds) {
       domain_to_relations.at(d).erase(name);
       // TODO: Remove r from domains.at(d)->items
       if (domain_to_relations.at(d).empty()) {
@@ -777,79 +777,79 @@ class IRM {
   }
 
   // Disable copying.
-  IRM &operator=(const IRM &) = delete;
-  IRM(const IRM &) = delete;
+  IRM& operator=(const IRM&) = delete;
+  IRM(const IRM&) = delete;
 };
 
 class HIRM {
  public:
-  T_schema schema;                      // schema of relations
-  std::unordered_map<int, IRM *> irms;  // map from cluster id to IRM
+  T_schema schema;                     // schema of relations
+  std::unordered_map<int, IRM*> irms;  // map from cluster id to IRM
   std::unordered_map<std::string, int>
       relation_to_code;  // map from relation name to code
   std::unordered_map<int, std::string>
       code_to_relation;  // map from code to relation
   CRP crp;               // clustering model for relations
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
-  HIRM(const T_schema &schema, std::mt19937 *prng) : crp(prng) {
+  HIRM(const T_schema& schema, std::mt19937* prng) : crp(prng) {
     this->prng = prng;
-    for (const auto &[name, relation] : schema) {
+    for (const auto& [name, relation] : schema) {
       this->add_relation(name, relation);
     }
   }
 
-  void incorporate(const std::string &r, const T_items &items, double value) {
-    IRM *irm = relation_to_irm(r);
+  void incorporate(const std::string& r, const T_items& items, double value) {
+    IRM* irm = relation_to_irm(r);
     irm->incorporate(r, items, value);
   }
-  void unincorporate(const std::string &r, const T_items &items) {
-    IRM *irm = relation_to_irm(r);
+  void unincorporate(const std::string& r, const T_items& items) {
+    IRM* irm = relation_to_irm(r);
     irm->unincorporate(r, items);
   }
 
-  int relation_to_table(const std::string &r) {
+  int relation_to_table(const std::string& r) {
     int rc = relation_to_code.at(r);
     return crp.assignments.at(rc);
   }
-  IRM *relation_to_irm(const std::string &r) {
+  IRM* relation_to_irm(const std::string& r) {
     int rc = relation_to_code.at(r);
     int table = crp.assignments.at(rc);
     return irms.at(table);
   }
-  Relation *get_relation(const std::string &r) {
-    IRM *irm = relation_to_irm(r);
+  Relation* get_relation(const std::string& r) {
+    IRM* irm = relation_to_irm(r);
     return irm->relations.at(r);
   }
 
   void transition_cluster_assignments_all() {
-    for (const auto &[r, rc] : relation_to_code) {
+    for (const auto& [r, rc] : relation_to_code) {
       transition_cluster_assignment_relation(r);
     }
   }
-  void transition_cluster_assignments(const std::vector<std::string> &rs) {
-    for (const auto &r : rs) {
+  void transition_cluster_assignments(const std::vector<std::string>& rs) {
+    for (const auto& r : rs) {
       transition_cluster_assignment_relation(r);
     }
   }
-  void transition_cluster_assignment_relation(const std::string &r) {
+  void transition_cluster_assignment_relation(const std::string& r) {
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
-    Relation *relation = get_relation(r);
+    Relation* relation = get_relation(r);
     T_relation t_relation = relation->get_T_relation();
     auto crp_dist = crp.tables_weights_gibbs(table_current);
     std::vector<int> tables;
     std::vector<double> logps;
-    int *table_aux = nullptr;
-    IRM *irm_aux = nullptr;
+    int* table_aux = nullptr;
+    IRM* irm_aux = nullptr;
     // Compute probabilities of each table.
-    for (const auto &[table, n_customers] : crp_dist) {
-      IRM *irm;
+    for (const auto& [table, n_customers] : crp_dist) {
+      IRM* irm;
       if (!irms.contains(table)) {
         irm = new IRM({}, prng);
         assert(table_aux == nullptr);
         assert(irm_aux == nullptr);
-        table_aux = (int *)malloc(sizeof(*table_aux));
+        table_aux = (int*)malloc(sizeof(*table_aux));
         *table_aux = table;
         irm_aux = irm;
       } else {
@@ -857,7 +857,7 @@ class HIRM {
       }
       if (table != table_current) {
         irm->add_relation(r, t_relation);
-        for (const auto &[items, value] : relation->data) {
+        for (const auto& [items, value] : relation->data) {
           irm->incorporate(r, items, value);
         }
       }
@@ -871,8 +871,8 @@ class HIRM {
     T_item choice = tables[idx];
 
     // Remove relation from all other tables.
-    for (const auto &[table, customers] : crp.tables) {
-      IRM *irm = irms.at(table);
+    for (const auto& [table, customers] : crp.tables) {
+      IRM* irm = irms.at(table);
       if (table != choice) {
         assert(irm->relations.count(r) == 1);
         irm->remove_relation(r);
@@ -896,18 +896,18 @@ class HIRM {
     crp.unincorporate(rc);
     crp.incorporate(rc, choice);
     assert(irms.size() == crp.tables.size());
-    for (const auto &[table, irm] : irms) {
+    for (const auto& [table, irm] : irms) {
       assert(crp.tables.contains(table));
     }
   }
 
-  void set_cluster_assignment_gibbs(const std::string &r, int table) {
+  void set_cluster_assignment_gibbs(const std::string& r, int table) {
     assert(irms.size() == crp.tables.size());
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
-    Relation *relation = get_relation(r);
+    Relation* relation = get_relation(r);
     T_relation trel = relation->get_T_relation();
-    IRM *irm = relation_to_irm(r);
+    IRM* irm = relation_to_irm(r);
     auto observations = relation->data;
     // Remove from current IRM.
     irm->remove_relation(r);
@@ -922,19 +922,19 @@ class HIRM {
     }
     irm = irms.at(table);
     irm->add_relation(r, trel);
-    for (const auto &[items, value] : observations) {
+    for (const auto& [items, value] : observations) {
       irm->incorporate(r, items, value);
     }
     // Update CRP.
     crp.unincorporate(rc);
     crp.incorporate(rc, table);
     assert(irms.size() == crp.tables.size());
-    for (const auto &[table, irm] : irms) {
+    for (const auto& [table, irm] : irms) {
       assert(crp.tables.contains(table));
     }
   }
 
-  void add_relation(const std::string &name, const T_relation &rel) {
+  void add_relation(const std::string& name, const T_relation& rel) {
     assert(!schema.contains(name));
     schema[name] = rel;
     int offset =
@@ -955,7 +955,7 @@ class HIRM {
     relation_to_code[name] = rc;
     code_to_relation[rc] = name;
   }
-  void remove_relation(const std::string &name) {
+  void remove_relation(const std::string& name) {
     schema.erase(name);
     int rc = relation_to_code.at(name);
     int table = crp.assignments.at(rc);
@@ -963,7 +963,7 @@ class HIRM {
     crp.unincorporate(rc);
     irms.at(table)->remove_relation(name);
     if (singleton) {
-      IRM *irm = irms.at(table);
+      IRM* irm = irms.at(table);
       assert(irm->relations.empty());
       irms.erase(table);
       delete irm;
@@ -972,12 +972,12 @@ class HIRM {
     code_to_relation.erase(rc);
   }
 
-  double logp(const std::vector<std::tuple<std::string, T_items, double>>
-                  &observations) {
+  double logp(const std::vector<std::tuple<std::string, T_items, double>>&
+                  observations) {
     std::unordered_map<int,
                        std::vector<std::tuple<std::string, T_items, double>>>
         obs_dict;
-    for (const auto &[r, items, value] : observations) {
+    for (const auto& [r, items, value] : observations) {
       int rc = relation_to_code.at(r);
       int table = crp.assignments.at(rc);
       if (!obs_dict.contains(table)) {
@@ -986,7 +986,7 @@ class HIRM {
       obs_dict.at(table).push_back({r, items, value});
     }
     double logp = 0.0;
-    for (const auto &[t, o] : obs_dict) {
+    for (const auto& [t, o] : obs_dict) {
       logp += irms.at(t)->logp(o);
     }
     return logp;
@@ -995,19 +995,19 @@ class HIRM {
   double logp_score() {
     double logp_score_crp = crp.logp_score();
     double logp_score_irms = 0.0;
-    for (const auto &[table, irm] : irms) {
+    for (const auto& [table, irm] : irms) {
       logp_score_irms += irm->logp_score();
     }
     return logp_score_crp + logp_score_irms;
   }
 
   ~HIRM() {
-    for (const auto &[table, irm] : irms) {
+    for (const auto& [table, irm] : irms) {
       delete irm;
     }
   }
 
   // Disable copying.
-  HIRM &operator=(const HIRM &) = delete;
-  HIRM(const HIRM &) = delete;
+  HIRM& operator=(const HIRM&) = delete;
+  HIRM(const HIRM&) = delete;
 };

@@ -32,60 +32,59 @@
     fflush(stdout);                                              \
   }
 
-void inference_irm(IRM *irm, int iters, int timeout, bool verbose) {
+void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
+  // TRANSITION ASSIGNMENTS.
+  for (const auto& [d, domain] : irm->domains) {
+    for (const auto item : domain->items) {
+      clock_t t = clock();
+      irm->transition_cluster_assignment_item(d, item);
+      REPORT_SCORE(verbose, t, t_total, irm);
+    }
+  }
+  // TRANSITION DISTRIBUTION HYPERPARAMETERS.
+  for (const auto& [r, relation] : irm->relations) {
+    for (const auto& [c, distribution] : relation->clusters) {
+      clock_t t = clock();
+      distribution->transition_hyperparameters();
+      REPORT_SCORE(verbose, t, t_total, irm);
+    }
+  }
+  // TRANSITION ALPHA.
+  for (const auto& [d, domain] : irm->domains) {
+    clock_t t = clock();
+    domain->crp.transition_alpha();
+    REPORT_SCORE(verbose, t, t_total, irm);
+  }
+}
+
+void inference_irm(IRM* irm, int iters, int timeout, bool verbose) {
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
     CHECK_TIMEOUT(timeout, t_begin);
-    // TRANSITION ASSIGNMENTS.
-    for (const auto &[d, domain] : irm->domains) {
-      for (const auto item : domain->items) {
-        clock_t t = clock();
-        irm->transition_cluster_assignment_item(d, item);
-        REPORT_SCORE(verbose, t, t_total, irm);
-      }
-    }
-    // TRANSITION ALPHA.
-    for (const auto &[d, domain] : irm->domains) {
-      clock_t t = clock();
-      domain->crp.transition_alpha();
-      REPORT_SCORE(verbose, t, t_total, irm);
-    }
+    single_step_irm_inference(irm, t_total, verbose);
   }
 }
 
-void inference_hirm(HIRM *hirm, int iters, int timeout, bool verbose) {
+void inference_hirm(HIRM* hirm, int iters, int timeout, bool verbose) {
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
     CHECK_TIMEOUT(timeout, t_begin);
     // TRANSITION RELATIONS.
-    for (const auto &[r, rc] : hirm->relation_to_code) {
+    for (const auto& [r, rc] : hirm->relation_to_code) {
       clock_t t = clock();
       hirm->transition_cluster_assignment_relation(r);
       REPORT_SCORE(verbose, t, t_total, hirm);
     }
     // TRANSITION IRMs.
-    for (const auto &[t, irm] : hirm->irms) {
-      // TRANSITION ASSIGNMENTS.
-      for (const auto &[d, domain] : irm->domains) {
-        for (auto item : domain->items) {
-          clock_t t = clock();
-          irm->transition_cluster_assignment_item(d, item);
-          REPORT_SCORE(verbose, t, t_total, irm);
-        }
-      }
-      // TRANSITION ALPHA.
-      for (const auto &[d, domain] : irm->domains) {
-        clock_t t = clock();
-        domain->crp.transition_alpha();
-        REPORT_SCORE(verbose, t, t_total, irm);
-      }
+    for (const auto& [t, irm] : hirm->irms) {
+      single_step_irm_inference(irm, t_total, verbose);
     }
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   cxxopts::Options options("hirm",
                            "Run a hierarchical infinite relational model.");
   options.add_options()("help", "show help message")(
@@ -146,7 +145,7 @@ int main(int argc, char **argv) {
 
   if (mode == "irm") {
     std::cout << "selected model is IRM" << std::endl;
-    IRM *irm;
+    IRM* irm;
     // Load
     if (path_clusters.empty()) {
       irm = new IRM(schema, &prng);
@@ -172,7 +171,7 @@ int main(int argc, char **argv) {
 
   if (mode == "hirm") {
     std::cout << "selected model is HIRM" << std::endl;
-    HIRM *hirm;
+    HIRM* hirm;
     // Load
     if (path_clusters.empty()) {
       hirm = new HIRM(schema, &prng);

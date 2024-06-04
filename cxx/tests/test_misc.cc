@@ -18,7 +18,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   srand(1);
   std::mt19937 prng(1);
 
@@ -68,10 +68,10 @@ int main(int argc, char **argv) {
   printf("%f\n", crp.logp_score());
   crp.incorporate(ali, 0);
   std::cout << "tables count 10 " << crp.tables.count(10) << std::endl;
-  for (auto const &i : crp.tables[0]) {
+  for (auto const& i : crp.tables[0]) {
     std::cout << i << " ";
   }
-  for (auto const &i : crp.tables[1]) {
+  for (auto const& i : crp.tables[1]) {
     std::cout << i << " ";
   }
   printf("\n");
@@ -82,18 +82,18 @@ int main(int argc, char **argv) {
 
   printf("=== tables_weights\n");
   auto tables_weights = crp.tables_weights();
-  for (auto &tw : tables_weights) {
+  for (auto& tw : tables_weights) {
     printf("table %d weight %f\n", tw.first, tw.second);
   }
 
   printf("=== tables_weights_gibbs\n");
   auto tables_weights_gibbs = crp.tables_weights_gibbs(1);
-  for (auto &tw : tables_weights_gibbs) {
+  for (auto& tw : tables_weights_gibbs) {
     printf("table %d weight %f\n", tw.first, tw.second);
   }
   printf("==== tables_weights_gibbs_singleton\n");
   auto tables_weights_gibbs_singleton = crp.tables_weights_gibbs(12);
-  for (auto &tw : tables_weights_gibbs_singleton) {
+  for (auto& tw : tables_weights_gibbs_singleton) {
     printf("table %d weight %f\n", tw.first, tw.second);
   }
   printf("==== log probability\n");
@@ -106,17 +106,17 @@ int main(int argc, char **argv) {
   T_item salman = 1;
   T_item mansour = 2;
   d.incorporate(salman);
-  for (auto &item : d.items) {
+  for (auto& item : d.items) {
     printf("item %d: ", item);
   }
   d.set_cluster_assignment_gibbs(salman, 12);
   d.incorporate(salman);
   d.incorporate(mansour, 5);
-  for (auto &item : d.items) {
+  for (auto& item : d.items) {
     printf("item %d: ", item);
   }
   // d.unincorporate(salman);
-  for (auto &item : d.items) {
+  for (auto& item : d.items) {
     printf("item %d: ", item);
   }
   // d.unincorporate(relation2, salman);
@@ -126,9 +126,9 @@ int main(int argc, char **argv) {
   std::unordered_map<int, std::unordered_set<int>> m;
   m[1].insert(10);
   m[1] = std::unordered_set<int>();
-  for (auto &ir : m) {
+  for (auto& ir : m) {
     printf("%d\n", ir.first);
-    for (auto &x : ir.second) {
+    for (auto& x : ir.second) {
       printf("%d\n", x);
     }
   }
@@ -193,14 +193,14 @@ int main(int argc, char **argv) {
   };
   IRM irm(schema1, &prng);
 
-  for (auto const &kv : irm.domains) {
+  for (auto const& kv : irm.domains) {
     printf("%s %s; ", kv.first.c_str(), kv.second->name.c_str());
     for (auto const r : irm.domain_to_relations.at(kv.first)) {
       printf("%s ", r.c_str());
     }
     printf("\n");
   }
-  for (auto const &kv : irm.relations) {
+  for (auto const& kv : irm.relations) {
     printf("%s ", kv.first.c_str());
     for (auto const d : kv.second->domains) {
       printf("%s ", d->name.c_str());
@@ -210,11 +210,11 @@ int main(int argc, char **argv) {
 
   printf("==== READING IO ===== \n");
   auto schema = load_schema("assets/animals.binary.schema");
-  for (auto const &i : schema) {
+  for (auto const& i : schema) {
     printf("relation: %s\n", i.first.c_str());
     printf("distribution: %s\n", i.second.distribution.c_str());
     printf("domains: ");
-    for (auto const &j : i.second.domains) {
+    for (auto const& j : i.second.domains) {
       printf("%s ", j.c_str());
     }
     printf("\n");
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
   auto observations = load_observations("assets/animals.binary.obs");
   auto encoding = encode_observations(schema, observations);
   auto item_to_code = std::get<0>(encoding);
-  for (auto const &i : observations) {
+  for (auto const& i : observations) {
     auto relation = std::get<0>(i);
     auto value = std::get<2>(i);
     auto item = std::get<1>(i);
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
     printf("%1.f ", value);
     int counter = 0;
     T_items items_code;
-    for (auto const &item : std::get<1>(i)) {
+    for (auto const& item : std::get<1>(i)) {
       auto domain = schema.at(relation).domains[counter];
       counter += 1;
       auto code = item_to_code.at(domain).at(item);
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 4; i++) {
     irm3.transition_cluster_assignments({"animal", "feature"});
     irm3.transition_cluster_assignments_all();
-    for (auto const &[d, domain] : irm3.domains) {
+    for (auto const& [d, domain] : irm3.domains) {
       domain->crp.transition_alpha();
     }
     double x = irm3.logp_score();
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
   to_txt(path_clusters, irm3, encoding);
 
   auto rel = irm3.relations.at("has");
-  auto &enc = std::get<0>(encoding);
+  auto& enc = std::get<0>(encoding);
   auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0);
   auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1);
   auto lp_01 = logsumexp({lp0, lp1});
@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
   irm4.domains.at("animal")->crp.alpha = irm3.domains.at("animal")->crp.alpha;
   irm4.domains.at("feature")->crp.alpha = irm3.domains.at("feature")->crp.alpha;
   assert(abs(irm3.logp_score() - irm4.logp_score()) < 1e-8);
-  for (const auto &d : {"animal", "feature"}) {
+  for (const auto& d : {"animal", "feature"}) {
     auto d3 = irm3.domains.at(d);
     auto d4 = irm4.domains.at(d);
     assert(d3->items == d4->items);
@@ -281,13 +281,13 @@ int main(int argc, char **argv) {
     assert(d3->crp.N == d4->crp.N);
     assert(d3->crp.alpha == d4->crp.alpha);
   }
-  for (const auto &r : {"has"}) {
+  for (const auto& r : {"has"}) {
     auto r3 = irm3.relations.at(r);
     auto r4 = irm4.relations.at(r);
     assert(r3->data == r4->data);
     assert(r3->data_r == r4->data_r);
     assert(r3->clusters.size() == r4->clusters.size());
-    for (const auto &[z, cluster3] : r3->clusters) {
+    for (const auto& [z, cluster3] : r3->clusters) {
       auto cluster4 = r4->clusters.at(z);
       assert(cluster3->N == cluster4->N);
     }

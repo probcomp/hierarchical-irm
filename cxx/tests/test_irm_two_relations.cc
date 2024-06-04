@@ -15,7 +15,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   std::string path_base = "assets/two_relations";
   int seed = 1;
   int iters = 2;
@@ -25,11 +25,11 @@ int main(int argc, char **argv) {
   std::string path_schema = path_base + ".schema";
   std::cout << "loading schema from " << path_schema << std::endl;
   auto schema = load_schema(path_schema);
-  for (auto const &[relation_name, relation] : schema) {
+  for (auto const& [relation_name, relation] : schema) {
     printf("relation: %s, ", relation_name.c_str());
     printf("distribution: %s, ", relation.distribution.c_str());
     printf("domains: ");
-    for (auto const &domain : relation.domains) {
+    for (auto const& domain : relation.domains) {
       printf("%s ", domain.c_str());
     }
     printf("\n");
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   printf("running for %d iterations\n", iters);
   for (int i = 0; i < iters; i++) {
     irm.transition_cluster_assignments_all();
-    for (auto const &[d, domain] : irm.domains) {
+    for (auto const& [d, domain] : irm.domains) {
       domain->crp.transition_alpha();
     }
     double x = irm.logp_score();
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
   std::vector<std::vector<int>> indexes{
       {code_item_0_D1, code_item_10_D1, code_item_novel},
       {code_item_0_D1, code_item_10_D2, code_item_novel}};
-  for (const auto &l : product(indexes)) {
+  for (const auto& l : product(indexes)) {
     assert(l.size() == 2);
     auto x1 = l.at(0);
     auto x2 = l.at(1);
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
   }
 
-  for (const auto &l :
+  for (const auto& l :
        std::vector<std::vector<int>>{{0, 10, 100}, {110, 10, 100}}) {
     auto x1 = l.at(0);
     auto x2 = l.at(1);
@@ -104,14 +104,14 @@ int main(int argc, char **argv) {
   IRM irx({}, &prng);
   from_txt(&irx, path_schema, path_obs, path_clusters);
   // Check log scores agree.
-  for (const auto &d : {"D1", "D2"}) {
+  for (const auto& d : {"D1", "D2"}) {
     auto dm = irm.domains.at(d);
     auto dx = irx.domains.at(d);
     dx->crp.alpha = dm->crp.alpha;
   }
   assert(abs(irx.logp_score() - irm.logp_score()) < 1e-8);
   // Check domains agree.
-  for (const auto &d : {"D1", "D2"}) {
+  for (const auto& d : {"D1", "D2"}) {
     auto dm = irm.domains.at(d);
     auto dx = irx.domains.at(d);
     assert(dm->items == dx->items);
@@ -121,13 +121,13 @@ int main(int argc, char **argv) {
     assert(dm->crp.alpha == dx->crp.alpha);
   }
   // Check relations agree.
-  for (const auto &r : {"R1", "R2"}) {
+  for (const auto& r : {"R1", "R2"}) {
     auto rm = irm.relations.at(r);
     auto rx = irx.relations.at(r);
     assert(rm->data == rx->data);
     assert(rm->data_r == rx->data_r);
     assert(rm->clusters.size() == rx->clusters.size());
-    for (const auto &[z, clusterm] : rm->clusters) {
+    for (const auto& [z, clusterm] : rm->clusters) {
       auto clusterx = rx->clusters.at(z);
       assert(clusterm->N == clusterx->N);
     }

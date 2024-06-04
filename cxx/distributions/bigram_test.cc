@@ -35,3 +35,17 @@ BOOST_AUTO_TEST_CASE(test_set_alpha) {
 
   BOOST_TEST(first_lp != bb.logp_score());
 }
+
+BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
+  std::mt19937 prng;
+  Bigram bb(&prng);
+
+  bb.transition_hyperparameters();
+  for (int i = 0; i < 100; ++i) {
+    bb.incorporate("abcdefghijklmnopqrstuvwxyz");
+  }
+
+  bb.transition_hyperparameters();
+
+  BOOST_TEST(bb.alpha < 1.0);
+}

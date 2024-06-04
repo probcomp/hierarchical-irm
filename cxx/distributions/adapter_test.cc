@@ -20,8 +20,8 @@ BOOST_AUTO_TEST_CASE(adapt_normal) {
   ad.incorporate("7.0");
   ad.unincorporate("-2.0");
 
-  BOOST_TEST(ad.logp("6.0") == -3.1331256657870137, tt::tolerance(1e-6));
-  BOOST_TEST(ad.logp_score() == -4.7494000141508543, tt::tolerance(1e-6));
+  BOOST_TEST(ad.logp("6.0") == -2.7673076255063034, tt::tolerance(1e-6));
+  BOOST_TEST(ad.logp_score() == -4.7299819282937534, tt::tolerance(1e-6));
 
   std::string samp = ad.sample();
 }

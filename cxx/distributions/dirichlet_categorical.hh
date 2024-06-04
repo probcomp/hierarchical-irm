@@ -9,6 +9,9 @@
 #include "base.hh"
 #include "util_math.hh"
 
+#define ALPHA_GRID \
+  { 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0 }
+
 class DirichletCategorical : public Distribution<double> {
  public:
   double alpha = 1;         // hyperparameter (applies to all categories)
@@ -56,5 +59,20 @@ class DirichletCategorical : public Distribution<double> {
                    [&](size_t y) -> double { return y + alpha; });
     int idx = choice(weights, prng);
     return double(idx);
+  }
+  void transition_hyperparameters() {
+    std::vector<double> logps;
+    std::vector<double> alphas;
+    // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
+    for (double alphat : ALPHA_GRID) {
+      alpha = alphat;
+      double lp = logp_score();
+      if (!std::isnan(lp)) {
+        logps.push_back(logp_score());
+        alphas.push_back(alpha);
+      }
+    }
+    int i = sample_from_logps(logps, prng);
+    alpha = alphas[i];
   }
 };

@@ -1,0 +1,24 @@
+# This workflow will run tests.
+
+name: Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+jobs:
+  run_tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checking out repository
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run : |
+          sudo apt-get update && sudo apt-get install -yq clang clang-format
+      - name: Build everything
+        run: |
+          cd cxx && bazel build ...
+      - name: Test C++
+        run: |
+          cd cxx && bazel test --test_output=errors ...

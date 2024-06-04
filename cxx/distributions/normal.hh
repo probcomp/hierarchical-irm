@@ -3,8 +3,11 @@
 
 #pragma once
 #include <random>
+#include <tuple>
+#include <variant>
 
 #include "base.hh"
+#include "util_math.hh"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288419716939937510
@@ -13,6 +16,15 @@
 #ifndef M_2PI
 #define M_2PI 6.28318530717958647692528676655
 #endif
+
+#define R_GRID \
+  { 0.1, 1.0, 10.0 }
+#define V_GRID \
+  { 0.5, 1.0, 2.0, 5.0 }
+#define M_GRID \
+  { -1.0, 0.0, 1.0 }
+#define S_GRID \
+  { 0.5, 1.0, 2.0 }
 
 double logZ(double r, double v, double s) {
   return (v + 1.0) / 2.0 * log(2.0) + 0.5 * log(M_PI) - 0.5 * log(r) -
@@ -33,30 +45,35 @@ class Normal : public Distribution<double> {
   // We use Welford's algorithm for computing the mean and variance
   // of streaming data in a numerically stable way.  See Knuth's
   // Art of Computer Programming vol. 2, 3rd edition, page 232.
-  int mean = 0;  // Mean of observed values
-  int var = 0;   // Variance of observed values
+  double mean = 0.0;  // Mean of observed values
+  double var = 0.0;   // Variance of observed values
 
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
   // Normal does not take ownership of prng.
-  Normal(std::mt19937 *prng) { this->prng = prng; }
+  Normal(std::mt19937* prng) { this->prng = prng; }
 
-  void incorporate(const double &x) {
+  void incorporate(const double& x) {
     ++N;
     double old_mean = mean;
     mean += (x - mean) / N;
     var += (x - mean) * (x - old_mean);
   }
 
-  void unincorporate(const double &x) {
+  void unincorporate(const double& x) {
     int old_N = N;
     --N;
+    if (N == 0) {
+      mean = 0.0;
+      var = 0.0;
+      return;
+    }
     double old_mean = mean;
     mean = (mean * old_N - x) / N;
     var -= (x - mean) * (x - old_mean);
   }
 
-  void posterior_hypers(double *mprime, double *sprime) const {
+  void posterior_hypers(double* mprime, double* sprime) const {
     // r' = r + N
     // m' = (r m + N mean) / (r + N)
     // C = N (var + mean^2)
@@ -67,12 +84,12 @@ class Normal : public Distribution<double> {
               N * (var - 2 * mean * mdelta - mdelta * mdelta);
   }
 
-  double logp(const double &x) const {
+  double logp(const double& x) const {
     // Based on equation (13) of GaussianInverseGamma.pdf
     double unused_mprime, sprime;
-    const_cast<Normal *>(this)->incorporate(x);
+    const_cast<Normal*>(this)->incorporate(x);
     posterior_hypers(&unused_mprime, &sprime);
-    const_cast<Normal *>(this)->unincorporate(x);
+    const_cast<Normal*>(this)->unincorporate(x);
     double sprime2;
     posterior_hypers(&unused_mprime, &sprime2);
     return -0.5 * log(M_2PI) + logZ(r + N + 1, v + N + 1, sprime) -
@@ -101,7 +118,35 @@ class Normal : public Distribution<double> {
     return d(*prng);
   }
 
+  void transition_hyperparameters() {
+    std::vector<double> logps;
+    std::vector<std::tuple<double, double, double, double>> hypers;
+    for (double rt : R_GRID) {
+      for (double vt : V_GRID) {
+        for (double mt : M_GRID) {
+          for (double st : S_GRID) {
+            r = rt;
+            v = vt;
+            m = mt;
+            s = st;
+            double lp = logp_score();
+            if (!std::isnan(lp)) {
+              logps.push_back(logp_score());
+              hypers.push_back(std::make_tuple(r, v, m, s));
+            }
+          }
+        }
+      }
+    }
+
+    int i = sample_from_logps(logps, prng);
+    r = std::get<0>(hypers[i]);
+    v = std::get<1>(hypers[i]);
+    m = std::get<2>(hypers[i]);
+    s = std::get<3>(hypers[i]);
+  }
+
   // Disable copying.
-  Normal &operator=(const Normal &) = delete;
-  Normal(const Normal &) = delete;
+  Normal& operator=(const Normal&) = delete;
+  Normal(const Normal&) = delete;
 };

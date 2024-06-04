@@ -56,14 +56,20 @@ cc_library(
     name = "dirichlet_categorical",
     srcs = ["dirichlet_categorical.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//:util_math",
+    ],
 )
 
 cc_library(
     name = "normal",
     srcs = ["normal.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//:util_math",
+    ],
 )
 
 cc_test(
@@ -92,6 +98,16 @@ cc_test(
     srcs = ["bigram_test.cc"],
     deps = [
         ":bigram",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "dirichlet_categorical_test",
+    srcs = ["dirichlet_categorical_test.cc"],
+    deps = [
+        ":dirichlet_categorical",
         "@boost//:algorithm",
         "@boost//:test",
     ],

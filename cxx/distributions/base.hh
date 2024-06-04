@@ -31,5 +31,10 @@ class Distribution {
   // PRNG parameter.
   virtual SampleType sample() = 0;
 
+  // Transition the hyperparameters.  The probability of transitioning to
+  // a particular set of hyperparameters should be proportional to
+  // e^logp_score() under those hyperparameters.
+  virtual void transition_hyperparameters() = 0;
+
   virtual ~Distribution() = default;
 };
