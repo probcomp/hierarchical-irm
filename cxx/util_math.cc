@@ -31,7 +31,7 @@ std::vector<double> log_linspace(double start, double stop, int num,
   return v;
 }
 
-std::vector<double> log_normalize(const std::vector<double> &weights) {
+std::vector<double> log_normalize(const std::vector<double>& weights) {
   double Z = logsumexp(weights);
   std::vector<double> result(weights.size());
   for (int i = 0; i < std::ssize(weights); i++) {
@@ -40,7 +40,7 @@ std::vector<double> log_normalize(const std::vector<double> &weights) {
   return result;
 }
 
-double logsumexp(const std::vector<double> &weights) {
+double logsumexp(const std::vector<double>& weights) {
   // Get the max index.
   int max_index = std::distance(
       weights.cbegin(), std::max_element(weights.cbegin(), weights.cend()));
@@ -57,13 +57,13 @@ double logsumexp(const std::vector<double> &weights) {
   return log1p(s) + m;
 }
 
-int choice(const std::vector<double> &weights, std::mt19937 *prng) {
+int choice(const std::vector<double>& weights, std::mt19937* prng) {
   std::discrete_distribution<int> dist(weights.begin(), weights.end());
   int idx = dist(*prng);
   return idx;
 }
 
-int log_choice(const std::vector<double> &weights, std::mt19937 *prng) {
+int log_choice(const std::vector<double>& weights, std::mt19937* prng) {
   std::vector<double> log_weights_norm = log_normalize(weights);
   std::vector<double> weights_norm;
   for (double w : log_weights_norm) {
@@ -73,20 +73,20 @@ int log_choice(const std::vector<double> &weights, std::mt19937 *prng) {
 }
 
 std::vector<std::vector<int>> product(
-    const std::vector<std::vector<int>> &lists) {
+    const std::vector<std::vector<int>>& lists) {
   // https://rosettacode.org/wiki/Cartesian_product_of_two_or_more_lists#C.2B.2B
   std::vector<std::vector<int>> result;
-  for (const auto &l : lists) {
+  for (const auto& l : lists) {
     if (l.empty()) {
       return result;
     }
   }
-  for (const int &e : lists[0]) {
+  for (const int& e : lists[0]) {
     result.push_back({e});
   }
   for (size_t i = 1; i < lists.size(); ++i) {
     std::vector<std::vector<int>> temp;
-    for (std::vector<int> &e : result) {
+    for (std::vector<int>& e : result) {
       for (int f : lists[i]) {
         std::vector<int> e_tmp = e;
         e_tmp.push_back(f);
@@ -98,7 +98,8 @@ std::vector<std::vector<int>> product(
   return result;
 }
 
-int sample_from_logps(const std::vector<double> &log_probs, std::mt19937 *prng) {
+int sample_from_logps(const std::vector<double>& log_probs,
+                      std::mt19937* prng) {
   double max_lp = *std::max_element(log_probs.begin(), log_probs.end());
   std::vector<double> weights;
   for (auto lp : log_probs) {

@@ -9,7 +9,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   srand(1);
   std::mt19937 prng(1);
 
@@ -30,12 +30,12 @@ int main(int argc, char **argv) {
   incorporate_observations(hirm, encoding_unary, observations_unary);
   printf("--- incorporated observations --- \n");
   int n_obs_unary = 0;
-  for (const auto &[z, irm] : hirm.irms) {
-    for (const auto &[r, relation] : irm->relations) {
+  for (const auto& [z, irm] : hirm.irms) {
+    for (const auto& [r, relation] : irm->relations) {
       n_obs_unary += relation->data.size();
     }
   }
-  assert(n_obs_unary == observations_unary.size());
+  assert(n_obs_unary == std::ssize(observations_unary));
 
   hirm.transition_cluster_assignments_all();
   hirm.transition_cluster_assignments_all();
@@ -45,15 +45,15 @@ int main(int argc, char **argv) {
   printf("--- set cluster assignments --- \n");
   for (int i = 0; i < 20; i++) {
     hirm.transition_cluster_assignments_all();
-    for (const auto &[t, irm] : hirm.irms) {
+    for (const auto& [t, irm] : hirm.irms) {
       irm->transition_cluster_assignments_all();
-      for (const auto &[d, domain] : irm->domains) {
+      for (const auto& [d, domain] : irm->domains) {
         domain->crp.transition_alpha();
       }
     }
     hirm.crp.transition_alpha();
     printf("%d %f [", i, hirm.logp_score());
-    for (const auto &[t, customers] : hirm.crp.tables) {
+    for (const auto& [t, customers] : hirm.crp.tables) {
       printf("%ld ", customers.size());
     }
     printf("]\n");
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   std::string path_clusters = path_base + ".hirm";
   to_txt(path_clusters, hirm, encoding_unary);
 
-  auto &enc = std::get<0>(encoding_unary);
+  auto& enc = std::get<0>(encoding_unary);
 
   // Marginally normalized.
   int persiancat = enc["animal"]["persiancat"];
@@ -118,16 +118,16 @@ int main(int argc, char **argv) {
 
   assert(hirm.irms.size() == hirx.irms.size());
   // Check IRMs agree.
-  for (const auto &[table, irm] : hirm.irms) {
+  for (const auto& [table, irm] : hirm.irms) {
     auto irx = hirx.irms.at(table);
     // Check log scores agree.
-    for (const auto &[d, dm] : irm->domains) {
+    for (const auto& [d, dm] : irm->domains) {
       auto dx = irx->domains.at(d);
       dx->crp.alpha = dm->crp.alpha;
     }
     assert(abs(irx->logp_score() - irm->logp_score()) < 1e-8);
     // Check domains agree.
-    for (const auto &[d, dm] : irm->domains) {
+    for (const auto& [d, dm] : irm->domains) {
       auto dx = irx->domains.at(d);
       assert(dm->items == dx->items);
       assert(dm->crp.assignments == dx->crp.assignments);
@@ -136,12 +136,12 @@ int main(int argc, char **argv) {
       assert(dm->crp.alpha == dx->crp.alpha);
     }
     // Check relations agree.
-    for (const auto &[r, rm] : irm->relations) {
+    for (const auto& [r, rm] : irm->relations) {
       auto rx = irx->relations.at(r);
       assert(rm->data == rx->data);
       assert(rm->data_r == rx->data_r);
       assert(rm->clusters.size() == rx->clusters.size());
-      for (const auto &[z, clusterm] : rm->clusters) {
+      for (const auto& [z, clusterm] : rm->clusters) {
         auto clusterx = rx->clusters.at(z);
         assert(clusterm->N == clusterx->N);
       }

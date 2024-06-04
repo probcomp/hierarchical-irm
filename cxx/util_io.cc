@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
-T_schema load_schema(const std::string &path) {
+T_schema load_schema(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
@@ -36,7 +36,7 @@ T_schema load_schema(const std::string &path) {
   return schema;
 }
 
-T_observations load_observations(const std::string &path) {
+T_observations load_observations(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
@@ -64,26 +64,26 @@ T_observations load_observations(const std::string &path) {
 }
 
 // Assumes that T_item is integer.
-T_encoding encode_observations(const T_schema &schema,
-                               const T_observations &observations) {
+T_encoding encode_observations(const T_schema& schema,
+                               const T_observations& observations) {
   // Counter and encoding maps.
   std::map<std::string, int> domain_item_counter;
   T_encoding_f item_to_code;
   T_encoding_r code_to_item;
   // Create a counter of items for each domain.
-  for (const auto &[r, relation] : schema) {
-    for (const std::string &domain : relation.domains) {
+  for (const auto& [r, relation] : schema) {
+    for (const std::string& domain : relation.domains) {
       domain_item_counter[domain] = 0;
       item_to_code[domain] = std::map<std::string, T_item>();
       code_to_item[domain] = std::map<T_item, std::string>();
     }
   }
   // Create the codes for each item.
-  for (const T_observation &i : observations) {
+  for (const T_observation& i : observations) {
     std::string relation = std::get<0>(i);
     std::vector<std::string> items = std::get<1>(i);
     int counter = 0;
-    for (const std::string &item : items) {
+    for (const std::string& item : items) {
       // Obtain domain that item belongs to.
       std::string domain = schema.at(relation).domains.at(counter);
       // Compute its code, if necessary.
@@ -99,13 +99,13 @@ T_encoding encode_observations(const T_schema &schema,
   return std::make_pair(item_to_code, code_to_item);
 }
 
-void incorporate_observations(IRM &irm, const T_encoding &encoding,
-                              const T_observations &observations) {
+void incorporate_observations(IRM& irm, const T_encoding& encoding,
+                              const T_observations& observations) {
   T_encoding_f item_to_code = std::get<0>(encoding);
-  for (const auto &[relation, items, value] : observations) {
+  for (const auto& [relation, items, value] : observations) {
     int counter = 0;
     T_items items_e;
-    for (const std::string &item : items) {
+    for (const std::string& item : items) {
       std::string domain = irm.schema.at(relation).domains[counter];
       counter += 1;
       int code = item_to_code.at(domain).at(item);
@@ -115,13 +115,13 @@ void incorporate_observations(IRM &irm, const T_encoding &encoding,
   }
 }
 
-void incorporate_observations(HIRM &hirm, const T_encoding &encoding,
-                              const T_observations &observations) {
+void incorporate_observations(HIRM& hirm, const T_encoding& encoding,
+                              const T_observations& observations) {
   T_encoding_f item_to_code = std::get<0>(encoding);
-  for (const auto &[relation, items, value] : observations) {
+  for (const auto& [relation, items, value] : observations) {
     int counter = 0;
     T_items items_e;
-    for (const std::string &item : items) {
+    for (const std::string& item : items) {
       std::string domain = hirm.schema.at(relation).domains[counter];
       counter += 1;
       int code = item_to_code.at(domain).at(item);
@@ -131,17 +131,17 @@ void incorporate_observations(HIRM &hirm, const T_encoding &encoding,
   }
 }
 
-void to_txt(std::ostream &fp, const IRM &irm, const T_encoding &encoding) {
+void to_txt(std::ostream& fp, const IRM& irm, const T_encoding& encoding) {
   T_encoding_r code_to_item = std::get<1>(encoding);
-  for (const auto &[d, domain] : irm.domains) {
+  for (const auto& [d, domain] : irm.domains) {
     auto i0 = domain->crp.tables.begin();
     auto i1 = domain->crp.tables.end();
     std::map<int, std::unordered_set<T_item>> tables(i0, i1);
-    for (const auto &[table, items] : tables) {
+    for (const auto& [table, items] : tables) {
       fp << domain->name << " ";
       fp << table << " ";
       int i = 1;
-      for (const T_item &item : items) {
+      for (const T_item& item : items) {
         fp << code_to_item.at(domain->name).at(item);
         if (i++ < std::ssize(items)) {
           fp << " ";
@@ -152,12 +152,12 @@ void to_txt(std::ostream &fp, const IRM &irm, const T_encoding &encoding) {
   }
 }
 
-void to_txt(std::ostream &fp, const HIRM &hirm, const T_encoding &encoding) {
+void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
   // Write the relation clusters.
   auto i0 = hirm.crp.tables.begin();
   auto i1 = hirm.crp.tables.end();
   std::map<int, std::unordered_set<T_item>> tables(i0, i1);
-  for (const auto &[table, rcs] : tables) {
+  for (const auto& [table, rcs] : tables) {
     fp << table << " ";
     int i = 1;
     for (const T_item rc : rcs) {
@@ -171,8 +171,8 @@ void to_txt(std::ostream &fp, const HIRM &hirm, const T_encoding &encoding) {
   fp << "\n";
   // Write the IRMs.
   int j = 0;
-  for (const auto &[table, rcs] : tables) {
-    const IRM *const irm = hirm.irms.at(table);
+  for (const auto& [table, rcs] : tables) {
+    const IRM* const irm = hirm.irms.at(table);
     fp << "irm=" << table << "\n";
     to_txt(fp, *irm, encoding);
     if (j < std::ssize(tables) - 1) {
@@ -182,16 +182,16 @@ void to_txt(std::ostream &fp, const HIRM &hirm, const T_encoding &encoding) {
   }
 }
 
-void to_txt(const std::string &path, const IRM &irm,
-            const T_encoding &encoding) {
+void to_txt(const std::string& path, const IRM& irm,
+            const T_encoding& encoding) {
   std::ofstream fp(path);
   assert(fp.good());
   to_txt(fp, irm, encoding);
   fp.close();
 }
 
-void to_txt(const std::string &path, const HIRM &hirm,
-            const T_encoding &encoding) {
+void to_txt(const std::string& path, const HIRM& hirm,
+            const T_encoding& encoding) {
   std::ofstream fp(path);
   assert(fp.good());
   to_txt(fp, hirm, encoding);
@@ -199,7 +199,7 @@ void to_txt(const std::string &path, const HIRM &hirm,
 }
 
 std::map<std::string, std::map<int, std::vector<std::string>>>
-load_clusters_irm(const std::string &path) {
+load_clusters_irm(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
@@ -225,7 +225,7 @@ load_clusters_irm(const std::string &path) {
   return clusters;
 }
 
-int isnumeric(const std::string &s) {
+int isnumeric(const std::string& s) {
   for (char c : s) {
     if (!isdigit(c)) {
       return false;
@@ -236,14 +236,17 @@ int isnumeric(const std::string &s) {
 
 std::tuple<std::map<int, std::vector<std::string>>,  // x[table] = {relation
                                                      // list}
-           std::map<int,
-                    std::map<std::string,
-                             std::map<int, std::vector<std::string>>>>  // x[table][domain][table]
-                                                                        // =
-                                                                        // {item
-                                                                        // list}
+           std::map<
+               int,
+               std::map<
+                   std::string,
+                   std::map<int, std::vector<
+                                     std::string>>>>  // x[table][domain][table]
+                                                      // =
+                                                      // {item
+                                                      // list}
            >
-load_clusters_hirm(const std::string &path) {
+load_clusters_hirm(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
@@ -297,7 +300,7 @@ load_clusters_hirm(const std::string &path) {
     stream >> second;
     assert(second.size() > 0);
     assert(isnumeric(second));
-    std::string &domain = first;
+    std::string& domain = first;
     int table = std::stoi(second);
     std::vector<std::string> items;
     for (std::string item; stream >> item;) {
@@ -312,15 +315,15 @@ load_clusters_hirm(const std::string &path) {
   }
 
   assert(relations.size() == irms.size());
-  for (const auto &[t, rs] : relations) {
+  for (const auto& [t, rs] : relations) {
     assert(irms.count(t) == 1);
   }
   fp.close();
   return std::make_pair(relations, irms);
 }
 
-void from_txt(IRM *const irm, const std::string &path_schema,
-              const std::string &path_obs, const std::string &path_clusters) {
+void from_txt(IRM* const irm, const std::string& path_schema,
+              const std::string& path_obs, const std::string& path_clusters) {
   // Load the data.
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs);
@@ -331,16 +334,16 @@ void from_txt(IRM *const irm, const std::string &path_schema,
   assert(irm->domains.empty());
   assert(irm->relations.empty());
   assert(irm->domain_to_relations.empty());
-  for (const auto &[r, ds] : schema) {
+  for (const auto& [r, ds] : schema) {
     irm->add_relation(r, ds);
   }
   // Add the domain entities with fixed clustering.
   T_encoding_f item_to_code = std::get<0>(encoding);
-  for (const auto &[domain, tables] : clusters) {
+  for (const auto& [domain, tables] : clusters) {
     assert(irm->domains.at(domain)->items.size() == 0);
-    for (const auto &[table, items] : tables) {
+    for (const auto& [table, items] : tables) {
       assert(0 <= table);
-      for (const std::string &item : items) {
+      for (const std::string& item : items) {
         T_item code = item_to_code.at(domain).at(item);
         irm->domains.at(domain)->incorporate(code, table);
       }
@@ -350,8 +353,8 @@ void from_txt(IRM *const irm, const std::string &path_schema,
   incorporate_observations(*irm, encoding, observations);
 }
 
-void from_txt(HIRM *const hirm, const std::string &path_schema,
-              const std::string &path_obs, const std::string &path_clusters) {
+void from_txt(HIRM* const hirm, const std::string& path_schema,
+              const std::string& path_obs, const std::string& path_clusters) {
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs);
   T_encoding encoding = encode_observations(schema, observations);
@@ -361,16 +364,16 @@ void from_txt(HIRM *const hirm, const std::string &path_schema,
   assert(hirm->irms.empty());
   assert(hirm->relation_to_code.empty());
   assert(hirm->code_to_relation.empty());
-  for (const auto &[r, ds] : schema) {
+  for (const auto& [r, ds] : schema) {
     hirm->add_relation(r, ds);
     assert(hirm->irms.size() == hirm->crp.tables.size());
     hirm->set_cluster_assignment_gibbs(r, -1);
   }
   // Add each IRM.
-  for (const auto &[table, rs] : relations) {
+  for (const auto& [table, rs] : relations) {
     assert(hirm->irms.size() == hirm->crp.tables.size());
     // Add relations to the IRM.
-    for (const std::string &r : rs) {
+    for (const std::string& r : rs) {
       assert(hirm->irms.size() == hirm->crp.tables.size());
       int table_current = hirm->relation_to_table(r);
       if (table_current != table) {
@@ -380,15 +383,15 @@ void from_txt(HIRM *const hirm, const std::string &path_schema,
     }
     // Add the domain entities with fixed clustering to this IRM.
     // TODO: Duplicated code with from_txt(IRM)
-    IRM *irm = hirm->irms.at(table);
+    IRM* irm = hirm->irms.at(table);
     auto clusters = irms.at(table);
     assert(irm->relations.size() == rs.size());
     T_encoding_f item_to_code = std::get<0>(encoding);
-    for (const auto &[domain, tables] : clusters) {
+    for (const auto& [domain, tables] : clusters) {
       assert(irm->domains.at(domain)->items.size() == 0);
-      for (const auto &[t, items] : tables) {
+      for (const auto& [t, items] : tables) {
         assert(0 <= t);
-        for (const std::string &item : items) {
+        for (const std::string& item : items) {
           int code = item_to_code.at(domain).at(item);
           irm->domains.at(domain)->incorporate(code, t);
         }

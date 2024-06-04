@@ -3,6 +3,8 @@
 
 #pragma once
 #include <random>
+#include <tuple>
+#include <variant>
 
 #include "base.hh"
 #include "util_math.hh"
@@ -15,10 +17,14 @@
 #define M_2PI 6.28318530717958647692528676655
 #endif
 
-#define R_GRID {0.1, 1.0, 10.0}
-#define V_GRID {0.5, 1.0, 2.0, 5.0}
-#define M_GRID {-1.0, 0.0, 1.0}
-#define S_GRID {0.5, 1.0, 2.0}
+#define R_GRID \
+  { 0.1, 1.0, 10.0 }
+#define V_GRID \
+  { 0.5, 1.0, 2.0, 5.0 }
+#define M_GRID \
+  { -1.0, 0.0, 1.0 }
+#define S_GRID \
+  { 0.5, 1.0, 2.0 }
 
 double logZ(double r, double v, double s) {
   return (v + 1.0) / 2.0 * log(2.0) + 0.5 * log(M_PI) - 0.5 * log(r) -
@@ -42,19 +48,19 @@ class Normal : public Distribution<double> {
   double mean = 0.0;  // Mean of observed values
   double var = 0.0;   // Variance of observed values
 
-  std::mt19937 *prng;
+  std::mt19937* prng;
 
   // Normal does not take ownership of prng.
-  Normal(std::mt19937 *prng) { this->prng = prng; }
+  Normal(std::mt19937* prng) { this->prng = prng; }
 
-  void incorporate(const double &x) {
+  void incorporate(const double& x) {
     ++N;
     double old_mean = mean;
     mean += (x - mean) / N;
     var += (x - mean) * (x - old_mean);
   }
 
-  void unincorporate(const double &x) {
+  void unincorporate(const double& x) {
     int old_N = N;
     --N;
     if (N == 0) {
@@ -67,7 +73,7 @@ class Normal : public Distribution<double> {
     var -= (x - mean) * (x - old_mean);
   }
 
-  void posterior_hypers(double *mprime, double *sprime) const {
+  void posterior_hypers(double* mprime, double* sprime) const {
     // r' = r + N
     // m' = (r m + N mean) / (r + N)
     // C = N (var + mean^2)
@@ -78,12 +84,12 @@ class Normal : public Distribution<double> {
               N * (var - 2 * mean * mdelta - mdelta * mdelta);
   }
 
-  double logp(const double &x) const {
+  double logp(const double& x) const {
     // Based on equation (13) of GaussianInverseGamma.pdf
     double unused_mprime, sprime;
-    const_cast<Normal *>(this)->incorporate(x);
+    const_cast<Normal*>(this)->incorporate(x);
     posterior_hypers(&unused_mprime, &sprime);
-    const_cast<Normal *>(this)->unincorporate(x);
+    const_cast<Normal*>(this)->unincorporate(x);
     double sprime2;
     posterior_hypers(&unused_mprime, &sprime2);
     return -0.5 * log(M_2PI) + logZ(r + N + 1, v + N + 1, sprime) -
@@ -141,6 +147,6 @@ class Normal : public Distribution<double> {
   }
 
   // Disable copying.
-  Normal &operator=(const Normal &) = delete;
-  Normal(const Normal &) = delete;
+  Normal& operator=(const Normal&) = delete;
+  Normal(const Normal&) = delete;
 };
