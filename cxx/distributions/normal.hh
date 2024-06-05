@@ -57,7 +57,7 @@ class Normal : public Distribution<double> {
     ++N;
     double old_mean = mean;
     mean += (x - mean) / N;
-    var += (x - mean) * (x - old_mean);
+    var += ((x - mean) * (x - old_mean) - var) / N;
   }
 
   void unincorporate(const double& x) {
@@ -70,7 +70,7 @@ class Normal : public Distribution<double> {
     }
     double old_mean = mean;
     mean = (mean * old_N - x) / N;
-    var -= (x - mean) * (x - old_mean);
+    var = (var * old_N - (x - mean) * (x - old_mean)) / N;
   }
 
   void posterior_hypers(double* mprime, double* sprime) const {
@@ -80,7 +80,7 @@ class Normal : public Distribution<double> {
     // s' = s + C + r m^2 - r' m' m'
     double mdelta = r * (m - mean) / (r + N);
     *mprime = mean + mdelta;
-    *sprime = s + r * (m * m - *mprime * *mprime) +
+    *sprime = s + r * (m - *mprime) * (m + *mprime) +
               N * (var - 2 * mean * mdelta - mdelta * mdelta);
   }
 
