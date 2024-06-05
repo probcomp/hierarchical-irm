@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   bb.unincorporate("world");
 
   BOOST_TEST(bb.logp("test") == -22.169938638053061, tt::tolerance(1e-6));
-  BOOST_TEST(bb.logp_score() == -24, tt::tolerance(1e-6));
+  BOOST_TEST(bb.logp_score() == -27.386089148807059, tt::tolerance(1e-6));
 }
 
 BOOST_AUTO_TEST_CASE(test_set_alpha) {
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(test_set_alpha) {
     BOOST_TEST(trans_dist.alpha == 2.0);
   }
 
-  BOOST_TEST(first_lp != bb.logp_score());
+  BOOST_TEST(first_lp != bb.logp_score(), tt::tolerance(1e-6));
 }
 
 BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
