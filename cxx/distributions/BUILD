@@ -89,6 +89,7 @@ cc_test(
     deps = [
         ":beta_bernoulli",
         "@boost//:algorithm",
+        "@boost//:math",
         "@boost//:test",
     ],
 )
@@ -108,6 +109,7 @@ cc_test(
     srcs = ["dirichlet_categorical_test.cc"],
     deps = [
         ":dirichlet_categorical",
+        ":beta_bernoulli",
         "@boost//:algorithm",
         "@boost//:test",
     ],
@@ -119,6 +121,7 @@ cc_test(
     deps = [
         ":normal",
         "@boost//:algorithm",
+        "@boost//:math",
         "@boost//:test",
     ],
 )

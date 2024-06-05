@@ -47,18 +47,21 @@ class Bigram : public Distribution<std::string> {
       transition_dists.emplace_back(prng, total_chars);
     }
   }
+
   void incorporate(const std::string& x) {
     const std::vector<size_t> indices = string_to_indices(x);
     for (size_t i = 0; i != indices.size() - 1; ++i) {
       transition_dists[indices[i]].incorporate(indices[i + 1]);
     }
   }
+
   void unincorporate(const std::string& s) {
     const std::vector<size_t> indices = string_to_indices(s);
     for (size_t i = 0; i != indices.size() - 1; ++i) {
       transition_dists[indices[i]].unincorporate(indices[i + 1]);
     }
   }
+
   double logp(const std::string& s) const {
     const std::vector<size_t> indices = string_to_indices(s);
     double total_logp = 0.0;
@@ -73,11 +76,15 @@ class Bigram : public Distribution<std::string> {
     }
     return total_logp;
   }
+
   double logp_score() const {
-    return std::transform_reduce(
-        transition_dists.cbegin(), transition_dists.cend(), 0, std::plus{},
-        [&](auto d) -> double { return d.logp_score(); });
+    double logp = 0;
+    for (auto d : transition_dists) {
+      logp += d.logp_score();
+    }
+    return logp;
   }
+
   std::string sample() {
     std::string sampled_string;
     // TODO(emilyaf): Reconsider the reserved length and maybe enforce a
