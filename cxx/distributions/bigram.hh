@@ -79,7 +79,7 @@ class Bigram : public Distribution<std::string> {
 
   double logp_score() const {
     double logp = 0;
-    for (auto d : transition_dists) {
+    for (const auto& d : transition_dists) {
       logp += d.logp_score();
     }
     return logp;
