@@ -3,11 +3,12 @@
 #define BOOST_TEST_MODULE test Normal
 
 #include "distributions/normal.hh"
-#include "util_math.hh"
 
 #include <boost/math/distributions/inverse_gamma.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/test/included/unit_test.hpp>
+
+#include "util_math.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_against_boost) {
@@ -24,7 +25,7 @@ BOOST_AUTO_TEST_CASE(test_against_boost) {
   for (int j = 0; j < num_trials; ++j) {
     double x = 1. / (std::gamma_distribution<double>(nd.v, nd.s))(prng2);
     inverse_gamma_samples.emplace_back(x);
-    double y = (std::normal_distribution<double>(nd.m, sqrt(x / nd.r))) (prng2);
+    double y = (std::normal_distribution<double>(nd.m, sqrt(x / nd.r)))(prng2);
     normal_samples.emplace_back(y);
   }
 
@@ -39,8 +40,8 @@ BOOST_AUTO_TEST_CASE(test_against_boost) {
       double ig = inverse_gamma_samples[j];
       double n = normal_samples[j];
       boost::math::normal_distribution normal_dist(n, sqrt(ig));
-      average_log_prob.emplace_back(
-          log(boost::math::pdf(normal_dist, static_cast<double>(i)) / num_trials));
+      average_log_prob.emplace_back(log(
+          boost::math::pdf(normal_dist, static_cast<double>(i)) / num_trials));
     }
     accumulated_log_prob += logsumexp(average_log_prob);
     BOOST_TEST(nd.logp_score() == accumulated_log_prob, tt::tolerance(0.3));

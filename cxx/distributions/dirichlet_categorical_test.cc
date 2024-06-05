@@ -2,13 +2,14 @@
 
 #define BOOST_TEST_MODULE test DirichletCategorical
 
-#include <boost/test/included/unit_test.hpp>
-#include "distributions/beta_bernoulli.hh"
 #include "distributions/dirichlet_categorical.hh"
+
+#include <boost/test/included/unit_test.hpp>
+
+#include "distributions/beta_bernoulli.hh"
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_matches_beta_bernoulli)
-{
+BOOST_AUTO_TEST_CASE(test_matches_beta_bernoulli) {
   std::mt19937 prng;
   // 2-category Dirichlet Categorical is the same as a BetaBernoulli.
   DirichletCategorical dc(&prng, 2);
@@ -30,8 +31,7 @@ BOOST_AUTO_TEST_CASE(test_matches_beta_bernoulli)
   BOOST_TEST(dc.logp_score() == bb.logp_score(), tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(test_simple)
-{
+BOOST_AUTO_TEST_CASE(test_simple) {
   std::mt19937 prng;
   DirichletCategorical dc(&prng, 10);
 
@@ -47,8 +47,7 @@ BOOST_AUTO_TEST_CASE(test_simple)
   BOOST_TEST(dc.logp_score() == -12.389393702657209, tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(test_transition_hyperparameters)
-{
+BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   std::mt19937 prng;
   DirichletCategorical dc(&prng, 10);
 
@@ -62,4 +61,3 @@ BOOST_AUTO_TEST_CASE(test_transition_hyperparameters)
   dc.transition_hyperparameters();
   BOOST_TEST(dc.alpha > 1.0);
 }
-

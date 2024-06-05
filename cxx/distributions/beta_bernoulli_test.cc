@@ -3,11 +3,12 @@
 #define BOOST_TEST_MODULE test BetaBernoulli
 
 #include "distributions/beta_bernoulli.hh"
-#include "util_math.hh"
 
 #include <boost/math/distributions/bernoulli.hpp>
 #include <boost/math/distributions/beta.hpp>
 #include <boost/test/included/unit_test.hpp>
+
+#include "util_math.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
@@ -57,17 +58,16 @@ BOOST_AUTO_TEST_CASE(test_against_boost) {
 
     for (double b : beta_samples) {
       boost::math::bernoulli_distribution bernoulli_dist(b);
-      average_log_prob.emplace_back(log(
-          boost::math::pdf(
-              bernoulli_dist, static_cast<double>(i % 2)) / num_trials));
+      average_log_prob.emplace_back(
+          log(boost::math::pdf(bernoulli_dist, static_cast<double>(i % 2)) /
+              num_trials));
     }
     accumulated_log_prob += logsumexp(average_log_prob);
     BOOST_TEST(bb.logp_score() == accumulated_log_prob, tt::tolerance(0.3));
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_transition_hyperparameters)
-{
+BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   std::mt19937 prng;
   BetaBernoulli bb(&prng);
 
