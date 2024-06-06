@@ -14,34 +14,34 @@ double logZ(double r, double v, double s) {
       + lgamma(0.5 * v);
 }
 
-void Normal::incorporate(const double &x){
-    ++N;
-    double old_mean = mean;
-    mean += (x - mean) / N;
-    var += (x - mean) * (x - old_mean);
+void Normal::incorporate(const double& x) {
+  ++N;
+  double old_mean = mean;
+  mean += (x - mean) / N;
+  var += ((x - mean) * (x - old_mean) - var) / N;
 }
 
-void Normal::unincorporate(const double &x) {
-    int old_N = N;
-    --N;
-    if (N == 0) {
-      mean = 0.0;
-      var = 0.0;
-      return;
-    }
-    double old_mean = mean;
-    mean = (mean * old_N - x) / N;
-    var -= (x - mean) * (x - old_mean);
+void Normal::unincorporate(const double& x) {
+  int old_N = N;
+  --N;
+  if (N == 0) {
+    mean = 0.0;
+    var = 0.0;
+    return;
+  }
+  double old_mean = mean;
+  mean = (mean * old_N - x) / N;
+  var = (var * old_N - (x - mean) * (x - old_mean)) / N;
 }
 
-void Normal::posterior_hypers(double *mprime, double *sprime) const {
+void Normal::posterior_hypers(double* mprime, double* sprime) const {
   // r' = r + N
   // m' = (r m + N mean) / (r + N)
   // C = N (var + mean^2)
   // s' = s + C + r m^2 - r' m' m'
   double mdelta = r * (m - mean) / (r + N);
   *mprime = mean + mdelta;
-  *sprime = s + r * (m * m - *mprime * *mprime) +
+  *sprime = s + r * (m - *mprime) * (m + *mprime) +
             N * (var - 2 * mean * mdelta - mdelta * mdelta);
 }
 
