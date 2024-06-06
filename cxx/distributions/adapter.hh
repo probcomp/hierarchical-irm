@@ -12,7 +12,7 @@
 #include "distributions/base.hh"
 
 template <typename SampleType = double>
-class DistributionAdapter : Distribution<std::string> {
+class DistributionAdapter : public Distribution<std::string> {
  public:
   // The underlying distribution that is being adapted.  We own the
   // underlying Distribution.
@@ -34,11 +34,13 @@ class DistributionAdapter : Distribution<std::string> {
 
   void incorporate(const std::string& x) {
     SampleType s = from_string(x);
+    ++N;
     d->incorporate(s);
   }
 
   void unincorporate(const std::string& x) {
     SampleType s = from_string(x);
+    --N;
     d->unincorporate(s);
   }
 

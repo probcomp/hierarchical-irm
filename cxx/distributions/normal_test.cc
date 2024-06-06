@@ -41,7 +41,6 @@ BOOST_AUTO_TEST_CASE(test_against_boost) {
 
   for (int i = 0; i < 10; ++i) {
     nd.incorporate(i);
-    std::cerr << nd.logp_score() << "\n";
 
     auto integrand1 = [&nd, &inv_gamma_dist, &i](double n, double ig) {
       bm::normal_distribution normal_prior_dist(nd.m, sqrt(ig / nd.r));
