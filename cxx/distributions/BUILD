@@ -1,14 +1,13 @@
 licenses(["notice"])
 
-
 cc_library(
     name = "distributions",
     visibility = ["//:__subpackages__"],
     deps = [
         ":adapter",
         ":base",
-        ":bigram",
         ":beta_bernoulli",
+        ":bigram",
         ":dirichlet_categorical",
         ":normal",
     ],
@@ -31,6 +30,7 @@ cc_library(
 
 cc_library(
     name = "beta_bernoulli",
+    srcs = ["beta_bernoulli.cc"],
     hdrs = ["beta_bernoulli.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
@@ -42,6 +42,7 @@ cc_library(
 
 cc_library(
     name = "bigram",
+    srcs = ["bigram.cc"],
     hdrs = ["bigram.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
@@ -54,7 +55,8 @@ cc_library(
 
 cc_library(
     name = "dirichlet_categorical",
-    srcs = ["dirichlet_categorical.hh"],
+    srcs = ["dirichlet_categorical.cc"],
+    hdrs = ["dirichlet_categorical.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
@@ -64,8 +66,8 @@ cc_library(
 
 cc_library(
     name = "normal",
-    hdrs = ["normal.hh"],
     srcs = ["normal.cc"],
+    hdrs = ["normal.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
@@ -109,8 +111,8 @@ cc_test(
     name = "dirichlet_categorical_test",
     srcs = ["dirichlet_categorical_test.cc"],
     deps = [
-        ":dirichlet_categorical",
         ":beta_bernoulli",
+        ":dirichlet_categorical",
         "@boost//:algorithm",
         "@boost//:test",
     ],

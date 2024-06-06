@@ -2,33 +2,19 @@
 // See LICENSE.txt
 
 #pragma once
-#include <cassert>
 
-#include "base.hh"
-#include "dirichlet_categorical.hh"
+#include "distributions/base.hh"
+#include "distributions/dirichlet_categorical.hh"
 
 class Bigram : public Distribution<std::string> {
  private:
-  void assert_valid_char(const char c) const { assert(c >= ' ' && c <= '~'); }
-  size_t char_to_index(const char c) const {
-    assert_valid_char(c);
-    return c - ' ';
-  }
-  char index_to_char(const size_t i) const {
-    const char c = i + ' ';
-    assert_valid_char(c);
-    return c;
-  }
-  std::vector<size_t> string_to_indices(const std::string& str) const {
-    // Convert the string to a vector of indices between 0 and `num_chars`,
-    // with a start/stop symbol at the beginning/end.
-    std::vector<size_t> inds = {num_chars};
-    for (const char& c : str) {
-      inds.push_back(char_to_index(c));
-    }
-    inds.push_back(num_chars);
-    return inds;
-  }
+  void assert_valid_char(const char c) const;
+
+  size_t char_to_index(const char c) const;
+
+  char index_to_char(const size_t i) const;
+
+  std::vector<size_t> string_to_indices(const std::string& str) const;
 
  public:
   double alpha = 1;  // hyperparameter for all transition distributions.
@@ -48,89 +34,17 @@ class Bigram : public Distribution<std::string> {
     }
   }
 
-  void incorporate(const std::string& x) {
-    const std::vector<size_t> indices = string_to_indices(x);
-    for (size_t i = 0; i != indices.size() - 1; ++i) {
-      transition_dists[indices[i]].incorporate(indices[i + 1]);
-    }
-    ++N;
-  }
+  void incorporate(const std::string& x);
 
-  void unincorporate(const std::string& s) {
-    const std::vector<size_t> indices = string_to_indices(s);
-    for (size_t i = 0; i != indices.size() - 1; ++i) {
-      transition_dists[indices[i]].unincorporate(indices[i + 1]);
-    }
-    --N;
-  }
+  void unincorporate(const std::string& s);
 
-  double logp(const std::string& s) const {
-    const std::vector<size_t> indices = string_to_indices(s);
-    double total_logp = 0.0;
-    for (size_t i = 0; i != indices.size() - 1; ++i) {
-      total_logp += transition_dists[indices[i]].logp(indices[i + 1]);
-      // Incorporate each value so that subsequent probabilities are
-      // conditioned on it.
-      transition_dists[indices[i]].incorporate(indices[i + 1]);
-    }
-    for (size_t i = 0; i != indices.size() - 1; ++i) {
-      transition_dists[indices[i]].unincorporate(indices[i + 1]);
-    }
-    return total_logp;
-  }
+  double logp(const std::string& s) const;
 
-  double logp_score() const {
-    double logp = 0;
-    for (const auto& d : transition_dists) {
-      logp += d.logp_score();
-    }
-    return logp;
-  }
+  double logp_score() const;
 
-  std::string sample() {
-    std::string sampled_string;
-    // TODO(emilyaf): Reconsider the reserved length and maybe enforce a
-    // max length.
-    sampled_string.reserve(30);
-    // Sample the first character conditioned on the stop/start symbol.
-    size_t current_ind = num_chars;
-    size_t next_ind = transition_dists[current_ind].sample();
-    transition_dists[current_ind].incorporate(next_ind);
-    current_ind = next_ind;
+  std::string sample();
 
-    // Sample additional characters until the stop/start symbol is sampled.
-    // Incorporate the sampled character at each loop iteration so that
-    // subsequent samples are conditioned on its observation.
-    while (current_ind != num_chars) {
-      sampled_string += index_to_char(current_ind);
-      next_ind = transition_dists[current_ind].sample();
-      transition_dists[current_ind].incorporate(next_ind);
-      current_ind = next_ind;
-    }
-    unincorporate(sampled_string);
-    return sampled_string;
-  }
+  void set_alpha(double alphat);
 
-  void set_alpha(double alphat) {
-    alpha = alphat;
-    for (auto& trans_dist : transition_dists) {
-      trans_dist.alpha = alpha;
-    }
-  }
-
-  void transition_hyperparameters() {
-    std::vector<double> logps;
-    std::vector<double> alphas;
-    // C++ doesn't yet allow range for-loops over existing variables.  Sigh.
-    for (double alphat : ALPHA_GRID) {
-      set_alpha(alphat);
-      double lp = logp_score();
-      if (!std::isnan(lp)) {
-        logps.push_back(logp_score());
-        alphas.push_back(alphat);
-      }
-    }
-    int i = sample_from_logps(logps, prng);
-    set_alpha(alphas[i]);
-  }
+  void transition_hyperparameters();
 };
