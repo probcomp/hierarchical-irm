@@ -24,7 +24,6 @@ class DirichletCategorical : public Distribution<double> {
                        int k) {  // k is number of categories
     this->prng = prng;
     counts = std::vector<int>(k, 0);
-    N = 0;
   }
   void incorporate(const double& x) {
     assert(x >= 0 && x < counts.size());

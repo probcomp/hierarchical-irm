@@ -53,6 +53,7 @@ class Bigram : public Distribution<std::string> {
     for (size_t i = 0; i != indices.size() - 1; ++i) {
       transition_dists[indices[i]].incorporate(indices[i + 1]);
     }
+    ++N;
   }
 
   void unincorporate(const std::string& s) {
@@ -60,6 +61,7 @@ class Bigram : public Distribution<std::string> {
     for (size_t i = 0; i != indices.size() - 1; ++i) {
       transition_dists[indices[i]].unincorporate(indices[i + 1]);
     }
+    --N;
   }
 
   double logp(const std::string& s) const {
