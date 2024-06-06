@@ -64,7 +64,8 @@ cc_library(
 
 cc_library(
     name = "normal",
-    srcs = ["normal.hh"],
+    hdrs = ["normal.hh"],
+    srcs = ["normal.cc"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",

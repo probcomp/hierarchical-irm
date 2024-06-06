@@ -10,6 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "util_math.hh"
+namespace bm = boost::math;
 namespace tt = boost::test_tools;
 namespace bm = boost::math;
 
@@ -74,35 +75,26 @@ BOOST_AUTO_TEST_CASE(test_posterior_predictive) {
 }
 
 BOOST_AUTO_TEST_CASE(test_against_boost) {
-  // Construct a biased estimator of the log_prob using Boost, and check that we
-  // are within tolerance.
   std::mt19937 prng;
   std::mt19937 prng2;
   BetaBernoulli bb(&prng);
-  const int num_trials = 5000;
 
-  std::vector<double> beta_samples;
-  for (int j = 0; j < num_trials; ++j) {
-    double x = (std::gamma_distribution<double>(bb.alpha, 1.))(prng2);
-    double y = (std::gamma_distribution<double>(bb.beta, 1.))(prng2);
-    beta_samples.emplace_back(x / (x + y));
-  }
-
-  double accumulated_log_prob;
-  boost::math::beta_distribution<> beta_dist(bb.alpha, bb.beta);
+  bm::beta_distribution<> beta_dist(bb.alpha, bb.beta);
 
   for (int i = 0; i < 10; ++i) {
-    bb.incorporate(i % 2);
-    std::vector<double> average_log_prob;
+    bb.incorporate(static_cast<double>(i % 2));
 
-    for (double b : beta_samples) {
-      boost::math::bernoulli_distribution bernoulli_dist(b);
-      average_log_prob.emplace_back(
-          log(boost::math::pdf(bernoulli_dist, static_cast<double>(i % 2)) /
-              num_trials));
-    }
-    accumulated_log_prob += logsumexp(average_log_prob);
-    BOOST_TEST(bb.logp_score() == accumulated_log_prob, tt::tolerance(0.3));
+    auto integrand = [&beta_dist, &i](double t) {
+      bm::bernoulli_distribution bernoulli_dist(t);
+      double result = bm::pdf(beta_dist, t);
+      for (int j = 0; j <= i; ++j) {
+        result *= bm::pdf(bernoulli_dist, static_cast<double>(j % 2));
+      }
+      return result;
+    };
+    double result = bm::quadrature::gauss_kronrod<double, 100>::integrate(
+        integrand, 0., 1.);
+    BOOST_TEST(bb.logp_score() == log(result), tt::tolerance(1e-5));
   }
 }
 

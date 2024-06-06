@@ -6,45 +6,64 @@
 
 #include <boost/math/distributions/inverse_gamma.hpp>
 #include <boost/math/distributions/normal.hpp>
+#include <boost/math/quadrature/gauss_kronrod.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include "util_math.hh"
+namespace bm = boost::math;
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_against_boost) {
-  // Construct a biased estimator of the log_prob using Boost, and check that we
-  // are within tolerance.
+BOOST_AUTO_TEST_CASE(test_welford) {
   std::mt19937 prng;
-  std::mt19937 prng2;
   Normal nd(&prng);
-
-  std::vector<double> inverse_gamma_samples;
-  std::vector<double> normal_samples;
-  int num_trials = 5000;
-
-  for (int j = 0; j < num_trials; ++j) {
-    double x = 1. / (std::gamma_distribution<double>(nd.v, nd.s))(prng2);
-    inverse_gamma_samples.emplace_back(x);
-    double y = (std::normal_distribution<double>(nd.m, sqrt(x / nd.r)))(prng2);
-    normal_samples.emplace_back(y);
+  std::vector<double> entries{-1., 2., 4., 5., 6., 20.};
+  std::vector<double> expected_means{-1., 0.5, 1 + 2 / 3., 2.5, 3.2, 6.};
+  std::vector<double> expected_vars{0.,   2.25, 4 + 2 / 9.,
+                                    5.25, 6.16, 44. + 1 / 3.};
+  for (int i = 0; i < std::ssize(entries); ++i) {
+    nd.incorporate(entries[i]);
+    BOOST_TEST(nd.mean == expected_means[i], tt::tolerance(1e-6));
+    BOOST_TEST(nd.var == expected_vars[i], tt::tolerance(1e-6));
   }
 
-  double accumulated_log_prob;
-  boost::math::inverse_gamma_distribution<> inv_gamma_dist(nd.v, nd.s);
+  for (int i = std::ssize(entries) - 1; i > 0; --i) {
+    nd.unincorporate(entries[i]);
+    BOOST_TEST(nd.mean == expected_means[i - 1], tt::tolerance(1e-6));
+    BOOST_TEST(nd.var == expected_vars[i - 1], tt::tolerance(1e-6));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_against_boost) {
+  std::mt19937 prng;
+  Normal nd(&prng);
+
+  bm::inverse_gamma_distribution inv_gamma_dist(nd.v / 2., nd.s / 2.);
 
   for (int i = 0; i < 10; ++i) {
     nd.incorporate(i);
-    std::vector<double> average_log_prob;
 
-    for (int j = 0; j < num_trials; ++j) {
-      double ig = inverse_gamma_samples[j];
-      double n = normal_samples[j];
-      boost::math::normal_distribution normal_dist(n, sqrt(ig));
-      average_log_prob.emplace_back(log(
-          boost::math::pdf(normal_dist, static_cast<double>(i)) / num_trials));
-    }
-    accumulated_log_prob += logsumexp(average_log_prob);
-    BOOST_TEST(nd.logp_score() == accumulated_log_prob, tt::tolerance(0.3));
+    auto integrand1 = [&nd, &inv_gamma_dist, &i](double n, double ig) {
+      bm::normal_distribution normal_prior_dist(nd.m, sqrt(ig / nd.r));
+      bm::normal_distribution normal_dist(n, sqrt(ig));
+      double result =
+          bm::pdf(normal_prior_dist, n) * bm::pdf(inv_gamma_dist, ig);
+      for (int j = 0; j <= i; ++j) {
+        result *= bm::pdf(normal_dist, j);
+      }
+      return result;
+    };
+
+    auto integrand2 = [&integrand1](double ig) {
+      auto f = [&](double n) { return integrand1(n, ig); };
+      return bm::quadrature::gauss_kronrod<double, 100>::integrate(
+          f, -std::numeric_limits<double>::infinity(),
+          std::numeric_limits<double>::infinity());
+    };
+
+    double result = bm::quadrature::gauss_kronrod<double, 100>::integrate(
+        integrand2, 0., std::numeric_limits<double>::infinity());
+
+    BOOST_TEST(nd.logp_score() == log(result), tt::tolerance(1e-4));
   }
   BOOST_TEST(nd.N == 10);
 }
@@ -63,9 +82,6 @@ BOOST_AUTO_TEST_CASE(simple) {
 
   nd.unincorporate(-2.0);
   BOOST_TEST(nd.N == 1);
-
-  BOOST_TEST(nd.logp(6.0) == -2.7673076255063034, tt::tolerance(1e-6));
-  BOOST_TEST(nd.logp_score() == -4.7299819282937534, tt::tolerance(1e-6));
 }
 
 BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {

@@ -11,50 +11,54 @@
 
 #include "distributions/base.hh"
 
-template <typename SampleType = double>
-class DistributionAdapter : Distribution<std::string> {
+template <typename S = double>
+class DistributionAdapter : public Distribution<std::string> {
  public:
   // The underlying distribution that is being adapted.  We own the
   // underlying Distribution.
-  Distribution<SampleType>* d;
+  Distribution<S>* d;
 
-  DistributionAdapter(Distribution<SampleType>* dd) : d(dd) {};
+  DistributionAdapter(Distribution<S>* dd) : d(dd) {};
 
-  SampleType from_string(const std::string& x) const {
-    SampleType s;
+  S from_string(const std::string& x) const {
+    S s;
     std::istringstream(x) >> s;
     return s;
   }
 
-  std::string to_string(const SampleType& s) const {
+  std::string to_string(const S& s) const {
     std::ostringstream os;
     os << s;
     return os.str();
   }
 
   void incorporate(const std::string& x) {
-    SampleType s = from_string(x);
+    S s = from_string(x);
+    ++N;
     d->incorporate(s);
   }
 
   void unincorporate(const std::string& x) {
-    SampleType s = from_string(x);
+    S s = from_string(x);
+    --N;
     d->unincorporate(s);
   }
 
   double logp(const std::string& x) const {
-    SampleType s = from_string(x);
+    S s = from_string(x);
     return d->logp(s);
   }
 
   double logp_score() const { return d->logp_score(); }
 
   std::string sample() {
-    SampleType s = d->sample();
+    S s = d->sample();
     return to_string(s);
   }
 
-  void transition_hyperparameters() { d->transition_hyperparameters(); }
+  void transition_hyperparameters() {
+    d->transition_hyperparameters();
+  }
 
   ~DistributionAdapter() { delete d; }
 };

@@ -43,11 +43,15 @@ void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
   }
   // TRANSITION DISTRIBUTION HYPERPARAMETERS.
   for (const auto& [r, relation] : irm->relations) {
-    for (const auto& [c, distribution] : relation->clusters) {
-      clock_t t = clock();
-      distribution->transition_hyperparameters();
-      REPORT_SCORE(verbose, t, t_total, irm);
-    }
+    std::visit(
+        [&](auto r) {
+          for (const auto& [c, distribution] : r->clusters) {
+            clock_t t = clock();
+            distribution->transition_hyperparameters();
+            REPORT_SCORE(verbose, t, t_total, irm);
+          }
+        },
+        relation);
   }
   // TRANSITION ALPHA.
   for (const auto& [d, domain] : irm->domains) {
