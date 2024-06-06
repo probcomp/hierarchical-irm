@@ -35,17 +35,20 @@ class BetaBernoulli : public Distribution<double> {
     assert(0 <= s);
     assert(0 <= N);
   }
+
   double logp(const double& x) const {
     assert(x == 0 || x == 1);
     double log_denom = log(N + alpha + beta);
     double log_numer = x ? log(s + alpha) : log(N - s + beta);
     return log_numer - log_denom;
   }
+
   double logp_score() const {
     double v1 = lbeta(s + alpha, N - s + beta);
     double v2 = lbeta(alpha, beta);
     return v1 - v2;
   }
+
   double sample() {
     double p = exp(logp(1));
     std::vector<int> items{0, 1};
@@ -53,6 +56,7 @@ class BetaBernoulli : public Distribution<double> {
     int idx = choice(weights, prng);
     return items[idx];
   }
+
   void transition_hyperparameters() {
     std::vector<double> logps;
     std::vector<std::pair<double, double>> hypers;

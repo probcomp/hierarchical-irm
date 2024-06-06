@@ -33,11 +33,12 @@ BOOST_AUTO_TEST_CASE(test_welford) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_against_boost) {
+BOOST_AUTO_TEST_CASE(test_log_prob) {
   std::mt19937 prng;
   Normal nd(&prng);
 
   bm::inverse_gamma_distribution inv_gamma_dist(nd.v / 2., nd.s / 2.);
+  auto quad = bm::quadrature::gauss_kronrod<double, 100>();
 
   for (int i = 0; i < 10; ++i) {
     nd.incorporate(i);
@@ -53,17 +54,61 @@ BOOST_AUTO_TEST_CASE(test_against_boost) {
       return result;
     };
 
-    auto integrand2 = [&integrand1](double ig) {
+    auto integrand2 = [&quad, &integrand1](double ig) {
       auto f = [&](double n) { return integrand1(n, ig); };
-      return bm::quadrature::gauss_kronrod<double, 100>::integrate(
-          f, -std::numeric_limits<double>::infinity(),
-          std::numeric_limits<double>::infinity());
+      return quad.integrate(f, -std::numeric_limits<double>::infinity(),
+                            std::numeric_limits<double>::infinity());
     };
 
-    double result = bm::quadrature::gauss_kronrod<double, 100>::integrate(
-        integrand2, 0., std::numeric_limits<double>::infinity());
+    double result =
+        quad.integrate(integrand2, 0., std::numeric_limits<double>::infinity());
 
     BOOST_TEST(nd.logp_score() == log(result), tt::tolerance(1e-4));
+  }
+  BOOST_TEST(nd.N == 10);
+}
+
+BOOST_AUTO_TEST_CASE(test_posterior_pred) {
+  std::mt19937 prng;
+  Normal nd(&prng);
+
+  bm::inverse_gamma_distribution inv_gamma_dist(nd.v / 2., nd.s / 2.);
+  auto quad = bm::quadrature::gauss<double, 100>();
+
+  for (int i = 0; i < 10; ++i) {
+    double test_data = i / 3.;
+    nd.incorporate(i);
+
+    auto unnormalized = [&nd, &inv_gamma_dist, &i](double n, double ig) {
+      bm::normal_distribution normal_prior_dist(nd.m, sqrt(ig / nd.r));
+      bm::normal_distribution normal_dist(n, sqrt(ig));
+      double result =
+          bm::pdf(normal_prior_dist, n) * bm::pdf(inv_gamma_dist, ig);
+      for (int j = 0; j <= i; ++j) {
+        result *= bm::pdf(normal_dist, j);
+      }
+      return result;
+    };
+
+    auto ppred_integrand1 = [&unnormalized, &test_data, &nd](double n,
+                                                             double ig) {
+      double result = unnormalized(n, ig);
+      double normalization = exp(nd.logp_score());
+      // Compute p(theta | data) = p(data | theta) p(theta) / p(data)
+      result /= normalization;
+      bm::normal_distribution normal_dist(n, sqrt(ig));
+      return bm::pdf(normal_dist, test_data) * result;
+    };
+
+    auto ppred_integrand2 = [&quad, &ppred_integrand1](double ig) {
+      auto f = [&](double n) { return ppred_integrand1(n, ig); };
+      return quad.integrate(f, -std::numeric_limits<double>::infinity(),
+                            std::numeric_limits<double>::infinity());
+    };
+    double result = quad.integrate(ppred_integrand2, 0.,
+                                   std::numeric_limits<double>::infinity());
+
+    BOOST_TEST(nd.logp(test_data) == log(result), tt::tolerance(1e-4));
   }
   BOOST_TEST(nd.N == 10);
 }
