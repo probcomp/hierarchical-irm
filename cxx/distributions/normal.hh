@@ -50,7 +50,7 @@ class Normal : public Distribution<double> {
 
   void unincorporate(const double& x);
 
-  void posterior_hypers(double *mprime, double *sprime) const;
+  void posterior_hypers(double* mprime, double* sprime) const;
 
   double logp(const double& x) const;
 

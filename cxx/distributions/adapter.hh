@@ -56,9 +56,7 @@ class DistributionAdapter : public Distribution<std::string> {
     return to_string(s);
   }
 
-  void transition_hyperparameters() {
-    d->transition_hyperparameters();
-  }
+  void transition_hyperparameters() { d->transition_hyperparameters(); }
 
   ~DistributionAdapter() { delete d; }
 };
