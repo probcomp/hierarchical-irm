@@ -17,3 +17,13 @@ cc_binary(
         "//distributions",
     ],
 )
+
+cc_binary(
+    name = "test_misc",
+    srcs = ["test_misc.cc"],
+    deps = [
+        "//:headers",
+        "//:util_io",
+        "//distributions",
+    ],
+)
