@@ -44,12 +44,14 @@ void Normal::posterior_hypers(double* mprime, double* sprime) const {
 
 double Normal::logp(const double& x) const {
   // Based on equation (13) of GaussianInverseGamma.pdf
-  double unused_mprime, sprime2;
+  double unused_mprime, sprime;
+  posterior_hypers(&unused_mprime, &sprime);
+
+  double sprime2;
   const_cast<Normal*>(this)->incorporate(x);
   posterior_hypers(&unused_mprime, &sprime2);
   const_cast<Normal*>(this)->unincorporate(x);
-  double sprime;
-  posterior_hypers(&unused_mprime, &sprime);
+
   return -0.5 * log(M_2PI) + logZ(r + N + 1, v + N + 1, sprime2) -
          logZ(r + N, v + N, sprime);
 }
