@@ -6,10 +6,12 @@
 
 #include <boost/math/distributions/bernoulli.hpp>
 #include <boost/math/distributions/beta.hpp>
+#include <boost/math/quadrature/gauss_kronrod.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include "util_math.hh"
 namespace tt = boost::test_tools;
+namespace bm = boost::math;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   std::mt19937 prng;
@@ -32,6 +34,43 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   // We expect a 50% chance when we see a single observation, since alpha = beta
   // = 1.
   BOOST_TEST(bb.logp_score() == -std::numbers::ln2, tt::tolerance(1e-6));
+}
+
+BOOST_AUTO_TEST_CASE(test_posterior_predictive) {
+   std::mt19937 prng;
+   BetaBernoulli bb(&prng);
+
+   bm::beta_distribution<> beta_dist(bb.alpha, bb.beta);
+
+   double test_data = 1.;
+
+   for (int i = 0; i < 11; ++i) {
+     bb.incorporate(static_cast<double>(i % 2));
+
+     auto pdata_integrand = [&beta_dist, &i](double t) {
+       bm::bernoulli_distribution bernoulli_dist(t);
+       double result = bm::pdf(beta_dist, t);
+       for (int j = 0; j <= i; ++j) {
+         result *= bm::pdf(bernoulli_dist, static_cast<double>(j % 2));
+       }
+       return result;
+     };
+
+     auto ppred_integrand = [&pdata_integrand, &test_data] (double t) {
+       bm::bernoulli_distribution bernoulli_dist(t);
+       double result = pdata_integrand(t);
+       double normalization = bm::quadrature::gauss_kronrod<double,
+              100>::integrate(pdata_integrand, 0., 1.);
+       // Compute p(theta | data) = p(data | theta) p(theta) / p(data)
+       result /= normalization;
+       return bm::pdf(bernoulli_dist, test_data) * result;
+     };
+
+     // Compute int p(x | theta) p(theta | data)
+     double result = bm::quadrature::gauss_kronrod<double, 100>::integrate(
+         ppred_integrand, 0., 1.);
+     BOOST_TEST(bb.logp(test_data) == log(result), tt::tolerance(1e-5));
+   }
 }
 
 BOOST_AUTO_TEST_CASE(test_against_boost) {
