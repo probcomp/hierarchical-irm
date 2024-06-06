@@ -1,17 +1,14 @@
 // Copyright 2024
 // See LICENSE.txt
 
+#include "normal.hh"
+
 #include <cmath>
 #include <numbers>
 
-#include "normal.hh"
-
 double logZ(double r, double v, double s) {
-  return (v + 1.0) / 2.0 * log(2.0)
-      + 0.5 * log(std::numbers::pi)
-      - 0.5 * log(r)
-      - 0.5 * v * log(s)
-      + lgamma(0.5 * v);
+  return (v + 1.0) / 2.0 * log(2.0) + 0.5 * log(std::numbers::pi) -
+         0.5 * log(r) - 0.5 * v * log(s) + lgamma(0.5 * v);
 }
 
 void Normal::incorporate(const double& x) {
@@ -47,24 +44,21 @@ void Normal::posterior_hypers(double* mprime, double* sprime) const {
 
 double Normal::logp(const double& x) const {
   // Based on equation (13) of GaussianInverseGamma.pdf
-  double unused_mprime, sprime;
+  double unused_mprime, sprime2;
   const_cast<Normal*>(this)->incorporate(x);
-  posterior_hypers(&unused_mprime, &sprime);
-  const_cast<Normal*>(this)->unincorporate(x);
-  double sprime2;
   posterior_hypers(&unused_mprime, &sprime2);
-  return -0.5 * log(M_2PI)
-      + logZ(r + N + 1, v + N + 1, sprime)
-      - logZ(r + N, v + N, sprime2);
+  const_cast<Normal*>(this)->unincorporate(x);
+  double sprime;
+  posterior_hypers(&unused_mprime, &sprime);
+  return -0.5 * log(M_2PI) + logZ(r + N + 1, v + N + 1, sprime2) -
+         logZ(r + N, v + N, sprime);
 }
 
 double Normal::logp_score() const {
   // Based on equation (11) of GaussianInverseGamma.pdf
   double unused_mprime, sprime;
   posterior_hypers(&unused_mprime, &sprime);
-  return -0.5 * N * log(M_2PI)
-      + logZ(r + N, v + N, sprime)
-      - logZ(r, v, s);
+  return -0.5 * N * log(M_2PI) + logZ(r + N, v + N, sprime) - logZ(r, v, s);
 }
 
 double Normal::sample() {
