@@ -74,28 +74,29 @@ BOOST_AUTO_TEST_CASE(test_logp) {
   // prob.
   std::mt19937 prng;
   std::mt19937 prng2;
+  int num_categories = 5;
 
-  DirichletCategorical dc(&prng, 5);
+  DirichletCategorical dc(&prng, num_categories);
 
   // We'll use the fact that the posterior distribution of a
   // DirichletCategorical is a Dirichlet.
   // Thus we only need to compute an expectation with respect to
   // this Dirichlet posterior for the posterior predictive.
   std::vector<double> effective_concentration;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < num_categories; ++i) {
     effective_concentration.emplace_back(dc.alpha);
   }
-  int num_samples = 5000;
+  int num_samples = 10000;
 
   for (int i = 0; i < 20; ++i) {
-    dc.incorporate(i % 5);
-    ++effective_concentration[i % 5];
+    dc.incorporate(i % num_categories);
+    ++effective_concentration[i % num_categories];
 
-    int test_data = (i * i) % 5;
+    int test_data = (i * i) % num_categories;
     double average_prob = 0;
 
     std::vector<std::gamma_distribution<>> gamma_dists;
-    for (int j = 0; j < 5; ++j) {
+    for (int j = 0; j < num_categories; ++j) {
       gamma_dists.emplace_back(
           std::gamma_distribution<>(effective_concentration[j], 1.));
     }
@@ -103,12 +104,12 @@ BOOST_AUTO_TEST_CASE(test_logp) {
     // Create samples with these concentration parameters.
     for (int j = 0; j < num_samples; ++j) {
       std::vector<double> sample;
-      for (int k = 0; k < 5; ++k) {
+      for (int k = 0; k < num_categories; ++k) {
         sample.emplace_back(gamma_dists[k](prng2));
       }
       double sum_of_elements =
           std::accumulate(sample.begin(), sample.end(), 0.);
-      for (int k = 0; k < 5; ++k) {
+      for (int k = 0; k < num_categories; ++k) {
         sample[k] /= sum_of_elements;
       }
       // For this posterior sample, compute an estimate of the posterior
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_logp) {
       average_prob += sample[test_data];
     }
     average_prob /= num_samples;
-    BOOST_TEST(dc.logp(test_data) == log(average_prob), tt::tolerance(2e-2));
+    BOOST_TEST(dc.logp(test_data) == log(average_prob), tt::tolerance(8e-3));
   }
 }
 
