@@ -40,8 +40,13 @@ ObservationVariant observation_string_to_value(const std::string& value_str,
                                                const std::string& distribution) {
   if (distribution == "normal" || distribution == "bernoulli") {
     return std::stod(value_str);
-  } else {
+  } else if (distribution == "categorical") {
+    return std::stoi(value_str);
+  } else if (distribution == "bigram") {
     return value_str;
+  } else {
+    // Unrecognized distribution name.
+    assert(false);
   }
 }
 

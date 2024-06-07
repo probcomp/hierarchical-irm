@@ -201,6 +201,8 @@ class Relation {
  public:
   using ValueType = typename DistributionType::SampleType;
   using DType = DistributionType;
+  static_assert(std::is_base_of<Distribution<ValueType>, DType>::value, 
+                "DistributionType must inherit from Distribution.");
   // human-readable name
   const std::string name;
   // Distribution over the relation's codomain.
@@ -544,7 +546,7 @@ class Relation {
 
 using RelationVariant =
     std::variant<Relation<BetaBernoulli>*, Relation<Bigram>*,
-                 // Relation<double, DirichletCategorical>*,
+                 // Relation<DirichletCategorical>*,
                  Relation<Normal>*>;
 
 class IRM {
