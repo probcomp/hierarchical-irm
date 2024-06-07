@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
   }
 
   IRM irm3(schema, &prng);
-  auto observations = load_observations("assets/animals.binary.obs");
+  auto observations = load_observations("assets/animals.binary.obs", schema);
   auto encoding = encode_observations(schema, observations);
   auto item_to_code = std::get<0>(encoding);
   for (auto const& i : observations) {
@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
     auto value = std::get<2>(i);
     auto item = std::get<1>(i);
     printf("incorporating %s ", relation.c_str());
-    printf("%1.f ", value);
+    printf("%1.f ", std::get<double>(value));
     int counter = 0;
     T_items items_code;
     for (auto const& item : std::get<1>(i)) {

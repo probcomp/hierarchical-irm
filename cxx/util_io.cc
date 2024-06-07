@@ -36,22 +36,33 @@ T_schema load_schema(const std::string& path) {
   return schema;
 }
 
-T_observations load_observations(const std::string& path) {
+ObservationVariant observation_string_to_value(const std::string& value_str, 
+                                               const std::string& distribution) {
+  if (distribution == "normal" || distribution == "bernoulli") {
+    return std::stod(value_str);
+  } else {
+    return value_str;
+  }
+}
+
+T_observations load_observations(const std::string& path,
+                                 const T_schema& schema) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
-  std::vector<std::tuple<std::string, std::vector<std::string>, double>>
-      observations;
+  T_observations observations;
   std::string line;
   while (std::getline(fp, line)) {
     std::istringstream stream(line);
 
-    double value;
+    std::string value_str;
     std::string relname;
     std::vector<std::string> items;
 
-    stream >> value;
+    stream >> value_str;
     stream >> relname;
+    ObservationVariant value = observation_string_to_value(
+      value_str, schema.at(relname).distribution);
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }
@@ -127,7 +138,10 @@ void incorporate_observations(HIRM& hirm, const T_encoding& encoding,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
-    hirm.incorporate(relation, items_e, value);
+    std::visit(
+      [&](const auto& v) {hirm.incorporate(relation, items_e, v);}, 
+      value
+    );
   }
 }
 
@@ -326,7 +340,7 @@ void from_txt(IRM* const irm, const std::string& path_schema,
               const std::string& path_obs, const std::string& path_clusters) {
   // Load the data.
   T_schema schema = load_schema(path_schema);
-  T_observations observations = load_observations(path_obs);
+  T_observations observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
   auto clusters = load_clusters_irm(path_clusters);
   // Add the relations.
@@ -356,7 +370,7 @@ void from_txt(IRM* const irm, const std::string& path_schema,
 void from_txt(HIRM* const hirm, const std::string& path_schema,
               const std::string& path_obs, const std::string& path_clusters) {
   T_schema schema = load_schema(path_schema);
-  T_observations observations = load_observations(path_obs);
+  T_observations observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
   auto [relations, irms] = load_clusters_hirm(path_clusters);
   // Add the relations.

@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   printf("== HIRM == \n");
   auto schema_unary = load_schema(path_schema);
   printf("--- loaded schema --- \n");
-  auto observations_unary = load_observations(path_obs);
+  auto observations_unary = load_observations(path_obs, schema_unary);
   printf("--- loaded observations --- \n");
   auto encoding_unary = encode_observations(schema_unary, observations_unary);
   printf("--- encoded observations --- \n");

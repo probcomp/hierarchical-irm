@@ -847,7 +847,8 @@ class HIRM {
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items, double value) {
+  void incorporate(const std::string& r, const T_items& items, 
+                   const ObservationVariant& value) {
     IRM* irm = relation_to_irm(r);
     irm->incorporate(r, items, value);
   }

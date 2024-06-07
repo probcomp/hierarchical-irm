@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
   std::string path_obs = path_base + ".obs";
   std::cout << "loading observations from " << path_obs << std::endl;
-  auto observations = load_observations(path_obs);
+  auto observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
 
   IRM irm(schema, &prng);

@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
   auto schema = load_schema(path_schema);
 
   std::cout << "loading observations from " << path_obs << std::endl;
-  auto observations = load_observations(path_obs);
+  auto observations = load_observations(path_obs, schema);
   auto encoding = encode_observations(schema, observations);
 
   if (mode == "irm") {
