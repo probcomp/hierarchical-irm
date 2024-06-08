@@ -11,6 +11,7 @@
 #include "distributions/base.hh"
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
+#include "distributions/crp.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
 #include "util_hash.hh"
@@ -36,114 +37,6 @@ class T_relation {
 typedef std::map<std::string, T_relation> T_schema;
 
 using ObservationVariant = std::variant<double, int, std::string>;
-
-// TODO(emilyaf): Make this a distribution subclass.
-class CRP {
- public:
-  double alpha = 1;  // concentration parameter
-  int N = 0;         // number of customers
-  std::unordered_map<int, std::unordered_set<T_item>>
-      tables;  // map from table id to set of customers
-  std::unordered_map<T_item, int> assignments;  // map from customer to table id
-  std::mt19937* prng;
-
-  CRP(std::mt19937* prng) { this->prng = prng; }
-
-  void incorporate(const T_item& item, int table) {
-    assert(!assignments.contains(item));
-    if (!tables.contains(table)) {
-      tables[table] = std::unordered_set<T_item>();
-    }
-    tables.at(table).insert(item);
-    assignments[item] = table;
-    ++N;
-  }
-  void unincorporate(const T_item& item) {
-    assert(assignments.contains(item));
-    int table = assignments.at(item);
-    tables.at(table).erase(item);
-    if (tables.at(table).empty()) {
-      tables.erase(table);
-    }
-    assignments.erase(item);
-    --N;
-  }
-  int sample() {
-    auto crp_dist = tables_weights();
-    std::vector<int> items(crp_dist.size());
-    std::vector<double> weights(crp_dist.size());
-    int i = 0;
-    for (const auto& [table, weight] : crp_dist) {
-      items[i] = table;
-      weights[i] = weight;
-      ++i;
-    }
-    int idx = choice(weights, prng);
-    return items[idx];
-  }
-  double logp(int table) const {
-    auto dist = tables_weights();
-    if (!dist.contains(table)) {
-      return -std::numeric_limits<double>::infinity();
-    }
-    double numer = dist[table];
-    double denom = N + alpha;
-    return log(numer) - log(denom);
-  }
-  double logp_score() const {
-    double term1 = tables.size() * log(alpha);
-    double term2 = 0;
-    for (const auto& [table, customers] : tables) {
-      term2 += lgamma(customers.size());
-    }
-    double term3 = lgamma(alpha);
-    double term4 = lgamma(N + alpha);
-    return term1 + term2 + term3 - term4;
-  }
-  std::unordered_map<int, double> tables_weights() const {
-    std::unordered_map<int, double> dist;
-    if (N == 0) {
-      dist[0] = 1;
-      return dist;
-    }
-    int t_max = 0;
-    for (const auto& [table, customers] : tables) {
-      dist[table] = customers.size();
-      t_max = std::max(table, t_max);
-    }
-    dist[t_max + 1] = alpha;
-    return dist;
-  }
-  std::unordered_map<int, double> tables_weights_gibbs(int table) const {
-    assert(N > 0);
-    assert(tables.contains(table));
-    auto dist = tables_weights();
-    --dist.at(table);
-    if (dist.at(table) == 0) {
-      dist.at(table) = alpha;
-      int t_max = 0;
-      for (const auto& [table, weight] : dist) {
-        t_max = std::max(table, t_max);
-      }
-      dist.erase(t_max);
-    }
-    return dist;
-  }
-  void transition_alpha() {
-    if (N == 0) {
-      return;
-    }
-    std::vector<double> grid = log_linspace(1. / N, N + 1, 20, true);
-    std::vector<double> logps;
-    for (const double& g : grid) {
-      this->alpha = g;
-      double logp_g = logp_score();
-      logps.push_back(logp_g);
-    }
-    int idx = log_choice(logps, prng);
-    this->alpha = grid[idx];
-  }
-};
 
 class Domain {
  public:

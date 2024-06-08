@@ -7,6 +7,8 @@
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/test/included/unit_test.hpp>
+
+#include "distributions/crp.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_crp) {
