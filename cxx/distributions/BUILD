@@ -124,6 +124,7 @@ cc_test(
     srcs = ["crp_test.cc"],
     deps = [
         ":crp",
+        "@boost//:algorithm",
         "@boost//:test",
     ],
 )
