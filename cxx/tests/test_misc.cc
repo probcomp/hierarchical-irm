@@ -22,27 +22,6 @@ int main(int argc, char** argv) {
   srand(1);
   std::mt19937 prng(1);
 
-  BetaBernoulli bb(&prng);
-  bb.incorporate(1);
-  bb.incorporate(1);
-  printf("%f\n", exp(bb.logp(1)));
-  for (int i = 0; i < 100; i++) {
-    printf("%1.f ", bb.sample());
-  }
-  printf("\n");
-
-  DirichletCategorical dc(&prng, 8);
-  dc.incorporate(1);
-  dc.incorporate(1);
-  dc.incorporate(3);
-  dc.unincorporate(1);
-  printf("%f\n", exp(dc.logp(5)));
-  printf("%f\n", exp(dc.logp_score()));
-  for (int i = 0; i < 100; i++) {
-    printf("%1.f ", dc.sample());
-  }
-  printf("\n");
-
   Bigram bg(&prng);
   bg.incorporate("foo");
   bg.incorporate("foo");
@@ -54,50 +33,6 @@ int main(int argc, char** argv) {
     printf("%s\n", bg.sample().c_str());
   }
   printf("\n");
-
-  CRP crp(&prng);
-  crp.alpha = 1.5;
-  printf("starting crp\n");
-  T_item foo = 1, food = 2, sultan = 3, ali = 4;
-  printf("%f\n", crp.logp_score());
-  crp.incorporate(foo, 1);
-  printf("%f\n", crp.logp_score());
-  crp.incorporate(food, 1);
-  printf("%f\n", crp.logp_score());
-  crp.incorporate(sultan, 12);
-  printf("%f\n", crp.logp_score());
-  crp.incorporate(ali, 0);
-  std::cout << "tables count 10 " << crp.tables.count(10) << std::endl;
-  for (auto const& i : crp.tables[0]) {
-    std::cout << i << " ";
-  }
-  for (auto const& i : crp.tables[1]) {
-    std::cout << i << " ";
-  }
-  printf("\n");
-  std::cout << "assignments ali? " << crp.assignments.count(ali) << std::endl;
-  crp.unincorporate(ali);
-  std::cout << "assignments ali? " << crp.assignments.count(ali) << std::endl;
-  printf("%f %d\n", crp.logp_score(), crp.assignments[-1]);
-
-  printf("=== tables_weights\n");
-  auto tables_weights = crp.tables_weights();
-  for (auto& tw : tables_weights) {
-    printf("table %d weight %f\n", tw.first, tw.second);
-  }
-
-  printf("=== tables_weights_gibbs\n");
-  auto tables_weights_gibbs = crp.tables_weights_gibbs(1);
-  for (auto& tw : tables_weights_gibbs) {
-    printf("table %d weight %f\n", tw.first, tw.second);
-  }
-  printf("==== tables_weights_gibbs_singleton\n");
-  auto tables_weights_gibbs_singleton = crp.tables_weights_gibbs(12);
-  for (auto& tw : tables_weights_gibbs_singleton) {
-    printf("table %d weight %f\n", tw.first, tw.second);
-  }
-  printf("==== log probability\n");
-  printf("%f\n", crp.logp(0));
 
   printf("=== DOMAIN === \n");
   Domain d("foo", &prng);

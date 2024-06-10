@@ -58,17 +58,6 @@ cc_library(
 )
 
 cc_test(
-    name = "hirm_test",
-    srcs = ["hirm_test.cc"],
-    deps = [
-        ":headers",
-        "//distributions",
-        "@boost//:algorithm",
-        "@boost//:test",
-    ],
-)
-
-cc_test(
     name = "util_math_test",
     srcs = ["util_math_test.cc"],
     deps = [

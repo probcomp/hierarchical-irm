@@ -8,6 +8,7 @@ cc_library(
         ":base",
         ":beta_bernoulli",
         ":bigram",
+        ":crp",
         ":dirichlet_categorical",
         ":normal",
     ],
@@ -48,6 +49,17 @@ cc_library(
     deps = [
         ":base",
         ":dirichlet_categorical",
+        "//:headers",
+        "//:util_math",
+    ],
+)
+
+cc_library(
+    name = "crp",
+    srcs = ["crp.cc"],
+    hdrs = ["crp.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
         "//:headers",
         "//:util_math",
     ],
@@ -102,6 +114,16 @@ cc_test(
     srcs = ["bigram_test.cc"],
     deps = [
         ":bigram",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "crp_test",
+    srcs = ["crp_test.cc"],
+    deps = [
+        ":crp",
         "@boost//:algorithm",
         "@boost//:test",
     ],
