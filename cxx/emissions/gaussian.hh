@@ -5,7 +5,7 @@
 
 class GaussianEmission : public Emission<double> {
  public:
-  ZeroMeanNormal zmn;
+  ZeroMeanNormal zmn(nullptr);
 
   GaussianEmission() {}
 
@@ -28,7 +28,8 @@ class GaussianEmission : public Emission<double> {
   }
 
   double sample_corrupted(const double& clean, std::mt19937* prng) {
-    return clean + zmn.sample(prng);
+    zmn.prng = prng;
+    return clean + zmn.sample();
   }
 
   double propose_clean(const std::vector<double>& corrupted,
