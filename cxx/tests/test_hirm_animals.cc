@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
       n_obs_unary += std::visit([](const auto r) {return r->data.size();}, relation);
     }
   }
-  assert(n_obs_unary == std::ssize(observations_unary));
+  assert(n_obs_unary == std::size(observations_unary));
 
   hirm.transition_cluster_assignments_all();
   hirm.transition_cluster_assignments_all();
