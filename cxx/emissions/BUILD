@@ -13,7 +13,10 @@ cc_library(
     name = "gaussian",
     srcs = ["gaussian.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//distributions:zero_mean_normal",
+    ],
 )
 
 # TODO(thomaswc): Fix and re-enable.
