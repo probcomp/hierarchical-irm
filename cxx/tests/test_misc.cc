@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "hirm.hh"
+#include "relation.hh"
 #include "util_hash.hh"
 #include "util_io.hh"
 #include "util_math.hh"
@@ -21,105 +22,6 @@
 int main(int argc, char** argv) {
   srand(1);
   std::mt19937 prng(1);
-
-  Bigram bg(&prng);
-  bg.incorporate("foo");
-  bg.incorporate("foo");
-  bg.incorporate("_Hello!~");
-  bg.unincorporate("foo");
-  printf("%f\n", exp(bg.logp("bar")));
-  printf("%f\n", exp(bg.logp_score()));
-  for (int i = 0; i < 10; i++) {
-    printf("%s\n", bg.sample().c_str());
-  }
-  printf("\n");
-
-  printf("=== DOMAIN === \n");
-  Domain d("foo", &prng);
-  std::string relation1 = "ali";
-  std::string relation2 = "mubarak";
-  T_item salman = 1;
-  T_item mansour = 2;
-  d.incorporate(salman);
-  for (auto& item : d.items) {
-    printf("item %d: ", item);
-  }
-  d.set_cluster_assignment_gibbs(salman, 12);
-  d.incorporate(salman);
-  d.incorporate(mansour, 5);
-  for (auto& item : d.items) {
-    printf("item %d: ", item);
-  }
-  // d.unincorporate(salman);
-  for (auto& item : d.items) {
-    printf("item %d: ", item);
-  }
-  // d.unincorporate(relation2, salman);
-  // assert (d.items.size() == 0);
-  // d.items[01].insert("foo");
-
-  std::unordered_map<int, std::unordered_set<int>> m;
-  m[1].insert(10);
-  m[1] = std::unordered_set<int>();
-  for (auto& ir : m) {
-    printf("%d\n", ir.first);
-    for (auto& x : ir.second) {
-      printf("%d\n", x);
-    }
-  }
-
-  printf("== RELATION == \n");
-  Domain D1("D1", &prng);
-  Domain D2("D2", &prng);
-  Domain D3("D3", &prng);
-  D1.incorporate(0);
-  D2.incorporate(1);
-  D3.incorporate(3);
-  Relation<BetaBernoulli> R1("R1", "bernoulli", {&D1, &D2, &D3}, &prng);
-  printf("arity %ld\n", R1.domains.size());
-  R1.incorporate({0, 1, 3}, 1);
-  R1.incorporate({1, 1, 3}, 1);
-  R1.incorporate({3, 1, 3}, 1);
-  R1.incorporate({4, 1, 3}, 1);
-  R1.incorporate({5, 1, 3}, 1);
-  R1.incorporate({0, 1, 4}, 0);
-  R1.incorporate({0, 1, 6}, 1);
-  auto z1 = R1.get_cluster_assignment({0, 1, 3});
-  for (int x : z1) {
-    printf("%d,", x);
-  }
-  auto z2 = R1.get_cluster_assignment_gibbs({0, 1, 3}, D2, 1, 191);
-  printf("\n");
-  for (int x : z2) {
-    printf("%d,", x);
-  }
-  printf("\n");
-
-  Relation<Bigram> R2("R1", "bigram", {&D2, &D3}, &prng);
-  printf("arity %ld\n", R1.domains.size());
-  R2.incorporate({1, 3}, "cat");
-  R2.incorporate({1, 2}, "dog");
-  R2.incorporate({1, 4}, "catt");
-  R2.incorporate({2, 6}, "fish");
-
-  double lpg = R1.logp_gibbs_approx(D1, 0, 1);
-  printf("logp gibbs %f\n", lpg);
-  lpg = R1.logp_gibbs_approx(D1, 0, 0);
-  printf("logp gibbs %f\n", lpg);
-  lpg = R1.logp_gibbs_approx(D1, 0, 10);
-  printf("logp gibbs %f\n", lpg);
-  lpg = R2.logp_gibbs_approx(D2, 2, 0);
-  printf("logp gibbs %f\n", lpg);
-
-  printf("calling set_cluster_assignment_gibbs\n");
-  R1.set_cluster_assignment_gibbs(D1, 0, 1);
-  R2.set_cluster_assignment_gibbs(D3, 3, 1);
-  printf("new cluster %d\n", D1.get_cluster_assignment(0));
-  D1.set_cluster_assignment_gibbs(0, 1);
-
-  printf("%lu\n", R1.data.size());
-  // R1.unincorporate({0, 1, 3});
-  printf("%lu\n", R1.data.size());
 
   printf("== HASHING UTIL == \n");
   std::unordered_map<const std::vector<int>, int, VectorIntHash> map_int;
