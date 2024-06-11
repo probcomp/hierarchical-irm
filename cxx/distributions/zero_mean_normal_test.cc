@@ -26,6 +26,22 @@ BOOST_AUTO_TEST_CASE(simple) {
   BOOST_TEST(nd.N == 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_expected_vars) {
+  std::mt19937 prng;
+  ZeroMeanNormal nd(&prng);
+  std::vector<double> entries{-1., 2., 4., 5., 6., 20.};
+  std::vector<double> expected_vars{1.0, 2.5, 7.0, 11.5, 16.4, 241.0 / 3.0};
+  for (int i = 0; i < std::ssize(entries); ++i) {
+    nd.incorporate(entries[i]);
+    BOOST_TEST(nd.var == expected_vars[i], tt::tolerance(1e-6));
+  }
+
+  for (int i = std::ssize(entries) - 1; i > 0; --i) {
+    nd.unincorporate(entries[i]);
+    BOOST_TEST(nd.var == expected_vars[i - 1], tt::tolerance(1e-6));
+  }
+}
+
 BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {
   std::mt19937 prng;
   ZeroMeanNormal nd(&prng);
