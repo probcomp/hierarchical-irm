@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "distributions/beta_bernoulli.hh"
 #include "emissions/base.hh"
 
@@ -10,14 +12,10 @@
 template <typename BaseEmissor, typename SampleType = double>
 class Sometimes : public Emission<SampleType> {
  public:
-  // We use a beta distribution prior, so our hyperparameters are
-  double alpha = 1.0;
-  double beta = 1.0;
-
+  BetaBernoulli bb;
   BaseEmissor be;
-  BetaBernoulli bb(nullptr);
 
-  Sometimes() {};
+  Sometimes() : bb(nullptr) {};
 
   void incorporate(const std::pair<SampleType, SampleType>& x) {
     ++N;
@@ -48,13 +46,12 @@ class Sometimes : public Emission<SampleType> {
     bb.transition_hyperparameters();
   }
 
-  double sample_corrupted(const SampleType& clean, std::mt19937* prng) {
+  SampleType sample_corrupted(const SampleType& clean, std::mt19937* prng) {
     bb.prng = prng;
     if (bb.sample()) {
       return be.sample_corrupted(clean, prng);
-    } else {
-      return clean;
     }
+    return clean;
   }
 
   SampleType propose_clean(const std::vector<SampleType>& corrupted,

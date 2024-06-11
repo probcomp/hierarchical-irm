@@ -43,6 +43,17 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "sometimes_test",
+    srcs = ["sometimes_test.cc"],
+    deps = [
+        ":bitflip",
+        ":sometimes",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
 # TODO(thomaswc): Fix and re-enable.
 #cc_test(
 #    name = "gaussian_test",
