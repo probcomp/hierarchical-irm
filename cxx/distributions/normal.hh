@@ -60,6 +60,8 @@ class Normal : public Distribution<double> {
 
   void transition_hyperparameters();
 
+  Normal* prior() const;
+
   // Disable copying.
   Normal& operator=(const Normal&) = delete;
   Normal(const Normal&) = delete;

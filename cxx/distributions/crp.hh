@@ -36,4 +36,6 @@ class CRP {
   std::unordered_map<int, double> tables_weights_gibbs(int table) const;
 
   void transition_alpha();
+
+  CRP* prior() const;
 };

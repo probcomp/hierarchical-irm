@@ -63,3 +63,7 @@ void DirichletCategorical::transition_hyperparameters() {
   int i = sample_from_logps(logps, prng);
   alpha = alphas[i];
 }
+
+DirichletCategorical* DirichletCategorical::prior() const {
+  return new DirichletCategorical(prng, counts.size());
+}

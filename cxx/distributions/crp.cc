@@ -112,3 +112,7 @@ void CRP::transition_alpha() {
   int idx = log_choice(logps, prng);
   this->alpha = grid[idx];
 }
+
+CRP* CRP::prior() const {
+  return new CRP(prng);
+}

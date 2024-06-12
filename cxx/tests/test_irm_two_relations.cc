@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
   auto schema = load_schema(path_schema);
   for (auto const& [relation_name, relation] : schema) {
     printf("relation: %s, ", relation_name.c_str());
-    printf("distribution: %s, ", relation.distribution.c_str());
     printf("domains: ");
     for (auto const& domain : relation.domains) {
       printf("%s ", domain.c_str());

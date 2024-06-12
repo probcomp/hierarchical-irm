@@ -118,3 +118,7 @@ void Bigram::transition_hyperparameters() {
   int i = sample_from_logps(logps, prng);
   set_alpha(alphas[i]);
 }
+
+Bigram* Bigram::prior() const {
+  return new Bigram (prng);
+}

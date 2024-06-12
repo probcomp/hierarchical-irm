@@ -35,4 +35,6 @@ class BetaBernoulli : public Distribution<double> {
   double sample();
 
   void transition_hyperparameters();
+
+  BetaBernoulli* prior() const;
 };

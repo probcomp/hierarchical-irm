@@ -61,3 +61,7 @@ void BetaBernoulli::transition_hyperparameters() {
   alpha = hypers[i].first;
   beta = hypers[i].second;
 }
+
+BetaBernoulli* BetaBernoulli::prior() const {
+  return new BetaBernoulli (prng);
+}
