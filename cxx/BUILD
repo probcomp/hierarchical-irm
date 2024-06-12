@@ -16,6 +16,14 @@ cc_library(
     deps = [],
 )
 
+cc_library(
+    name = "domain",
+    hdrs = ["domain.hh"],
+    deps = [
+        "//distributions",
+    ],
+)
+
 cc_binary(
     name = "hirm",
     srcs = ["hirm.cc"],
@@ -26,6 +34,17 @@ cc_binary(
         ":util_io",
         ":util_math",
         "//distributions",
+    ],
+)
+
+cc_library(
+    name = "relation",
+    hdrs = ["relation.hh"],
+    deps = [
+        ":domain",
+        ":util_hash",
+        ":util_math",
+        "//distributions:base"
     ],
 )
 
@@ -55,6 +74,26 @@ cc_library(
     hdrs = ["util_math.hh"],
     visibility = [":__subpackages__"],
     deps = [":headers"],
+)
+
+cc_test(
+    name = "domain_test",
+    srcs = ["domain_test.cc"],
+    deps = [
+        ":domain",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "relation_test",
+    srcs = ["relation_test.cc"],
+    deps = [
+        ":domain",
+        ":relation",
+        "//distributions",
+        "@boost//:test",
+    ],
 )
 
 cc_test(
