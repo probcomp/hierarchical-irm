@@ -86,6 +86,16 @@ cc_library(
         "//:util_math",
     ],
 )
+cc_library(
+    name = "zero_mean_normal",
+    srcs = ["zero_mean_normal.cc"],
+    hdrs = ["zero_mean_normal.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        "//:util_math",
+    ],
+)
 
 cc_test(
     name = "adapter_test",
@@ -145,6 +155,17 @@ cc_test(
     srcs = ["normal_test.cc"],
     deps = [
         ":normal",
+        "@boost//:algorithm",
+        "@boost//:math",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "zero_mean_normal_test",
+    srcs = ["zero_mean_normal_test.cc"],
+    deps = [
+        ":zero_mean_normal",
         "@boost//:algorithm",
         "@boost//:math",
         "@boost//:test",
