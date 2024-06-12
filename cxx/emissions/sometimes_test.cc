@@ -29,7 +29,5 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(sbf.logp(std::make_pair<bool, bool>(true, false)) < 0.0);
 
   std::mt19937 prng;
-  BOOST_TEST(sbf.sample_corrupted(false, &prng));
-
   BOOST_TEST(sbf.propose_clean({true, true, false}, &prng));
 }

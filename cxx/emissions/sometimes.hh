@@ -18,7 +18,7 @@ class Sometimes : public Emission<SampleType> {
   Sometimes() : bb(nullptr) {};
 
   void incorporate(const std::pair<SampleType, SampleType>& x) {
-    ++N;
+    ++(this->N);
     bb.incorporate(x.first != x.second);
     if (x.first != x.second) {
       be.incorporate(x);
@@ -26,7 +26,7 @@ class Sometimes : public Emission<SampleType> {
   }
 
   void unincorporate(const std::pair<SampleType, SampleType>& x) {
-    --N;
+    --(this->N);
     bb.unincorporate(x.first != x.second);
     if (x.first != x.second) {
       be.unincorporate(x);
