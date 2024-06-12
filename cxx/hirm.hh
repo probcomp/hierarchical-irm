@@ -11,7 +11,6 @@
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 
-
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;
 
@@ -212,8 +211,11 @@ class IRM {
         }
         auto v = std::get<
             typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
-        return rel->clusters.contains(z) ? rel->clusters.at(z)->logp(v) 
-                                         : rel->cluster_prior->logp(v);
+        auto prior =
+            std::get<typename std::remove_reference_t<decltype(*rel)>::DType*>(
+                cluster_prior_from_spec(rel->dist_spec, prng));
+        return rel->clusters.contains(z) ? rel->clusters.at(z)->logp(v)
+                                         : prior->logp(v);
       };
       for (const auto& [r, items, value] : observations) {
         auto g = std::bind(f_logp, std::placeholders::_1, items, value);
@@ -252,7 +254,8 @@ class IRM {
       domain_to_relations.at(d).insert(name);
       doms.push_back(domains.at(d));
     }
-    relations[name] = relation_from_spec(name, relation.distribution_spec, doms, prng);
+    relations[name] =
+        relation_from_spec(name, relation.distribution_spec, doms, prng);
     schema[name] = relation;
   }
 
@@ -300,7 +303,7 @@ class HIRM {
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items, 
+  void incorporate(const std::string& r, const T_items& items,
                    const ObservationVariant& value) {
     IRM* irm = relation_to_irm(r);
     irm->incorporate(r, items, value);

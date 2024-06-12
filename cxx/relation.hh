@@ -44,8 +44,8 @@ class Relation {
   const std::string name;
   // Relation spec.
   T_relation trel;
-  // Distribution prior over the relation's codomain.
-  const DistributionType* cluster_prior;
+  // Distribution spec over the relation's codomain.
+  const DistributionSpec dist_spec;
   // list of domain pointers
   const std::vector<Domain*> domains;
   // map from cluster multi-index to Distribution pointer
@@ -63,13 +63,10 @@ class Relation {
 
   Relation(const std::string& name, const DistributionSpec& dist_spec,
            const std::vector<Domain*>& domains, std::mt19937* prng)
-      : name(name), domains(domains) {
+      : name(name), dist_spec(dist_spec), domains(domains) {
     assert(!domains.empty());
     assert(!name.empty());
     this->prng = prng;
-    DistributionVariant cluster_prior_var =
-        cluster_prior_from_spec(dist_spec, prng);
-    cluster_prior = std::get<DistributionType*>(cluster_prior_var);
     for (const Domain* const d : domains) {
       this->data_r[d->name] =
           std::unordered_map<T_item, std::unordered_set<T_items, H_items>>();
@@ -104,7 +101,8 @@ class Relation {
       //      Cannot use clusters[z] because BetaBernoulli
       //      does not have a default constructor, whereas operator[]
       //      calls default constructor when the key does not exist.
-      clusters[z] = cluster_prior->prior();
+      clusters[z] =
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
     }
     clusters.at(z)->incorporate(value);
   }
@@ -243,8 +241,9 @@ class Relation {
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
-    DistributionType* cluster =
-        clusters.contains(z) ? clusters.at(z) : cluster_prior->prior();
+    DistributionType* prior =
+        std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
+    DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
       // assert(z == get_cluster_assignment_gibbs(items, domain, item, table));
@@ -326,8 +325,10 @@ class Relation {
         z.push_back(zi);
         logp_w += wi;
       }
-      double logp_z = clusters.contains(z) ? clusters.at(z)->logp(value)
-                                           : cluster_prior->logp(value);
+      DistributionType* prior =
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
+      DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
+      double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
       logps.push_back(logp_zw);
     }
@@ -360,7 +361,8 @@ class Relation {
       T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
-        clusters[z_new] = cluster_prior->prior();
+        clusters[z_new] = std::get<DistributionType*>(
+            cluster_prior_from_spec(dist_spec, prng));
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.

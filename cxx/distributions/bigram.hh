@@ -47,6 +47,4 @@ class Bigram : public Distribution<std::string> {
   void set_alpha(double alphat);
 
   void transition_hyperparameters();
-
-  Bigram* prior() const;
 };

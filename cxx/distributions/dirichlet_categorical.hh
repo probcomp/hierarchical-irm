@@ -33,6 +33,4 @@ class DirichletCategorical : public Distribution<double> {
   double sample();
 
   void transition_hyperparameters();
-
-  DirichletCategorical* prior() const;
 };

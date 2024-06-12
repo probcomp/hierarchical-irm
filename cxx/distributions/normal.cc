@@ -105,7 +105,3 @@ void Normal::transition_hyperparameters() {
   m = std::get<2>(hypers[i]);
   s = std::get<3>(hypers[i]);
 }
-
-Normal* Normal::prior() const {
-  return new Normal(prng);
-}

@@ -3,7 +3,7 @@
 template <typename T>
 class Distribution {
   // Abstract base class for probability distributions in HIRM.
-  // New distribution subclasses need to be added to 
+  // New distribution subclasses need to be added to
   // `util_distribution_variant` to be used in the (H)IRM models.
  public:
   typedef T SampleType;
@@ -38,9 +38,6 @@ class Distribution {
   // a particular set of hyperparameters should be proportional to
   // e^logp_score() under those hyperparameters.
   virtual void transition_hyperparameters() = 0;
-
-  // Return a copy of the distribution with no observed data.
-  virtual Distribution<T>* prior() const = 0;
 
   virtual ~Distribution() = default;
 };

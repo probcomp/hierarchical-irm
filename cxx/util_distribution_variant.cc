@@ -26,33 +26,20 @@ ObservationVariant observation_string_to_value(
     case DistributionEnum::bigram:
       return value_str;
     default:
-      assert(false);
+      assert(false && "Unsupported distribution enum value.");
   }
 }
 
 DistributionSpec parse_distribution_spec(const std::string& dist_str) {
-  DistributionEnum dist;
-  std::string prefix;
-  std::map<std::string, std::string> dist_args;
-  if (dist_str.starts_with("bernoulli")) {
-    prefix = "bernoulli";
-    dist = DistributionEnum::bernoulli;
-    assert(prefix.size() == dist_str.size());
-  } else if (dist_str.starts_with("bigram")) {
-    prefix = "bigram";
-    dist = DistributionEnum::bigram;
-    assert(prefix.size() == dist_str.size());
-  } else if (dist_str.starts_with("categorical")) {
-    prefix = "categorical";
-    dist = DistributionEnum::categorical;
-  } else if (dist_str.starts_with("normal")) {
-    prefix = "normal";
-    dist = DistributionEnum::normal;
-    assert(prefix.size() == dist_str.size());
-  } else {
-    assert(false);
-  }
-  std::string args_str = dist_str.substr(prefix.length());
+  std::map<std::string, DistributionEnum> dist_name_to_enum = {
+      {"bernoulli", DistributionEnum::bernoulli},
+      {"bigram", DistributionEnum::bigram},
+      {"categorical", DistributionEnum::categorical},
+      {"normal", DistributionEnum::normal}};
+  std::string dist_name = dist_str.substr(0, dist_str.find('('));
+  DistributionEnum dist = dist_name_to_enum.at(dist_name);
+
+  std::string args_str = dist_str.substr(dist_name.length());
   if (args_str.empty()) {
     return DistributionSpec{dist};
   } else {
@@ -62,6 +49,7 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
 
     std::string part;
     std::istringstream iss{args_str};
+    std::map<std::string, std::string> dist_args;
     while (std::getline(iss, part, ',')) {
       assert(part.find('=') != std::string::npos);
       std::string arg_name = part.substr(0, part.find('='));
@@ -87,7 +75,7 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
     case DistributionEnum::normal:
       return new Normal(prng);
     default:
-      assert(false);
+      assert(false && "Unsupported distribution enum value.");
   }
 }
 
@@ -105,6 +93,6 @@ RelationVariant relation_from_spec(const std::string& name,
     case DistributionEnum::normal:
       return new Relation<Normal>(name, dist_spec, domains, prng);
     default:
-      assert(false);
+      assert(false && "Unsupported distribution enum value.");
   }
 }
