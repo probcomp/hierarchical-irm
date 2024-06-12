@@ -6,14 +6,13 @@
 #include <unordered_map>
 #include <unordered_set>
 
-
 typedef int T_item;
 
 // TODO(emilyaf): Make this a distribution subclass.
 class CRP {
  public:
   double alpha = 1.;  // concentration parameter
-  int N = 0;         // number of customers
+  int N = 0;          // number of customers
   std::unordered_map<int, std::unordered_set<T_item>>
       tables;  // map from table id to set of customers
   std::unordered_map<T_item, int> assignments;  // map from customer to table id

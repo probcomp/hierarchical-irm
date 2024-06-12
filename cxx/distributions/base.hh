@@ -3,6 +3,8 @@
 template <typename T>
 class Distribution {
   // Abstract base class for probability distributions in HIRM.
+  // New distribution subclasses need to be added to
+  // `util_distribution_variant` to be used in the (H)IRM models.
  public:
   typedef T SampleType;
   // N is the number of incorporated observations.

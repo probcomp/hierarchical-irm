@@ -7,6 +7,8 @@
 #include "distributions/base.hh"
 #include "util_math.hh"
 
+// TODO(thomaswc, emilyaf): Change BetaBernoulli to use bool instead of
+// double.
 class BetaBernoulli : public Distribution<double> {
  public:
   double alpha = 1;  // hyperparameter
