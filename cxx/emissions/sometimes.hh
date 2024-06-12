@@ -59,7 +59,7 @@ class Sometimes : public Emission<SampleType> {
     // We approximate the maximum likelihood estimate by taking the mode of
     // corrupted.  The full solution would construct BaseEmissor and
     // BetaBernoulli instances for each choice of clean and picking the
-    // clean with the lowest combined logp_score().
+    // clean with the highest combined logp_score().
     std::unordered_map<SampleType, int> counts;
     SampleType mode;
     int max_count = 0;
