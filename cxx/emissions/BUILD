@@ -24,6 +24,16 @@ cc_library(
 )
 
 cc_library(
+    name = "simple_string",
+    srcs = ["simple_string.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        "//distributions:beta_bernoulli",
+    ],
+)
+
+cc_library(
     name = "sometimes",
     srcs = ["sometimes.hh"],
     visibility = ["//:__subpackages__"],
@@ -38,6 +48,17 @@ cc_test(
     srcs = ["bitflip_test.cc"],
     deps = [
         ":bitflip",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "simple_string_test",
+    srcs = ["simple_string_test.cc"],
+    deps = [
+        ":bitflip",
+        ":simple_string",
         "@boost//:algorithm",
         "@boost//:test",
     ],
