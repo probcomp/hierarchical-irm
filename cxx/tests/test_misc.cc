@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
 
   printf("===== IRM ====\n");
   std::map<std::string, T_relation> schema1{
-      {"R1", T_relation{{"D1", "D1"}, "bernoulli"}},
-      {"R2", T_relation{{"D1", "D2"}, "normal"}},
-      {"R3", T_relation{{"D3", "D1"}, "bigram"}},
+      {"R1", T_relation{{"D1", "D1"}, DistributionSpec {DistributionEnum::bernoulli}}},
+      {"R2", T_relation{{"D1", "D2"}, DistributionSpec {DistributionEnum::normal}}},
+      {"R3", T_relation{{"D3", "D1"}, DistributionSpec {DistributionEnum::bigram}}}
   };
   IRM irm(schema1, &prng);
 
@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
   auto schema = load_schema("assets/animals.binary.schema");
   for (auto const& i : schema) {
     printf("relation: %s\n", i.first.c_str());
-    printf("distribution: %s\n", i.second.distribution.c_str());
     printf("domains: ");
     for (auto const& j : i.second.domains) {
       printf("%s ", j.c_str());
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
     auto value = std::get<2>(i);
     auto item = std::get<1>(i);
     printf("incorporating %s ", relation.c_str());
-    printf("%1.f ", std::get<double>(value));
+    printf("%d ", std::get<bool>(value));
     int counter = 0;
     T_items items_code;
     for (auto const& item : std::get<1>(i)) {

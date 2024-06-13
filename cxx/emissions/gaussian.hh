@@ -1,45 +1,35 @@
 #pragma once
 
 #include "emissions/base.hh"
+#include "distributions/zero_mean_normal.hh"
 
 class GaussianEmission : public Emission<double> {
  public:
-  // We use an Inverse gamma conjugate prior, so our hyperparameters are
-  double alpha = 1.0;
-  double beta = 1.0;
-
-  // Sufficient statistics of observed data.
-  double var = 0.0;
+  ZeroMeanNormal zmn(nullptr);
 
   GaussianEmission() {}
 
   void incorporate(const std::pair<double, double>& x) {
     ++N;
-    double y = x.second - x.first;
-    var += y * y;
+    zmn.incorporate(x.second - x.first);
   }
 
   void unincorporate(const std::pair<double, double>& x) {
     --N;
-    double y = x.second - x.first;
-    var -= y * y;
+    zmn.unincorporate(x.second - x.first);
   }
 
   double logp(const std::pair<double, double>& x) const {
-    double y = x.second - x.first;
-    // TODO(thomaswc): This.
-    return 0.0;
+    return zmn.logp(x.second - x.first);
   }
 
   double logp_score() const {
-    // TODO(thomaswc): This.
-    return 0.0;
+    return zmn.logp_score();
   }
 
   double sample_corrupted(const double& clean, std::mt19937* prng) {
-    double smoothed_var = var;  // TODO(thomaswc): Fix
-    std::normal_distribution<double> d(clean, sqrt(smoothed_var));
-    return d(*prng);
+    zmn.prng = prng;
+    return clean + zmn.sample();
   }
 
   double propose_clean(const std::vector<double>& corrupted,

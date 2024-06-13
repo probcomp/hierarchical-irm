@@ -30,6 +30,7 @@ cc_binary(
     deps = [
         ":cxxopts",
         ":headers",
+        ":util_distribution_variant",
         ":util_hash",
         ":util_io",
         ":util_math",
@@ -42,11 +43,23 @@ cc_library(
     hdrs = ["relation.hh"],
     deps = [
         ":domain",
+        ":util_distribution_variant",
         ":util_hash",
         ":util_math",
         "//distributions:base"
     ],
 )
+
+cc_library(
+    name = "util_distribution_variant",
+    srcs = ["util_distribution_variant.cc"],
+    visibility = [":__subpackages__"],
+    hdrs = ["util_distribution_variant.hh"],
+    deps = [
+        "//distributions",
+    ],
+)
+
 
 cc_library(
     name = "util_hash",
@@ -92,6 +105,16 @@ cc_test(
         ":domain",
         ":relation",
         "//distributions",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "util_distribution_variant_test",
+    srcs = ["util_distribution_variant_test.cc"],
+    deps = [
+        ":util_distribution_variant",
+        "@boost//:algorithm",
         "@boost//:test",
     ],
 )

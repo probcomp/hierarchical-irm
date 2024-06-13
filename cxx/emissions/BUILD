@@ -20,7 +20,10 @@ cc_library(
     name = "gaussian",
     srcs = ["gaussian.hh"],
     visibility = ["//:__subpackages__"],
-    deps = [":base"],
+    deps = [
+        ":base",
+        "//distributions:zero_mean_normal",
+    ],
 )
 
 cc_library(

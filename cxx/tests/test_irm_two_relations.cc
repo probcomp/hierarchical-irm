@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
   auto schema = load_schema(path_schema);
   for (auto const& [relation_name, relation] : schema) {
     printf("relation: %s, ", relation_name.c_str());
-    printf("distribution: %s, ", relation.distribution.c_str());
     printf("domains: ");
     for (auto const& domain : relation.domains) {
       printf("%s ", domain.c_str());
@@ -81,10 +80,10 @@ int main(int argc, char** argv) {
     assert(l.size() == 2);
     auto x1 = l.at(0);
     auto x2 = l.at(1);
-    auto p0 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, 0.);
-    auto p0_irm = irm.logp({{"R1", {x1, x2}, 0.}});
+    auto p0 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, false);
+    auto p0_irm = irm.logp({{"R1", {x1, x2}, false}});
     assert(abs(p0 - p0_irm) < 1e-10);
-    auto p1 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, 1.);
+    auto p1 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, true);
     auto Z = logsumexp({p0, p1});
     assert(abs(Z) < 1e-10);
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
@@ -95,10 +94,10 @@ int main(int argc, char** argv) {
     auto x1 = l.at(0);
     auto x2 = l.at(1);
     auto x3 = l.at(2);
-    auto p00 = irm.logp({{"R1", {x1, x2}, 0.}, {"R1", {x1, x3}, 0.}});
-    auto p01 = irm.logp({{"R1", {x1, x2}, 0.}, {"R1", {x1, x3}, 1.}});
-    auto p10 = irm.logp({{"R1", {x1, x2}, 1.}, {"R1", {x1, x3}, 0.}});
-    auto p11 = irm.logp({{"R1", {x1, x2}, 1.}, {"R1", {x1, x3}, 1.}});
+    auto p00 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, false}});
+    auto p01 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, true}});
+    auto p10 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}});
+    auto p11 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}});
     auto Z = logsumexp({p00, p01, p10, p11});
     assert(abs(Z) < 1e-10);
   }

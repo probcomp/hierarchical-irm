@@ -7,7 +7,9 @@
 #include "distributions/base.hh"
 #include "util_math.hh"
 
-class BetaBernoulli : public Distribution<double> {
+// TODO(thomaswc, emilyaf): Change BetaBernoulli to use bool instead of
+// double.
+class BetaBernoulli : public Distribution<bool> {
  public:
   double alpha = 1;  // hyperparameter
   double beta = 1;   // hyperparameter
@@ -24,15 +26,15 @@ class BetaBernoulli : public Distribution<double> {
     beta_grid = log_linspace(1e-4, 1e4, 10, true);
   }
 
-  void incorporate(const double& x);
+  void incorporate(const bool& x);
 
-  void unincorporate(const double& x);
+  void unincorporate(const bool& x);
 
-  double logp(const double& x) const;
+  double logp(const bool& x) const;
 
   double logp_score() const;
 
-  double sample();
+  bool sample();
 
   void transition_hyperparameters();
 };

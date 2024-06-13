@@ -10,7 +10,7 @@
 #define ALPHA_GRID \
   { 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0 }
 
-class DirichletCategorical : public Distribution<double> {
+class DirichletCategorical : public Distribution<int> {
  public:
   double alpha = 1;         // hyperparameter (applies to all categories)
   std::vector<int> counts;  // counts of observed categories
@@ -22,15 +22,15 @@ class DirichletCategorical : public Distribution<double> {
     this->prng = prng;
     counts = std::vector<int>(k, 0);
   }
-  void incorporate(const double& x);
+  void incorporate(const int& x);
 
-  void unincorporate(const double& x);
+  void unincorporate(const int& x);
 
-  double logp(const double& x) const;
+  double logp(const int& x) const;
 
   double logp_score() const;
 
-  double sample();
+  int sample();
 
   void transition_hyperparameters();
 };

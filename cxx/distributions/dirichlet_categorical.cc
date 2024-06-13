@@ -9,13 +9,13 @@
 
 #include "util_math.hh"
 
-void DirichletCategorical::incorporate(const double& x) {
-  assert(x >= 0 && x < counts.size());
+void DirichletCategorical::incorporate(const int& x) {
+  assert(x >= 0 && x < std::ssize(counts));
   counts[size_t(x)] += 1;
   ++N;
 }
 
-void DirichletCategorical::unincorporate(const double& x) {
+void DirichletCategorical::unincorporate(const int& x) {
   const size_t y = x;
   assert(y < counts.size());
   counts[y] -= 1;
@@ -24,8 +24,8 @@ void DirichletCategorical::unincorporate(const double& x) {
   assert(0 <= N);
 }
 
-double DirichletCategorical::logp(const double& x) const {
-  assert(x >= 0 && x < counts.size());
+double DirichletCategorical::logp(const int& x) const {
+  assert(x >= 0 && x < std::ssize(counts));
   const double numer = log(alpha + counts[size_t(x)]);
   const double denom = log(N + alpha * counts.size());
   return numer - denom;
@@ -40,12 +40,12 @@ double DirichletCategorical::logp_score() const {
   }
   return lgamma(a) - lgamma(a + N) + lg - k * lgamma(alpha);
 }
-double DirichletCategorical::sample() {
+
+int DirichletCategorical::sample() {
   std::vector<double> weights(counts.size());
   std::transform(counts.begin(), counts.end(), weights.begin(),
                  [&](size_t y) -> double { return y + alpha; });
-  int idx = choice(weights, prng);
-  return double(idx);
+  return choice(weights, prng);
 }
 
 void DirichletCategorical::transition_hyperparameters() {

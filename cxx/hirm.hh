@@ -8,24 +8,11 @@
 #include <unordered_set>
 #include <variant>
 
-#include "distributions/base.hh"
-#include "distributions/beta_bernoulli.hh"
-#include "distributions/bigram.hh"
-#include "distributions/crp.hh"
-#include "distributions/dirichlet_categorical.hh"
-#include "distributions/normal.hh"
 #include "relation.hh"
-
+#include "util_distribution_variant.hh"
 
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;
-
-using ObservationVariant = std::variant<double, int, std::string>;
-
-using RelationVariant =
-    std::variant<Relation<BetaBernoulli>*, Relation<Bigram>*,
-                 // Relation<DirichletCategorical>*,
-                 Relation<Normal>*>;
 
 class IRM {
  public:
@@ -222,11 +209,13 @@ class IRM {
           T_item t = t_list.at(indexes.at(loc));
           z.push_back(t);
         }
-        typename std::remove_reference_t<decltype(*rel)>::DType aux(prng);
-        auto cluster = rel->clusters.contains(z) ? rel->clusters.at(z) : &aux;
         auto v = std::get<
             typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
-        return cluster->logp(v);
+        auto prior =
+            std::get<typename std::remove_reference_t<decltype(*rel)>::DType*>(
+                cluster_prior_from_spec(rel->dist_spec, prng));
+        return rel->clusters.contains(z) ? rel->clusters.at(z)->logp(v)
+                                         : prior->logp(v);
       };
       for (const auto& [r, items, value] : observations) {
         auto g = std::bind(f_logp, std::placeholders::_1, items, value);
@@ -265,21 +254,8 @@ class IRM {
       domain_to_relations.at(d).insert(name);
       doms.push_back(domains.at(d));
     }
-    if (relation.distribution == "normal") {
-      relations[name] =
-          new Relation<Normal>(name, relation.distribution, doms, prng);
-    } else if (relation.distribution == "bernoulli") {
-      relations[name] =
-          new Relation<BetaBernoulli>(name, relation.distribution, doms, prng);
-    } else if (relation.distribution == "bigram") {
-      relations[name] =
-          new Relation<Bigram>(name, relation.distribution, doms, prng);
-    } else {
-      assert(false);
-    }
-    // TODO(emilyaf): Enable Categorical. Maybe have "categorical5" e.g. for 5
-    // categories. relations[name] = new Relation<DirichletCategorical>(name,
-    // relation.distribution, doms, prng);
+    relations[name] =
+        relation_from_spec(name, relation.distribution_spec, doms, prng);
     schema[name] = relation;
   }
 
@@ -327,7 +303,7 @@ class HIRM {
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items, 
+  void incorporate(const std::string& r, const T_items& items,
                    const ObservationVariant& value) {
     IRM* irm = relation_to_irm(r);
     irm->incorporate(r, items, value);
@@ -366,7 +342,7 @@ class HIRM {
     int table_current = crp.assignments.at(rc);
     RelationVariant relation = get_relation(r);
     T_relation t_relation =
-        std::visit([](auto rel) { return rel->get_T_relation(); }, relation);
+        std::visit([](auto rel) { return rel->trel; }, relation);
     auto crp_dist = crp.tables_weights_gibbs(table_current);
     std::vector<int> tables;
     std::vector<double> logps;
@@ -443,7 +419,7 @@ class HIRM {
     int table_current = crp.assignments.at(rc);
     RelationVariant relation = get_relation(r);
     auto f_obs = [&](auto rel) {
-      T_relation trel = rel->get_T_relation();
+      T_relation trel = rel->trel;
       IRM* irm = relation_to_irm(r);
       auto observations = rel->data;
       // Remove from current IRM.

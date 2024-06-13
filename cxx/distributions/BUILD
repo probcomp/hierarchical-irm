@@ -4,22 +4,12 @@ cc_library(
     name = "distributions",
     visibility = ["//:__subpackages__"],
     deps = [
-        ":adapter",
         ":base",
         ":beta_bernoulli",
         ":bigram",
         ":crp",
         ":dirichlet_categorical",
         ":normal",
-    ],
-)
-
-cc_library(
-    name = "adapter",
-    hdrs = ["adapter.hh"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":base",
     ],
 )
 
@@ -86,15 +76,14 @@ cc_library(
         "//:util_math",
     ],
 )
-
-cc_test(
-    name = "adapter_test",
-    srcs = ["adapter_test.cc"],
+cc_library(
+    name = "zero_mean_normal",
+    srcs = ["zero_mean_normal.cc"],
+    hdrs = ["zero_mean_normal.hh"],
+    visibility = ["//:__subpackages__"],
     deps = [
-        ":adapter",
-        ":normal",
-        "@boost//:algorithm",
-        "@boost//:test",
+        ":base",
+        "//:util_math",
     ],
 )
 
@@ -145,6 +134,17 @@ cc_test(
     srcs = ["normal_test.cc"],
     deps = [
         ":normal",
+        "@boost//:algorithm",
+        "@boost//:math",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "zero_mean_normal_test",
+    srcs = ["zero_mean_normal_test.cc"],
+    deps = [
+        ":zero_mean_normal",
         "@boost//:algorithm",
         "@boost//:math",
         "@boost//:test",

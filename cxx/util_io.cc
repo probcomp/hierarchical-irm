@@ -5,7 +5,6 @@
 
 #include <cstdio>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -23,31 +22,19 @@ T_schema load_schema(const std::string& path) {
     T_relation relation;
 
     std::string relname;
+    std::string distribution_spec_str;
 
-    stream >> relation.distribution;
+    stream >> distribution_spec_str;
     stream >> relname;
     for (std::string w; stream >> w;) {
       relation.domains.push_back(w);
     }
     assert(relation.domains.size() > 0);
+    relation.distribution_spec = parse_distribution_spec(distribution_spec_str);
     schema[relname] = relation;
   }
   fp.close();
   return schema;
-}
-
-ObservationVariant observation_string_to_value(const std::string& value_str, 
-                                               const std::string& distribution) {
-  if (distribution == "normal" || distribution == "bernoulli") {
-    return std::stod(value_str);
-  } else if (distribution == "categorical") {
-    return std::stoi(value_str);
-  } else if (distribution == "bigram") {
-    return value_str;
-  } else {
-    // Unrecognized distribution name.
-    assert(false);
-  }
 }
 
 T_observations load_observations(const std::string& path,
@@ -67,7 +54,7 @@ T_observations load_observations(const std::string& path,
     stream >> value_str;
     stream >> relname;
     ObservationVariant value = observation_string_to_value(
-      value_str, schema.at(relname).distribution);
+        value_str, schema.at(relname).distribution_spec.distribution);
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }
@@ -143,10 +130,8 @@ void incorporate_observations(HIRM& hirm, const T_encoding& encoding,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
-    std::visit(
-      [&](const auto& v) {hirm.incorporate(relation, items_e, v);}, 
-      value
-    );
+    std::visit([&](const auto& v) { hirm.incorporate(relation, items_e, v); },
+               value);
   }
 }
 
