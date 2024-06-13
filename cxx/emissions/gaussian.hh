@@ -5,9 +5,9 @@
 
 class GaussianEmission : public Emission<double> {
  public:
-  ZeroMeanNormal zmn(nullptr);
+  ZeroMeanNormal zmn;
 
-  GaussianEmission() {}
+  GaussianEmission() : zmn(nullptr) {}
 
   void incorporate(const std::pair<double, double>& x) {
     ++N;
@@ -25,6 +25,10 @@ class GaussianEmission : public Emission<double> {
 
   double logp_score() const {
     return zmn.logp_score();
+  }
+
+  void transition_hyperparameters() {
+    zmn.transition_hyperparameters();
   }
 
   double sample_corrupted(const double& clean, std::mt19937* prng) {
@@ -45,4 +49,4 @@ class GaussianEmission : public Emission<double> {
     }
     return mean;
   }
-}
+};

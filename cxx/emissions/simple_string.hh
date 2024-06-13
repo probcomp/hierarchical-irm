@@ -25,7 +25,7 @@ class SimpleStringEmission : public Emission<std::string> {
   }
 
   void unincorporate(const std::pair<std::string, std::string>& x) {
-    ++N;
+    --N;
     corporate(x.first, x.second, false);
   }
 
@@ -33,7 +33,7 @@ class SimpleStringEmission : public Emission<std::string> {
     if (clean.empty()) {
       // All of dirty must be insertions.
       for (size_t i = 0; i < dirty.length(); ++i) {
-        insertion.incorporate(d);
+        d ? insertion.incorporate(1) : insertion.unincorporate(1);
       }
       return;
     }
@@ -41,15 +41,21 @@ class SimpleStringEmission : public Emission<std::string> {
     if (dirty.empty()) {
       // All of clean must have be deleted.
       for (size_t i = 0; i < dirty.length(); ++i) {
-        deletion.incorporate(d);
+        d ? deletion.incorporate(1) : deletion.unincorporate(1);
       }
       return;
     }
 
     if (clean[0] == dirty[0]) {
-      substitution.incorporate(!d);
-      insertion.incorporate(!d);
-      deletion.incorporate(!d);
+      if (d) {
+        substitution.incorporate(0);
+        insertion.incorporate(0);
+        deletion.incorporate(0);
+      } else {
+        substitution.unincorporate(0);
+        insertion.unincorporate(0);
+        deletion.unincorporate(0);
+      }
       corporate(clean.substr(1, std::string::npos),
                 dirty.substr(1, std::string::npos),
                 d);
@@ -57,9 +63,15 @@ class SimpleStringEmission : public Emission<std::string> {
     }
 
     if (clean.back() == dirty.back()) {
-      substitution.incorporate(!d);
-      insertion.incorporate(!d);
-      deletion.incorporate(!d);
+      if (d) {
+        substitution.incorporate(0);
+        insertion.incorporate(0);
+        deletion.incorporate(0);
+      } else {
+        substitution.unincorporate(0);
+        insertion.unincorporate(0);
+        deletion.unincorporate(0);
+      }
       corporate(clean.substr(0, clean.length() - 1),
                 dirty.substr(0, dirty.length() - 1),
                 d);
@@ -74,29 +86,29 @@ class SimpleStringEmission : public Emission<std::string> {
     // So instead, we just guess based on the std::string lengths.
     if (clean.length() < dirty.length()) {
       // Probably an insertion.
-      insertion.incorporate(d);
+      d ? insertion.incorporate(1) : insertion.unincorporate(1);
       corporate(clean, dirty.substr(1, std::string::npos), d);
       return;
     }
 
     if (clean.length() > dirty.length()) {
       // Probably a deletion.
-      deletion.incorporate(d);
+      d ? deletion.incorporate(1) : deletion.unincorporate(1);
       corporate(clean.substr(1, std::string::npos), dirty, d);
       return;
     }
 
     // Probably a substitution.
-    substitution.incorporate(d);
+    d ? substitution.incorporate(1) : substitution.unincorporate(1);
     corporate(clean.substr(1, std::string::npos),
               dirty.substr(1, std::string::npos),
               d);
   }
 
   double logp(const std::pair<std::string, std::string>& x) const {
-    incorporate(x);
+    const_cast<SimpleStringEmission*>(this)->incorporate(x);
     double lp = logp_score();
-    unincorporate(x);
+    const_cast<SimpleStringEmission*>(this)->unincorporate(x);
     return lp - logp_score();
   }
 
@@ -169,4 +181,4 @@ class SimpleStringEmission : public Emission<std::string> {
     }
   }
 
-}
+};

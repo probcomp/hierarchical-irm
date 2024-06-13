@@ -57,6 +57,16 @@ cc_test(
 )
 
 cc_test(
+    name = "gaussian_test",
+    srcs = ["gaussian_test.cc"],
+    deps = [
+        ":gaussian",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
     name = "simple_string_test",
     srcs = ["simple_string_test.cc"],
     deps = [
@@ -77,14 +87,3 @@ cc_test(
         "@boost//:test",
     ],
 )
-
-# TODO(thomaswc): Fix and re-enable.
-#cc_test(
-#    name = "gaussian_test",
-#    srcs = ["gaussian_test.cc"],
-#    deps = [
-#        ":gaussian",
-#        "@boost//:algorithm",
-#        "@boost//:test",
-#    ],
-#)
