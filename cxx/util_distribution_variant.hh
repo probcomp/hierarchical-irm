@@ -28,7 +28,7 @@ template <typename DistributionType>
 class Relation;
 
 // Set of all distribution sample types.
-using ObservationVariant = std::variant<double, int, std::string>;
+using ObservationVariant = std::variant<double, int, bool, std::string>;
 
 using DistributionVariant =
     std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*>;

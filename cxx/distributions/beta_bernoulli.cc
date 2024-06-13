@@ -7,13 +7,13 @@
 
 #include "util_math.hh"
 
-void BetaBernoulli::incorporate(const double& x) {
+void BetaBernoulli::incorporate(const bool& x) {
   assert(x == 0 || x == 1);
   ++N;
   s += x;
 }
 
-void BetaBernoulli::unincorporate(const double& x) {
+void BetaBernoulli::unincorporate(const bool& x) {
   assert(x == 0 || x == 1);
   --N;
   s -= x;
@@ -21,7 +21,7 @@ void BetaBernoulli::unincorporate(const double& x) {
   assert(0 <= N);
 }
 
-double BetaBernoulli::logp(const double& x) const {
+double BetaBernoulli::logp(const bool& x) const {
   assert(x == 0 || x == 1);
   double log_denom = log(N + alpha + beta);
   double log_numer = x ? log(s + alpha) : log(N - s + beta);
@@ -34,9 +34,9 @@ double BetaBernoulli::logp_score() const {
   return v1 - v2;
 }
 
-double BetaBernoulli::sample() {
+bool BetaBernoulli::sample() {
   double p = exp(logp(1));
-  std::vector<int> items{0, 1};
+  std::vector<bool> items{false, true};
   std::vector<double> weights{1 - p, p};
   int idx = choice(weights, prng);
   return items[idx];

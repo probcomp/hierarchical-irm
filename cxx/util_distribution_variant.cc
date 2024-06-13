@@ -20,7 +20,7 @@ ObservationVariant observation_string_to_value(
     case DistributionEnum::normal:
       return std::stod(value_str);
     case DistributionEnum::bernoulli:
-      return std::stod(value_str);
+      return static_cast<bool>(std::stoi(value_str));
     case DistributionEnum::categorical:
       return std::stoi(value_str);
     case DistributionEnum::bigram:
