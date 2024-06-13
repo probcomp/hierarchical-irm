@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <unordered_map>
 #include "emissions/base.hh"
 #include "distributions/beta_bernoulli.hh"
@@ -156,6 +157,11 @@ class SimpleStringEmission : public Emission<std::string> {
       const std::vector<std::string>& corrupted,
       std::mt19937* unused_prng) {
     std::string clean;
+    // This implemention does simple voting per absolute string position.
+    // A better version would first average the corrupted string lengths to
+    // get a target length for clean, and then for each position i in
+    // clean, find the mode among the
+    // corrupted[j][i * corrupted[j].length / clean_length]
     size_t i = 0;
     while (true) {
       std::unordered_map<char, int> counts;
@@ -178,6 +184,7 @@ class SimpleStringEmission : public Emission<std::string> {
         return clean;
       }
       clean = clean + mode;
+      ++i;
     }
   }
 
