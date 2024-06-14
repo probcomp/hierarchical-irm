@@ -102,7 +102,8 @@ T_encoding encode_observations(const T_schema& schema,
   return std::make_pair(item_to_code, code_to_item);
 }
 
-void incorporate_observations(IRM& irm, const T_encoding& encoding,
+void incorporate_observations(std::mt19937* prng, IRM& irm,
+                              const T_encoding& encoding,
                               const T_observations& observations) {
   T_encoding_f item_to_code = std::get<0>(encoding);
   for (const auto& [relation, items, value] : observations) {
@@ -114,11 +115,12 @@ void incorporate_observations(IRM& irm, const T_encoding& encoding,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
-    irm.incorporate(relation, items_e, value);
+    irm.incorporate(prng, relation, items_e, value);
   }
 }
 
-void incorporate_observations(HIRM& hirm, const T_encoding& encoding,
+void incorporate_observations(std::mt19937* prng, HIRM& hirm,
+                              const T_encoding& encoding,
                               const T_observations& observations) {
   T_encoding_f item_to_code = std::get<0>(encoding);
   for (const auto& [relation, items, value] : observations) {
@@ -130,8 +132,9 @@ void incorporate_observations(HIRM& hirm, const T_encoding& encoding,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
-    std::visit([&](const auto& v) { hirm.incorporate(relation, items_e, v); },
-               value);
+    std::visit(
+        [&](const auto& v) { hirm.incorporate(prng, relation, items_e, v); },
+        value);
   }
 }
 
@@ -326,8 +329,9 @@ load_clusters_hirm(const std::string& path) {
   return std::make_pair(relations, irms);
 }
 
-void from_txt(IRM* const irm, const std::string& path_schema,
-              const std::string& path_obs, const std::string& path_clusters) {
+void from_txt(std::mt19937* prng, IRM* const irm,
+              const std::string& path_schema, const std::string& path_obs,
+              const std::string& path_clusters) {
   // Load the data.
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs, schema);
@@ -349,16 +353,17 @@ void from_txt(IRM* const irm, const std::string& path_schema,
       assert(0 <= table);
       for (const std::string& item : items) {
         T_item code = item_to_code.at(domain).at(item);
-        irm->domains.at(domain)->incorporate(code, table);
+        irm->domains.at(domain)->incorporate(prng, code, table);
       }
     }
   }
   // Add the observations.
-  incorporate_observations(*irm, encoding, observations);
+  incorporate_observations(prng, *irm, encoding, observations);
 }
 
-void from_txt(HIRM* const hirm, const std::string& path_schema,
-              const std::string& path_obs, const std::string& path_clusters) {
+void from_txt(std::mt19937* prng, HIRM* const hirm,
+              const std::string& path_schema, const std::string& path_obs,
+              const std::string& path_clusters) {
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
@@ -369,9 +374,9 @@ void from_txt(HIRM* const hirm, const std::string& path_schema,
   assert(hirm->relation_to_code.empty());
   assert(hirm->code_to_relation.empty());
   for (const auto& [r, ds] : schema) {
-    hirm->add_relation(r, ds);
+    hirm->add_relation(prng, r, ds);
     assert(hirm->irms.size() == hirm->crp.tables.size());
-    hirm->set_cluster_assignment_gibbs(r, -1);
+    hirm->set_cluster_assignment_gibbs(prng, r, -1);
   }
   // Add each IRM.
   for (const auto& [table, rs] : relations) {
@@ -382,7 +387,7 @@ void from_txt(HIRM* const hirm, const std::string& path_schema,
       int table_current = hirm->relation_to_table(r);
       if (table_current != table) {
         assert(hirm->irms.size() == hirm->crp.tables.size());
-        hirm->set_cluster_assignment_gibbs(r, table);
+        hirm->set_cluster_assignment_gibbs(prng, r, table);
       }
     }
     // Add the domain entities with fixed clustering to this IRM.
@@ -397,12 +402,12 @@ void from_txt(HIRM* const hirm, const std::string& path_schema,
         assert(0 <= t);
         for (const std::string& item : items) {
           int code = item_to_code.at(domain).at(item);
-          irm->domains.at(domain)->incorporate(code, t);
+          irm->domains.at(domain)->incorporate(prng, code, t);
         }
       }
     }
   }
   assert(hirm->irms.count(-1) == 0);
   // Add the observations.
-  incorporate_observations(*hirm, encoding, observations);
+  incorporate_observations(prng, *hirm, encoding, observations);
 }

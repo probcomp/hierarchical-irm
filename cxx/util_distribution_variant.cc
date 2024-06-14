@@ -60,20 +60,19 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
   }
 }
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng) {
+DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
-      return new BetaBernoulli(prng);
+      return new BetaBernoulli;
     case DistributionEnum::bigram:
-      return new Bigram(prng);
+      return new Bigram;
     case DistributionEnum::categorical: {
       assert(spec.distribution_args.size() == 1);
       int num_categories = std::stoi(spec.distribution_args.at("k"));
-      return new DirichletCategorical(prng, num_categories);
+      return new DirichletCategorical(num_categories);
     }
     case DistributionEnum::normal:
-      return new Normal(prng);
+      return new Normal;
     default:
       assert(false && "Unsupported distribution enum value.");
   }
@@ -81,17 +80,16 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
 
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,
-                                   std::vector<Domain*>& domains,
-                                   std::mt19937* prng) {
+                                   std::vector<Domain*>& domains) {
   switch (dist_spec.distribution) {
     case DistributionEnum::bernoulli:
-      return new Relation<BetaBernoulli>(name, dist_spec, domains, prng);
+      return new Relation<BetaBernoulli>(name, dist_spec, domains);
     case DistributionEnum::bigram:
-      return new Relation<Bigram>(name, dist_spec, domains, prng);
+      return new Relation<Bigram>(name, dist_spec, domains);
     case DistributionEnum::categorical:
-      return new Relation<DirichletCategorical>(name, dist_spec, domains, prng);
+      return new Relation<DirichletCategorical>(name, dist_spec, domains);
     case DistributionEnum::normal:
-      return new Relation<Normal>(name, dist_spec, domains, prng);
+      return new Relation<Normal>(name, dist_spec, domains);
     default:
       assert(false && "Unsupported distribution enum value.");
   }

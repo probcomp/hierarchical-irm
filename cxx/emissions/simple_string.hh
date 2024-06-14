@@ -2,8 +2,9 @@
 
 #include <cstdio>
 #include <unordered_map>
-#include "emissions/base.hh"
+
 #include "distributions/beta_bernoulli.hh"
+#include "emissions/base.hh"
 
 // A simple string emission model that handles substitutions, insertions
 // and deletions of characters, all without context.  (I.e., their
@@ -18,9 +19,7 @@ class SimpleStringEmission : public Emission<std::string> {
   BetaBernoulli insertions;
   BetaBernoulli deletions;
 
-  SimpleStringEmission() : substitutions(nullptr),
-                           insertions(nullptr),
-                           deletions(nullptr) {};
+  SimpleStringEmission(){};
 
   void incorporate(const std::pair<std::string, std::string>& x) {
     ++N;
@@ -74,8 +73,7 @@ class SimpleStringEmission : public Emission<std::string> {
       }
       // Recurse on the rest of clean and dirty.
       corporate(clean.substr(1, std::string::npos),
-                dirty.substr(1, std::string::npos),
-                d);
+                dirty.substr(1, std::string::npos), d);
       return;
     }
 
@@ -91,8 +89,7 @@ class SimpleStringEmission : public Emission<std::string> {
         deletions.unincorporate(0);
       }
       corporate(clean.substr(0, clean.length() - 1),
-                dirty.substr(0, dirty.length() - 1),
-                d);
+                dirty.substr(0, dirty.length() - 1), d);
       return;
     }
 
@@ -127,8 +124,7 @@ class SimpleStringEmission : public Emission<std::string> {
     d ? insertions.incorporate(0) : insertions.unincorporate(0);
     d ? deletions.incorporate(0) : deletions.unincorporate(0);
     corporate(clean.substr(1, std::string::npos),
-              dirty.substr(1, std::string::npos),
-              d);
+              dirty.substr(1, std::string::npos), d);
   }
 
   double logp(const std::pair<std::string, std::string>& x) const {
@@ -139,17 +135,17 @@ class SimpleStringEmission : public Emission<std::string> {
   }
 
   double logp_score() const {
-    return substitutions.logp_score()
-        + insertions.logp_score()
-        + deletions.logp_score()
-        // Substitutions and insertions require us to generate a random char.
-        + (substitutions.s + insertions.s) * log(highest_char + 1 - lowest_char);
+    return substitutions.logp_score() + insertions.logp_score() +
+           deletions.logp_score()
+           // Substitutions and insertions require us to generate a random char.
+           + (substitutions.s + insertions.s) *
+                 log(highest_char + 1 - lowest_char);
   }
 
-  void transition_hyperparameters() {
-    substitutions.transition_hyperparameters();
-    insertions.transition_hyperparameters();
-    deletions.transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng) {
+    substitutions.transition_hyperparameters(prng);
+    insertions.transition_hyperparameters(prng);
+    deletions.transition_hyperparameters(prng);
   }
 
   char random_character(std::mt19937* prng) {
@@ -158,32 +154,28 @@ class SimpleStringEmission : public Emission<std::string> {
   }
 
   std::string sample_corrupted(const std::string& clean, std::mt19937* prng) {
-    substitutions.prng = prng;
-    insertions.prng = prng;
-    deletions.prng = prng;
     std::string s;
     for (size_t i = 0; i < clean.length(); ++i) {
-      while (insertions.sample()) {
+      while (insertions.sample(prng)) {
         s += random_character(prng);
       }
-      if (deletions.sample()) {
+      if (deletions.sample(prng)) {
         continue;
       }
-      if (substitutions.sample()) {
+      if (substitutions.sample(prng)) {
         s += random_character(prng);
       } else {
         s += clean[i];
       }
     }
-    while (insertions.sample()) {
+    while (insertions.sample(prng)) {
       s += random_character(prng);
     }
     return s;
   }
 
-  std::string propose_clean(
-      const std::vector<std::string>& corrupted,
-      std::mt19937* unused_prng) {
+  std::string propose_clean(const std::vector<std::string>& corrupted,
+                            std::mt19937* unused_prng) {
     std::string clean;
     // This implemention does simple voting per absolute string position.
     // A better version would first average the corrupted string lengths to
@@ -195,7 +187,7 @@ class SimpleStringEmission : public Emission<std::string> {
       std::unordered_map<char, int> counts;
       int max_count = 0;
       char mode;
-      for (const std::string& s: corrupted) {
+      for (const std::string& s : corrupted) {
         char c;
         if (i < s.length()) {
           c = s[i];
@@ -215,5 +207,4 @@ class SimpleStringEmission : public Emission<std::string> {
       ++i;
     }
   }
-
 };

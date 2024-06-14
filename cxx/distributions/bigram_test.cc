@@ -8,8 +8,7 @@
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
-  std::mt19937 prng;
-  Bigram bg(&prng);
+  Bigram bg;
 
   bg.incorporate("hello");
   bg.incorporate("world");
@@ -25,8 +24,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 }
 
 BOOST_AUTO_TEST_CASE(test_set_alpha) {
-  std::mt19937 prng;
-  Bigram bg(&prng);
+  Bigram bg;
 
   bg.incorporate("hello");
   double first_lp = bg.logp_score();
@@ -41,14 +39,14 @@ BOOST_AUTO_TEST_CASE(test_set_alpha) {
 
 BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
   std::mt19937 prng;
-  Bigram bg(&prng);
+  Bigram bg;
 
-  bg.transition_hyperparameters();
+  bg.transition_hyperparameters(&prng);
   for (int i = 0; i < 100; ++i) {
     bg.incorporate("abcdefghijklmnopqrstuvwxyz");
   }
 
-  bg.transition_hyperparameters();
+  bg.transition_hyperparameters(&prng);
 
   BOOST_TEST(bg.alpha < 1.0);
 }

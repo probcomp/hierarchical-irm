@@ -14,12 +14,8 @@ class DirichletCategorical : public Distribution<int> {
  public:
   double alpha = 1;         // hyperparameter (applies to all categories)
   std::vector<int> counts;  // counts of observed categories
-  std::mt19937* prng;
 
-  // DirichletCategorical does not take ownership of prng.
-  DirichletCategorical(std::mt19937* prng,
-                       int k) {  // k is number of categories
-    this->prng = prng;
+  DirichletCategorical(int k) {  // k is number of categories
     counts = std::vector<int>(k, 0);
   }
   void incorporate(const int& x);
@@ -30,7 +26,7 @@ class DirichletCategorical : public Distribution<int> {
 
   double logp_score() const;
 
-  int sample();
+  int sample(std::mt19937* prng);
 
-  void transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng);
 };

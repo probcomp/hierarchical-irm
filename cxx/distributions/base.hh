@@ -1,4 +1,5 @@
 #pragma once
+#include<random>
 
 template <typename T>
 class Distribution {
@@ -30,14 +31,12 @@ class Distribution {
   virtual double logp_score() const = 0;
 
   // A sample from the predictive distribution.
-  // TODO(thomaswc): Consider refactoring so that this takes a
-  // PRNG parameter.
-  virtual T sample() = 0;
+  virtual T sample(std::mt19937* prng) = 0;
 
   // Transition the hyperparameters.  The probability of transitioning to
   // a particular set of hyperparameters should be proportional to
   // e^logp_score() under those hyperparameters.
-  virtual void transition_hyperparameters() = 0;
+  virtual void transition_hyperparameters(std::mt19937* prng) = 0;
 
   virtual ~Distribution() = default;
 };

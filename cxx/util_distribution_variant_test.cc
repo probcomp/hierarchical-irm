@@ -6,7 +6,6 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include <iostream>
-#include <random>
 
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
@@ -36,9 +35,8 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
 }
 
 BOOST_AUTO_TEST_CASE(test_cluster_prior_from_spec) {
-  std::mt19937 prng;
   DistributionSpec dc = {DistributionEnum::categorical, {{"k", "4"}}};
-  DistributionVariant dcdv = cluster_prior_from_spec(dc, &prng);
+  DistributionVariant dcdv = cluster_prior_from_spec(dc);
   DirichletCategorical* dcd = std::get<DirichletCategorical*>(dcdv);
   BOOST_TEST(dcd->counts.size() == 4);
 }

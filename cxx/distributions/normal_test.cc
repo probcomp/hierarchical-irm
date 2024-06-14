@@ -14,8 +14,7 @@ namespace bm = boost::math;
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_welford) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
   std::vector<double> entries{-1., 2., 4., 5., 6., 20.};
   std::vector<double> expected_means{-1., 0.5, 1 + 2 / 3., 2.5, 3.2, 6.};
   std::vector<double> expected_vars{0.,   2.25, 4 + 2 / 9.,
@@ -34,8 +33,7 @@ BOOST_AUTO_TEST_CASE(test_welford) {
 }
 
 BOOST_AUTO_TEST_CASE(test_log_prob) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   bm::inverse_gamma_distribution inv_gamma_dist(nd.v / 2., nd.s / 2.);
   auto quad = bm::quadrature::gauss_kronrod<double, 100>();
@@ -69,8 +67,7 @@ BOOST_AUTO_TEST_CASE(test_log_prob) {
 }
 
 BOOST_AUTO_TEST_CASE(test_posterior_pred) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   bm::inverse_gamma_distribution inv_gamma_dist(nd.v / 2., nd.s / 2.);
   auto quad = bm::quadrature::gauss<double, 100>();
@@ -114,8 +111,7 @@ BOOST_AUTO_TEST_CASE(test_posterior_pred) {
 }
 
 BOOST_AUTO_TEST_CASE(simple) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   nd.incorporate(5.0);
   nd.incorporate(-2.0);
@@ -130,8 +126,7 @@ BOOST_AUTO_TEST_CASE(simple) {
 }
 
 BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   nd.incorporate(10.0);
   nd.unincorporate(10.0);
@@ -142,8 +137,7 @@ BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {
 }
 
 BOOST_AUTO_TEST_CASE(logp_before_incorporate) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   BOOST_TEST(nd.logp(6.0) == -4.4357424552958129, tt::tolerance(1e-6));
   BOOST_TEST(nd.logp_score() == 0.0, tt::tolerance(1e-6));
@@ -158,21 +152,20 @@ BOOST_AUTO_TEST_CASE(logp_before_incorporate) {
 
 BOOST_AUTO_TEST_CASE(sample) {
   std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   for (int i = 0; i < 1000; ++i) {
     nd.incorporate(42.0);
   }
 
-  double s = nd.sample();
+  double s = nd.sample(&prng);
 
   BOOST_TEST(s > 40.0);
   BOOST_TEST(s < 44.0);
 }
 
 BOOST_AUTO_TEST_CASE(incorporate_raises_logp) {
-  std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
   double old_lp = nd.logp(10.0);
   for (int i = 0; i < 10; ++i) {
@@ -184,8 +177,7 @@ BOOST_AUTO_TEST_CASE(incorporate_raises_logp) {
 }
 
 BOOST_AUTO_TEST_CASE(prior_prefers_origin) {
-  std::mt19937 prng;
-  Normal nd1(&prng), nd2(&prng);
+  Normal nd1, nd2;
 
   for (int i = 0; i < 100; ++i) {
     nd1.incorporate(0.0);
@@ -197,14 +189,14 @@ BOOST_AUTO_TEST_CASE(prior_prefers_origin) {
 
 BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
   std::mt19937 prng;
-  Normal nd(&prng);
+  Normal nd;
 
-  nd.transition_hyperparameters();
+  nd.transition_hyperparameters(&prng);
 
   for (int i = 0; i < 100; ++i) {
     nd.incorporate(5.0);
   }
 
-  nd.transition_hyperparameters();
+  nd.transition_hyperparameters(&prng);
   BOOST_TEST(nd.m > 0.0);
 }

@@ -72,14 +72,14 @@ double Bigram::logp_score() const {
   return logp;
 }
 
-std::string Bigram::sample() {
+std::string Bigram::sample(std::mt19937* prng) {
   std::string sampled_string;
   // TODO(emilyaf): Reconsider the reserved length and maybe enforce a
   // max length.
   sampled_string.reserve(30);
   // Sample the first character conditioned on the stop/start symbol.
   size_t current_ind = num_chars;
-  size_t next_ind = transition_dists[current_ind].sample();
+  size_t next_ind = transition_dists[current_ind].sample(prng);
   transition_dists[current_ind].incorporate(next_ind);
   current_ind = next_ind;
 
@@ -88,7 +88,7 @@ std::string Bigram::sample() {
   // subsequent samples are conditioned on its observation.
   while (current_ind != num_chars) {
     sampled_string += index_to_char(current_ind);
-    next_ind = transition_dists[current_ind].sample();
+    next_ind = transition_dists[current_ind].sample(prng);
     transition_dists[current_ind].incorporate(next_ind);
     current_ind = next_ind;
   }
@@ -103,7 +103,7 @@ void Bigram::set_alpha(double alphat) {
   }
 }
 
-void Bigram::transition_hyperparameters() {
+void Bigram::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<double> alphas;
   // C++ doesn't yet allow range for-loops over existing variables.  Sigh.

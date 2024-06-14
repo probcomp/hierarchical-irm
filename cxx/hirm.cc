@@ -32,12 +32,13 @@
     fflush(stdout);                                              \
   }
 
-void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
+void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
+                               bool verbose) {
   // TRANSITION ASSIGNMENTS.
   for (const auto& [d, domain] : irm->domains) {
     for (const auto item : domain->items) {
       clock_t t = clock();
-      irm->transition_cluster_assignment_item(d, item);
+      irm->transition_cluster_assignment_item(prng, d, item);
       REPORT_SCORE(verbose, t, t_total, irm);
     }
   }
@@ -47,7 +48,7 @@ void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
         [&](auto r) {
           for (const auto& [c, distribution] : r->clusters) {
             clock_t t = clock();
-            distribution->transition_hyperparameters();
+            distribution->transition_hyperparameters(prng);
             REPORT_SCORE(verbose, t, t_total, irm);
           }
         },
@@ -56,21 +57,23 @@ void single_step_irm_inference(IRM* irm, double& t_total, bool verbose) {
   // TRANSITION ALPHA.
   for (const auto& [d, domain] : irm->domains) {
     clock_t t = clock();
-    domain->crp.transition_alpha();
+    domain->crp.transition_alpha(prng);
     REPORT_SCORE(verbose, t, t_total, irm);
   }
 }
 
-void inference_irm(IRM* irm, int iters, int timeout, bool verbose) {
+void inference_irm(std::mt19937* prng, IRM* irm, int iters, int timeout,
+                   bool verbose) {
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
     CHECK_TIMEOUT(timeout, t_begin);
-    single_step_irm_inference(irm, t_total, verbose);
+    single_step_irm_inference(prng, irm, t_total, verbose);
   }
 }
 
-void inference_hirm(HIRM* hirm, int iters, int timeout, bool verbose) {
+void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
+                    bool verbose) {
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
@@ -78,12 +81,12 @@ void inference_hirm(HIRM* hirm, int iters, int timeout, bool verbose) {
     // TRANSITION RELATIONS.
     for (const auto& [r, rc] : hirm->relation_to_code) {
       clock_t t = clock();
-      hirm->transition_cluster_assignment_relation(r);
+      hirm->transition_cluster_assignment_relation(prng, r);
       REPORT_SCORE(verbose, t, t_total, hirm);
     }
     // TRANSITION IRMs.
     for (const auto& [t, irm] : hirm->irms) {
-      single_step_irm_inference(irm, t_total, verbose);
+      single_step_irm_inference(prng, irm, t_total, verbose);
     }
   }
 }
@@ -152,18 +155,18 @@ int main(int argc, char** argv) {
     IRM* irm;
     // Load
     if (path_clusters.empty()) {
-      irm = new IRM(schema, &prng);
+      irm = new IRM(schema);
       std::cout << "incorporating observations" << std::endl;
-      incorporate_observations(*irm, encoding, observations);
+      incorporate_observations(&prng, *irm, encoding, observations);
     } else {
-      irm = new IRM({}, &prng);
+      irm = new IRM({});
       std::cout << "loading clusters from " << path_clusters << std::endl;
-      from_txt(irm, path_schema, path_obs, path_clusters);
+      from_txt(&prng, irm, path_schema, path_obs, path_clusters);
     }
     // Infer
     std::cout << "inferring " << iters << " iters; timeout " << timeout
               << std::endl;
-    inference_irm(irm, iters, timeout, verbose);
+    inference_irm(&prng, irm, iters, timeout, verbose);
     // Save
     path_save += ".irm";
     std::cout << "saving to " << path_save << std::endl;
@@ -180,16 +183,16 @@ int main(int argc, char** argv) {
     if (path_clusters.empty()) {
       hirm = new HIRM(schema, &prng);
       std::cout << "incorporating observations" << std::endl;
-      incorporate_observations(*hirm, encoding, observations);
+      incorporate_observations(&prng, *hirm, encoding, observations);
     } else {
       hirm = new HIRM({}, &prng);
       std::cout << "loading clusters from " << path_clusters << std::endl;
-      from_txt(hirm, path_schema, path_obs, path_clusters);
+      from_txt(&prng, hirm, path_schema, path_obs, path_clusters);
     }
     // Infer
     std::cout << "inferring " << iters << " iters; timeout " << timeout
               << std::endl;
-    inference_hirm(hirm, iters, timeout, verbose);
+    inference_hirm(&prng, hirm, iters, timeout, verbose);
     // Save
     path_save += ".hirm";
     std::cout << "saving to " << path_save << std::endl;

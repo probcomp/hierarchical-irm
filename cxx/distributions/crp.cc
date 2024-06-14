@@ -31,7 +31,7 @@ void CRP::unincorporate(const T_item& item) {
   --N;
 }
 
-int CRP::sample() {
+int CRP::sample(std::mt19937* prng) {
   auto crp_dist = tables_weights();
   std::vector<int> items(crp_dist.size());
   std::vector<double> weights(crp_dist.size());
@@ -98,7 +98,7 @@ std::unordered_map<int, double> CRP::tables_weights_gibbs(int table) const {
   return dist;
 }
 
-void CRP::transition_alpha() {
+void CRP::transition_alpha(std::mt19937* prng) {
   if (N == 0) {
     return;
   }

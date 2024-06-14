@@ -7,15 +7,13 @@
 #include <numbers>
 
 // Return log density of location-scaled T distribution with zero mean.
-double log_t_distribution(const double& x,
-                          const double& v,
+double log_t_distribution(const double& x, const double& v,
                           const double& variance) {
   // https://en.wikipedia.org/wiki/Student%27s_t-distribution#Density_and_first_two_moments
   double v_shift = (v + 1.0) / 2.0;
-  return lgamma(v_shift)
-      - lgamma(v / 2.0)
-      - 0.5 * log(std::numbers::pi * v * variance)
-      - v_shift * log(1.0 + x * x / variance / v);
+  return lgamma(v_shift) - lgamma(v / 2.0) -
+         0.5 * log(std::numbers::pi * v * variance) -
+         v_shift * log(1.0 + x * x / variance / v);
 }
 
 void ZeroMeanNormal::incorporate(const double& x) {
@@ -33,7 +31,6 @@ void ZeroMeanNormal::unincorporate(const double& x) {
   var = (var * old_N - x * x) / N;
 }
 
-
 double ZeroMeanNormal::logp(const double& x) const {
   // Equation (119) of https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
   double alpha_n = alpha + N / 2.0;
@@ -46,14 +43,12 @@ double ZeroMeanNormal::logp_score() const {
   // Marginal likelihood from Page 10 of
   // https://j-zin.github.io/files/Conjugate_Bayesian_analysis_of_common_distributions.pdf
   double alpha_n = alpha + N / 2.0;
-  return alpha * log(beta)
-      - lgamma(alpha)
-      - (N / 2.0) * log(2.0 * std::numbers::pi)
-      + lgamma(alpha_n)
-      - alpha_n * log(2.0 * beta + 0.5 * var * N);
+  return alpha * log(beta) - lgamma(alpha) -
+         (N / 2.0) * log(2.0 * std::numbers::pi) + lgamma(alpha_n) -
+         alpha_n * log(2.0 * beta + 0.5 * var * N);
 }
 
-double ZeroMeanNormal::sample() {
+double ZeroMeanNormal::sample(std::mt19937* prng) {
   double alpha_n = alpha + N / 2.0;
   double beta_n = beta + var * N;
   double t_variance = beta_n / alpha_n;
@@ -66,18 +61,18 @@ double ZeroMeanNormal::sample() {
 #define BETA_GRID \
   { 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0 }
 
-void ZeroMeanNormal::transition_hyperparameters() {
+void ZeroMeanNormal::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<std::pair<double, double>> hypers;
   for (double a : ALPHA_GRID) {
     for (double b : BETA_GRID) {
-          alpha = a;
-          beta = b;
-          double lp = logp_score();
-          if (!std::isnan(lp)) {
-            logps.push_back(logp_score());
-            hypers.push_back(std::make_pair(a, b));
-          }
+      alpha = a;
+      beta = b;
+      double lp = logp_score();
+      if (!std::isnan(lp)) {
+        logps.push_back(logp_score());
+        hypers.push_back(std::make_pair(a, b));
+      }
     }
   }
 

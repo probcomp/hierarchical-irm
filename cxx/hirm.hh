@@ -22,10 +22,8 @@ class IRM {
       relations;  // map from name to Relation
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
-  std::mt19937* prng;
 
-  IRM(const T_schema& schema, std::mt19937* prng) {
-    this->prng = prng;
+  IRM(const T_schema& schema) {
     for (const auto& [name, relation] : schema) {
       this->add_relation(name, relation);
     }
@@ -40,14 +38,14 @@ class IRM {
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items,
-                   ObservationVariant value) {
+  void incorporate(std::mt19937* prng, const std::string& r,
+                   const T_items& items, ObservationVariant value) {
     std::visit(
         [&](auto rel) {
           auto v = std::get<
               typename std::remove_reference_t<decltype(*rel)>::ValueType>(
               value);
-          rel->incorporate(items, v);
+          rel->incorporate(prng, items, v);
         },
         relations.at(r));
   }
@@ -56,23 +54,25 @@ class IRM {
     std::visit([&](auto rel) { rel->unincorporate(items); }, relations.at(r));
   }
 
-  void transition_cluster_assignments_all() {
+  void transition_cluster_assignments_all(std::mt19937* prng) {
     for (const auto& [d, domain] : domains) {
       for (const T_item item : domain->items) {
-        transition_cluster_assignment_item(d, item);
+        transition_cluster_assignment_item(prng, d, item);
       }
     }
   }
 
-  void transition_cluster_assignments(const std::vector<std::string>& ds) {
+  void transition_cluster_assignments(std::mt19937* prng,
+                                      const std::vector<std::string>& ds) {
     for (const std::string& d : ds) {
       for (const T_item item : domains.at(d)->items) {
-        transition_cluster_assignment_item(d, item);
+        transition_cluster_assignment_item(prng, d, item);
       }
     }
   }
 
-  void transition_cluster_assignment_item(const std::string& d,
+  void transition_cluster_assignment_item(std::mt19937* prng,
+                                          const std::string& d,
                                           const T_item& item) {
     Domain* domain = domains.at(d);
     auto crp_dist = domain->tables_weights_gibbs(item);
@@ -213,7 +213,7 @@ class IRM {
             typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
         auto prior =
             std::get<typename std::remove_reference_t<decltype(*rel)>::DType*>(
-                cluster_prior_from_spec(rel->dist_spec, prng));
+                cluster_prior_from_spec(rel->dist_spec));
         return rel->clusters.contains(z) ? rel->clusters.at(z)->logp(v)
                                          : prior->logp(v);
       };
@@ -248,14 +248,14 @@ class IRM {
     for (const auto& d : relation.domains) {
       if (domains.count(d) == 0) {
         assert(domain_to_relations.count(d) == 0);
-        domains[d] = new Domain(d, prng);
+        domains[d] = new Domain(d);
         domain_to_relations[d] = std::unordered_set<std::string>();
       }
       domain_to_relations.at(d).insert(name);
       doms.push_back(domains.at(d));
     }
     relations[name] =
-        relation_from_spec(name, relation.distribution_spec, doms, prng);
+        relation_from_spec(name, relation.distribution_spec, doms);
     schema[name] = relation;
   }
 
@@ -294,19 +294,17 @@ class HIRM {
   std::unordered_map<int, std::string>
       code_to_relation;  // map from code to relation
   CRP crp;               // clustering model for relations
-  std::mt19937* prng;
 
-  HIRM(const T_schema& schema, std::mt19937* prng) : crp(prng) {
-    this->prng = prng;
+  HIRM(const T_schema& schema, std::mt19937* prng) {
     for (const auto& [name, relation] : schema) {
-      this->add_relation(name, relation);
+      this->add_relation(prng, name, relation);
     }
   }
 
-  void incorporate(const std::string& r, const T_items& items,
-                   const ObservationVariant& value) {
+  void incorporate(std::mt19937* prng, const std::string& r,
+                   const T_items& items, const ObservationVariant& value) {
     IRM* irm = relation_to_irm(r);
-    irm->incorporate(r, items, value);
+    irm->incorporate(prng, r, items, value);
   }
   void unincorporate(const std::string& r, const T_items& items) {
     IRM* irm = relation_to_irm(r);
@@ -327,17 +325,19 @@ class HIRM {
     return irm->relations.at(r);
   }
 
-  void transition_cluster_assignments_all() {
+  void transition_cluster_assignments_all(std::mt19937* prng) {
     for (const auto& [r, rc] : relation_to_code) {
-      transition_cluster_assignment_relation(r);
+      transition_cluster_assignment_relation(prng, r);
     }
   }
-  void transition_cluster_assignments(const std::vector<std::string>& rs) {
+  void transition_cluster_assignments(std::mt19937* prng,
+                                      const std::vector<std::string>& rs) {
     for (const auto& r : rs) {
-      transition_cluster_assignment_relation(r);
+      transition_cluster_assignment_relation(prng, r);
     }
   }
-  void transition_cluster_assignment_relation(const std::string& r) {
+  void transition_cluster_assignment_relation(std::mt19937* prng,
+                                              const std::string& r) {
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
     RelationVariant relation = get_relation(r);
@@ -352,7 +352,7 @@ class HIRM {
     for (const auto& [table, n_customers] : crp_dist) {
       IRM* irm;
       if (!irms.contains(table)) {
-        irm = new IRM({}, prng);
+        irm = new IRM({});
         assert(table_aux == nullptr);
         assert(irm_aux == nullptr);
         table_aux = (int*)malloc(sizeof(*table_aux));
@@ -366,7 +366,7 @@ class HIRM {
         std::visit(
             [&](auto rel) {
               for (const auto& [items, value] : rel->data) {
-                irm->incorporate(r, items, value);
+                irm->incorporate(prng, r, items, value);
               }
             },
             relation);
@@ -413,7 +413,8 @@ class HIRM {
     }
   }
 
-  void set_cluster_assignment_gibbs(const std::string& r, int table) {
+  void set_cluster_assignment_gibbs(std::mt19937* prng, const std::string& r,
+                                    int table) {
     assert(irms.size() == crp.tables.size());
     int rc = relation_to_code.at(r);
     int table_current = crp.assignments.at(rc);
@@ -430,13 +431,13 @@ class HIRM {
       }
       // Add to target IRM.
       if (!irms.contains(table)) {
-        irm = new IRM({}, prng);
+        irm = new IRM({});
         irms[table] = irm;
       }
       irm = irms.at(table);
       irm->add_relation(r, trel);
       for (const auto& [items, value] : observations) {
-        irm->incorporate(r, items, value);
+        irm->incorporate(prng, r, items, value);
       }
     };
     std::visit(f_obs, relation);
@@ -449,7 +450,8 @@ class HIRM {
     }
   }
 
-  void add_relation(const std::string& name, const T_relation& rel) {
+  void add_relation(std::mt19937* prng, const std::string& name,
+                    const T_relation& rel) {
     assert(!schema.contains(name));
     schema[name] = rel;
     int offset =
@@ -458,12 +460,12 @@ class HIRM {
             : std::max_element(code_to_relation.begin(), code_to_relation.end())
                   ->first;
     int rc = 1 + offset;
-    int table = crp.sample();
+    int table = crp.sample(prng);
     crp.incorporate(rc, table);
     if (irms.count(table) == 1) {
       irms.at(table)->add_relation(name, rel);
     } else {
-      irms[table] = new IRM({{name, rel}}, prng);
+      irms[table] = new IRM({{name, rel}});
     }
     assert(!relation_to_code.contains(name));
     assert(!code_to_relation.contains(rc));

@@ -63,7 +63,7 @@ double Normal::logp_score() const {
   return -0.5 * N * log(M_2PI) + logZ(r + N, v + N, sprime) - logZ(r, v, s);
 }
 
-double Normal::sample() {
+double Normal::sample(std::mt19937* prng) {
   double rn = r + N;
   double nu = v + N;
   double mprime, sprime;
@@ -78,7 +78,7 @@ double Normal::sample() {
   return d(*prng);
 }
 
-void Normal::transition_hyperparameters() {
+void Normal::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<std::tuple<double, double, double, double>> hypers;
   for (double rt : R_GRID) {
