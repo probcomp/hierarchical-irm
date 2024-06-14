@@ -15,7 +15,7 @@ double log_t_distribution(const double& x,
   return lgamma(v_shift)
       - lgamma(v / 2.0)
       - 0.5 * log(std::numbers::pi * v * variance)
-      - v_shift * log(1.0 + x * x / variance / v);
+      - v_shift * log1p(x * x / (variance * v));
 }
 
 void ZeroMeanNormal::incorporate(const double& x) {
@@ -37,20 +37,20 @@ void ZeroMeanNormal::unincorporate(const double& x) {
 double ZeroMeanNormal::logp(const double& x) const {
   // Equation (119) of https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
   double alpha_n = alpha + N / 2.0;
-  double beta_n = beta + var * N;
+  double beta_n = beta + 0.5 * var * N;
   double t_variance = beta_n / alpha_n;
   return log_t_distribution(x, 2.0 * alpha_n, t_variance);
 }
 
 double ZeroMeanNormal::logp_score() const {
   // Marginal likelihood from Page 10 of
-  // https://j-zin.github.io/files/Conjugate_Bayesian_analysis_of_common_distributions.pdf
+  // https://people.eecs.berkeley.edu/~jordan/courses/260-spring10/lectures/lecture5.pdf
   double alpha_n = alpha + N / 2.0;
   return alpha * log(beta)
       - lgamma(alpha)
       - (N / 2.0) * log(2.0 * std::numbers::pi)
       + lgamma(alpha_n)
-      - alpha_n * log(2.0 * beta + 0.5 * var * N);
+      - alpha_n * log(beta + 0.5 * var * N);
 }
 
 double ZeroMeanNormal::sample() {
