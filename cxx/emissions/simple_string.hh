@@ -12,13 +12,15 @@
 
 class SimpleStringEmission : public Emission<std::string> {
  public:
-  BetaBernoulli substitution;
-  BetaBernoulli insertion;
-  BetaBernoulli deletion;
+  char lowest_char = ' ';
+  char highest_char = '~';
+  BetaBernoulli substitutions;
+  BetaBernoulli insertions;
+  BetaBernoulli deletions;
 
-  SimpleStringEmission() : substitution(nullptr),
-                           insertion(nullptr),
-                           deletion(nullptr) {};
+  SimpleStringEmission() : substitutions(nullptr),
+                           insertions(nullptr),
+                           deletions(nullptr) {};
 
   void incorporate(const std::pair<std::string, std::string>& x) {
     ++N;
@@ -30,33 +32,47 @@ class SimpleStringEmission : public Emission<std::string> {
     corporate(x.first, x.second, false);
   }
 
+  // Calculate the insertions, deletion and substitutions between clean and
+  // dirty through a greedy, recursive search.  Incorporate those diffs into
+  // the corresponding BetaBernoulli models if d is true; otherwise
+  // unincorporate them.
   void corporate(const std::string& clean, const std::string& dirty, bool d) {
+    if (clean.empty() && dirty.empty()) {
+      // If both are empty, this is evidence of the lack of an insertion!
+      d ? insertions.incorporate(0) : insertions.unincorporate(0);
+      return;
+    }
+
     if (clean.empty()) {
       // All of dirty must be insertions.
       for (size_t i = 0; i < dirty.length(); ++i) {
-        d ? insertion.incorporate(1) : insertion.unincorporate(1);
+        d ? insertions.incorporate(1) : insertions.unincorporate(1);
       }
       return;
     }
 
     if (dirty.empty()) {
       // All of clean must have be deleted.
-      for (size_t i = 0; i < dirty.length(); ++i) {
-        d ? deletion.incorporate(1) : deletion.unincorporate(1);
+      for (size_t i = 0; i < clean.length(); ++i) {
+        d ? deletions.incorporate(1) : deletions.unincorporate(1);
+        // This is also evidence that clean.length()+1 insertions didn't happen.
+        d ? insertions.incorporate(0) : insertions.unincorporate(0);
       }
       return;
     }
 
     if (clean[0] == dirty[0]) {
+      // A match means there was no insertion, substitution or deletion.
       if (d) {
-        substitution.incorporate(0);
-        insertion.incorporate(0);
-        deletion.incorporate(0);
+        substitutions.incorporate(0);
+        insertions.incorporate(0);
+        deletions.incorporate(0);
       } else {
-        substitution.unincorporate(0);
-        insertion.unincorporate(0);
-        deletion.unincorporate(0);
+        substitutions.unincorporate(0);
+        insertions.unincorporate(0);
+        deletions.unincorporate(0);
       }
+      // Recurse on the rest of clean and dirty.
       corporate(clean.substr(1, std::string::npos),
                 dirty.substr(1, std::string::npos),
                 d);
@@ -64,14 +80,15 @@ class SimpleStringEmission : public Emission<std::string> {
     }
 
     if (clean.back() == dirty.back()) {
+      // Check if clean[-1] == dirty[-1].  This block might be removeable.
       if (d) {
-        substitution.incorporate(0);
-        insertion.incorporate(0);
-        deletion.incorporate(0);
+        substitutions.incorporate(0);
+        insertions.incorporate(0);
+        deletions.incorporate(0);
       } else {
-        substitution.unincorporate(0);
-        insertion.unincorporate(0);
-        deletion.unincorporate(0);
+        substitutions.unincorporate(0);
+        insertions.unincorporate(0);
+        deletions.unincorporate(0);
       }
       corporate(clean.substr(0, clean.length() - 1),
                 dirty.substr(0, dirty.length() - 1),
@@ -84,23 +101,31 @@ class SimpleStringEmission : public Emission<std::string> {
     // Also, dealing with multiple alignments (which again, is the right thing
     // to do) would require passing fractional counts to our BetaBernoulli
     // distributions, which we can't do right now.
-    // So instead, we just guess based on the std::string lengths.
+    // So instead, we just guess based on the std::string lengths.  Fun fact:
+    // this will never overcount insertions or deletions!  It will merely
+    // overcount substitutions by possibly putting the insertion or deletions
+    // in less than optimal places.
     if (clean.length() < dirty.length()) {
       // Probably an insertion.
-      d ? insertion.incorporate(1) : insertion.unincorporate(1);
+      d ? insertions.incorporate(1) : insertions.unincorporate(1);
       corporate(clean, dirty.substr(1, std::string::npos), d);
       return;
     }
 
     if (clean.length() > dirty.length()) {
       // Probably a deletion.
-      d ? deletion.incorporate(1) : deletion.unincorporate(1);
+      d ? deletions.incorporate(1) : deletions.unincorporate(1);
+      // Which means there (probably) wasn't an insertion.
+      d ? insertions.incorporate(0) : insertions.unincorporate(0);
       corporate(clean.substr(1, std::string::npos), dirty, d);
       return;
     }
 
     // Probably a substitution.
-    d ? substitution.incorporate(1) : substitution.unincorporate(1);
+    d ? substitutions.incorporate(1) : substitutions.unincorporate(1);
+    // Which is evidence of no insertion or deletion.
+    d ? insertions.incorporate(0) : insertions.unincorporate(0);
+    d ? deletions.incorporate(0) : deletions.unincorporate(0);
     corporate(clean.substr(1, std::string::npos),
               dirty.substr(1, std::string::npos),
               d);
@@ -114,40 +139,43 @@ class SimpleStringEmission : public Emission<std::string> {
   }
 
   double logp_score() const {
-    return substitution.logp_score() + insertion.logp_score() +
-        deletion.logp_score();
+    return substitutions.logp_score()
+        + insertions.logp_score()
+        + deletions.logp_score()
+        // Substitutions and insertions require us to generate a random char.
+        + (substitutions.s + insertions.s) * log(highest_char + 1 - lowest_char);
   }
 
   void transition_hyperparameters() {
-    substitution.transition_hyperparameters();
-    insertion.transition_hyperparameters();
-    deletion.transition_hyperparameters();
+    substitutions.transition_hyperparameters();
+    insertions.transition_hyperparameters();
+    deletions.transition_hyperparameters();
   }
 
   char random_character(std::mt19937* prng) {
-    std::uniform_int_distribution<char> uid(' ', '~' + 1);
+    std::uniform_int_distribution<char> uid(lowest_char, highest_char + 1);
     return uid(*prng);
   }
 
   std::string sample_corrupted(const std::string& clean, std::mt19937* prng) {
-    substitution.prng = prng;
-    insertion.prng = prng;
-    deletion.prng = prng;
+    substitutions.prng = prng;
+    insertions.prng = prng;
+    deletions.prng = prng;
     std::string s;
     for (size_t i = 0; i < clean.length(); ++i) {
-      while (insertion.sample()) {
+      while (insertions.sample()) {
         s += random_character(prng);
       }
-      if (deletion.sample()) {
+      if (deletions.sample()) {
         continue;
       }
-      if (substitution.sample()) {
+      if (substitutions.sample()) {
         s += random_character(prng);
       } else {
         s += clean[i];
       }
     }
-    while (insertion.sample()) {
+    while (insertions.sample()) {
       s += random_character(prng);
     }
     return s;
@@ -183,7 +211,7 @@ class SimpleStringEmission : public Emission<std::string> {
       if (mode == '\0') {
         return clean;
       }
-      clean = clean + mode;
+      clean += mode;
       ++i;
     }
   }
