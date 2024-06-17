@@ -6,12 +6,12 @@
 #include "emissions/base.hh"
 
 // An Emission class that sometimes applies BaseEmissor and sometimes doesn't.
-// BaseEmissor must (1) of type Emission<SampleType> and (2) assign zero
-// probability to <clean, dirty> pairs with clean == dirty.  [For example,
-// BitFlip and Gaussian both satisfy #2].
-template <typename BaseEmissor, typename SampleType = double>
-class Sometimes : public Emission<SampleType> {
+// BaseEmissor must assign zero probability to <clean, dirty> pairs with 
+// clean == dirty.  [For example, BitFlip and Gaussian both satisfy this].
+template <typename BaseEmissor>
+class Sometimes : public Emission<typename std::tuple_element<0, typename BaseEmissor::SampleType>::type> {
  public:
+  using SampleType = typename std::tuple_element<0, typename BaseEmissor::SampleType>::type;
   BetaBernoulli bb;
   BaseEmissor be;
 

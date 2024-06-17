@@ -11,8 +11,8 @@
 class BitFlip;
 class GaussianEmission;
 class SimpleStringEmission;
-using SometimesBitFlip = Sometimes<BitFlip, bool>;
-using SometimesGaussian = Sometimes<GaussianEmission, double>;
+using SometimesBitFlip = Sometimes<BitFlip>;
+using SometimesGaussian = Sometimes<GaussianEmission>;
 
 using EmissionVariant = std::variant<GaussianEmission*, SometimesGaussian*,
                                      SometimesBitFlip*, SimpleStringEmission*>;
