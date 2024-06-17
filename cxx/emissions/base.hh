@@ -1,9 +1,7 @@
 #pragma once
 
-#include <cstdio>
-#include <cstdlib>
+#include <cassert>
 #include <random>
-#include <utility>
 
 #include "distributions/base.hh"
 
@@ -11,8 +9,7 @@ template <typename SampleType = double>
 class Emission : public Distribution<std::pair<SampleType, SampleType>> {
  public:
   virtual std::pair<SampleType, SampleType> sample() {
-    printf("sample() should never be called on an Emission\n");
-    std::abort();
+    assert(false && "sample() should never be called on an Emission\n");
   }
 
   // Return a stochastically corrupted version of clean.
