@@ -8,7 +8,7 @@
 // Most users will want to combine this with Sometimes.
 class BitFlip : public Emission<bool> {
  public:
-  BitFlip(){};
+  BitFlip() {};
 
   void incorporate(const std::pair<bool, bool>& x) {
     assert(x.first != x.second);

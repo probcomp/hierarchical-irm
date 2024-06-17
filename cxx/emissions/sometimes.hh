@@ -15,7 +15,7 @@ class Sometimes : public Emission<SampleType> {
   BetaBernoulli bb;
   BaseEmissor be;
 
-  Sometimes(){};
+  Sometimes() {};
 
   void incorporate(const std::pair<SampleType, SampleType>& x) {
     ++(this->N);

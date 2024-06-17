@@ -19,7 +19,7 @@ class SimpleStringEmission : public Emission<std::string> {
   BetaBernoulli insertions;
   BetaBernoulli deletions;
 
-  SimpleStringEmission(){};
+  SimpleStringEmission() {};
 
   void incorporate(const std::pair<std::string, std::string>& x) {
     ++N;
