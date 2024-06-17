@@ -1,9 +1,10 @@
 // Copyright 2024
 // See LICENSE.txt
 
+#include "emissions/get_emission.hh"
+
 #include <cassert>
 
-#include "emissions/get_emission.hh"
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
@@ -21,4 +22,3 @@ EmissionVariant get_emission(const std::string& emission_name) {
   printf("Unknown emission name %s\n", emission_name.c_str());
   assert(false);
 }
-

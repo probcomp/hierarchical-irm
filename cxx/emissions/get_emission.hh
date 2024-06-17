@@ -5,6 +5,7 @@
 
 #include <string>
 #include <variant>
+
 #include "emissions/sometimes.hh"
 
 class BitFlip;
