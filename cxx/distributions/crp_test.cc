@@ -14,8 +14,7 @@ namespace tt = boost::test_tools;
 namespace bm = boost::math;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
-  std::mt19937 prng;
-  CRP crp(&prng);
+  CRP crp;
 
   T_item cat = 1;
   T_item dog = 2;
@@ -86,8 +85,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 }
 
 BOOST_AUTO_TEST_CASE(test_log_prob) {
-  std::mt19937 prng;
-  CRP crp(&prng);
+  CRP crp;
 
   T_item desk = 1;
   T_item chair = 2;
@@ -125,23 +123,23 @@ BOOST_AUTO_TEST_CASE(test_log_prob) {
 
 BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   std::mt19937 prng;
-  CRP crp(&prng);
+  CRP crp;
 
-  crp.transition_alpha();
+  crp.transition_alpha(&prng);
   double old_alpha = crp.alpha;
 
   for (int i = 0; i < 100; ++i) {
     crp.incorporate(i, 0);
   }
 
-  crp.transition_alpha();
+  crp.transition_alpha(&prng);
   // Expect that since all items are at one table, the new alpha is low.
   BOOST_TEST(crp.alpha < old_alpha);
 }
 
 BOOST_AUTO_TEST_CASE(test_crp_sample) {
   std::mt19937 prng;
-  auto crp = CRP(&prng);
+  CRP crp;
   for (int i = 0; i < 10; ++i) {
     crp.incorporate(i, 0);
   }
@@ -156,7 +154,7 @@ BOOST_AUTO_TEST_CASE(test_crp_sample) {
   std::map<int, int> table_count;
   const int num_draws = 3000;
   for (int i = 0; i < num_draws; ++i) {
-    ++table_count[crp.sample()];
+    ++table_count[crp.sample(&prng)];
   }
 
   // Check that the count of 0's is close to 10/16 = 5/8.

@@ -15,7 +15,7 @@ class Sometimes : public Emission<SampleType> {
   BetaBernoulli bb;
   BaseEmissor be;
 
-  Sometimes() : bb(nullptr) {};
+  Sometimes() {};
 
   void incorporate(const std::pair<SampleType, SampleType>& x) {
     ++(this->N);
@@ -37,18 +37,15 @@ class Sometimes : public Emission<SampleType> {
     return bb.logp(x.first != x.second) + be.logp(x);
   }
 
-  double logp_score() const {
-    return bb.logp_score() + be.logp_score();
-  }
+  double logp_score() const { return bb.logp_score() + be.logp_score(); }
 
-  void transition_hyperparameters() {
-    be.transition_hyperparameters();
-    bb.transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng) {
+    be.transition_hyperparameters(prng);
+    bb.transition_hyperparameters(prng);
   }
 
   SampleType sample_corrupted(const SampleType& clean, std::mt19937* prng) {
-    bb.prng = prng;
-    if (bb.sample()) {
+    if (bb.sample(prng)) {
       return be.sample_corrupted(clean, prng);
     }
     return clean;
@@ -63,7 +60,7 @@ class Sometimes : public Emission<SampleType> {
     std::unordered_map<SampleType, int> counts;
     SampleType mode;
     int max_count = 0;
-    for (const SampleType& c: corrupted) {
+    for (const SampleType& c : corrupted) {
       ++counts[c];
       if (counts[c] > max_count) {
         max_count = counts[c];

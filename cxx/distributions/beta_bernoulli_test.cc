@@ -15,8 +15,7 @@ namespace tt = boost::test_tools;
 namespace bm = boost::math;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
-  std::mt19937 prng;
-  BetaBernoulli bb(&prng);
+  BetaBernoulli bb;
 
   bb.incorporate(1);
   bb.incorporate(0);
@@ -38,8 +37,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 }
 
 BOOST_AUTO_TEST_CASE(test_log_prob) {
-  std::mt19937 prng;
-  BetaBernoulli bb(&prng);
+  BetaBernoulli bb;
 
   bm::beta_distribution<> beta_dist(bb.alpha, bb.beta);
 
@@ -61,8 +59,7 @@ BOOST_AUTO_TEST_CASE(test_log_prob) {
 }
 
 BOOST_AUTO_TEST_CASE(test_posterior_predictive) {
-  std::mt19937 prng;
-  BetaBernoulli bb(&prng);
+  BetaBernoulli bb;
 
   bm::beta_distribution<> beta_dist(bb.alpha, bb.beta);
 
@@ -99,9 +96,9 @@ BOOST_AUTO_TEST_CASE(test_posterior_predictive) {
 
 BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   std::mt19937 prng;
-  BetaBernoulli bb(&prng);
+  BetaBernoulli bb;
 
-  bb.transition_hyperparameters();
+  bb.transition_hyperparameters(&prng);
 
   bb.incorporate(0);
   for (int i = 0; i < 100; ++i) {
@@ -109,7 +106,7 @@ BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   }
 
   BOOST_TEST(bb.N == 101);
-  bb.transition_hyperparameters();
+  bb.transition_hyperparameters(&prng);
   // Expect that since we saw a lot of 1's, that alpha will be much larger than
   // beta.
   BOOST_TEST(bb.alpha > bb.beta);

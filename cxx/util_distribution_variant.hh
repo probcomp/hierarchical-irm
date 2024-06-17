@@ -7,7 +7,6 @@
 #pragma once
 
 #include <map>
-#include <random>
 #include <string>
 #include <variant>
 #include <vector>
@@ -41,10 +40,8 @@ ObservationVariant observation_string_to_value(
 
 DistributionSpec parse_distribution_spec(const std::string& dist_str);
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng);
+DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec);
 
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,
-                                   std::vector<Domain*>& domains,
-                                   std::mt19937* prng);
+                                   std::vector<Domain*>& domains);

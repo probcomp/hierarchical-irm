@@ -2,12 +2,12 @@
 
 #define BOOST_TEST_MODULE test Sometimes
 
-#include <random>
-
-#include "emissions/bitflip.hh"
 #include "emissions/sometimes.hh"
 
 #include <boost/test/included/unit_test.hpp>
+#include <random>
+
+#include "emissions/bitflip.hh"
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   Sometimes<BitFlip, bool> sbf;

@@ -9,15 +9,15 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_domain) {
   std::mt19937 prng;
-  Domain d("fruit", &prng);
+  Domain d("fruit");
   std::string relation1 = "grows_on_trees";
   std::string relation2 = "is_same_color";
   T_item banana = 1;
   T_item apple = 2;
-  d.incorporate(banana);
+  d.incorporate(&prng, banana);
   d.set_cluster_assignment_gibbs(banana, 12);
-  d.incorporate(banana);
-  d.incorporate(apple, 5);
+  d.incorporate(&prng, banana);
+  d.incorporate(&prng, apple, 5);
   BOOST_TEST(d.items.contains(banana));
   BOOST_TEST(d.items.contains(apple));
   BOOST_TEST(d.items.size() == 2);
@@ -26,5 +26,4 @@ BOOST_AUTO_TEST_CASE(test_domain) {
   int ca = d.get_cluster_assignment(apple);
   BOOST_TEST(ca == 5);
   BOOST_TEST(cb == 12);
-
 }

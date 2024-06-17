@@ -59,14 +59,12 @@ class Relation {
       std::string,
       std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>
       data_r;
-  std::mt19937* prng;
 
   Relation(const std::string& name, const DistributionSpec& dist_spec,
-           const std::vector<Domain*>& domains, std::mt19937* prng)
+           const std::vector<Domain*>& domains)
       : name(name), dist_spec(dist_spec), domains(domains) {
     assert(!domains.empty());
     assert(!name.empty());
-    this->prng = prng;
     for (const Domain* const d : domains) {
       this->data_r[d->name] =
           std::unordered_map<T_item, std::unordered_set<T_items, H_items>>();
@@ -84,11 +82,11 @@ class Relation {
     }
   }
 
-  void incorporate(const T_items& items, ValueType value) {
+  void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
     assert(!data.contains(items));
     data[items] = value;
     for (int i = 0; i < std::ssize(domains); ++i) {
-      domains[i]->incorporate(items[i]);
+      domains[i]->incorporate(prng, items[i]);
       if (!data_r.at(domains[i]->name).contains(items[i])) {
         data_r.at(domains[i]->name)[items[i]] =
             std::unordered_set<T_items, H_items>();
@@ -102,7 +100,7 @@ class Relation {
       //      does not have a default constructor, whereas operator[]
       //      calls default constructor when the key does not exist.
       clusters[z] =
-          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
     }
     clusters.at(z)->incorporate(value);
   }
@@ -182,8 +180,9 @@ class Relation {
       T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
       double lp;
       if (!clusters.contains(z)) {
-        DistributionType cluster(prng);
-        lp = cluster.logp(x);
+        DistributionType* cluster =
+            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+        lp = cluster->logp(x);
       } else {
         lp = clusters.at(z)->logp(x);
       }
@@ -242,7 +241,7 @@ class Relation {
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
     DistributionType* prior =
-        std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
+        std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
     DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
@@ -326,7 +325,7 @@ class Relation {
         logp_w += wi;
       }
       DistributionType* prior =
-          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
       DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
@@ -361,8 +360,8 @@ class Relation {
       T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
-        clusters[z_new] = std::get<DistributionType*>(
-            cluster_prior_from_spec(dist_spec, prng));
+        clusters[z_new] =
+            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.

@@ -2,11 +2,10 @@
 
 #define BOOST_TEST_MODULE test BitFlip
 
-#include <random>
-
 #include "emissions/bitflip.hh"
 
 #include <boost/test/included/unit_test.hpp>
+#include <random>
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   BitFlip bf;

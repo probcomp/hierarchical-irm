@@ -2,11 +2,10 @@
 
 #define BOOST_TEST_MODULE test SimpleString
 
-#include <random>
-
 #include "emissions/simple_string.hh"
 
 #include <boost/test/included/unit_test.hpp>
+#include <random>
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   SimpleStringEmission ss;
@@ -45,12 +44,14 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   ss.incorporate(std::make_pair<std::string, std::string>("hello", "hello"));
   BOOST_TEST(ss.N == 2);
 
-  BOOST_TEST(ss.logp(std::make_pair<std::string, std::string>("test", "tst")) < 0.0);
+  BOOST_TEST(ss.logp(std::make_pair<std::string, std::string>("test", "tst")) <
+             0.0);
   BOOST_TEST(ss.N == 2);
   // Since we have incorporated one substitution and no deletions, we should
   // expect substitutions to be more likely.
   double lp1 = ss.logp(std::make_pair<std::string, std::string>("test", "tst"));
-  double lp2 = ss.logp(std::make_pair<std::string, std::string>("test", "te$t"));
+  double lp2 =
+      ss.logp(std::make_pair<std::string, std::string>("test", "te$t"));
   BOOST_TEST(lp1 < lp2);
 
   std::mt19937 prng;
@@ -58,6 +59,6 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(corrupted.length() > 3);
   BOOST_TEST(corrupted.length() < 7);
 
-  BOOST_TEST(ss.propose_clean({"clean", "clean!", "cl5an", "lean"}, &prng)
-             == "clean");
+  BOOST_TEST(ss.propose_clean({"clean", "clean!", "cl5an", "lean"}, &prng) ==
+             "clean");
 }

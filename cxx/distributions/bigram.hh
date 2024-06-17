@@ -20,17 +20,14 @@ class Bigram : public Distribution<std::string> {
   double alpha = 1;  // hyperparameter for all transition distributions.
   size_t num_chars = '~' - ' ' + 1;  // printable ASCII without DEL.
   mutable std::vector<DirichletCategorical> transition_dists;
-  std::mt19937* prng;
 
-  // Bigram does not take ownership of prng.
-  Bigram(std::mt19937* prng) {
-    this->prng = prng;
+  Bigram() {
     const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
 
     // The distribution at index `i` represents `p(X_{j+1} | X_j == char_i)`.
     transition_dists.reserve(total_chars);
     for (size_t i = 0; i != total_chars; ++i) {
-      transition_dists.emplace_back(prng, total_chars);
+      transition_dists.emplace_back(total_chars);
     }
   }
 
@@ -42,9 +39,9 @@ class Bigram : public Distribution<std::string> {
 
   double logp_score() const;
 
-  std::string sample();
+  std::string sample(std::mt19937* prng);
 
   void set_alpha(double alphat);
 
-  void transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng);
 };

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "emissions/base.hh"
 #include "distributions/zero_mean_normal.hh"
+#include "emissions/base.hh"
 
 class GaussianEmission : public Emission<double> {
  public:
   ZeroMeanNormal zmn;
 
-  GaussianEmission() : zmn(nullptr) {}
+  GaussianEmission() {}
 
   void incorporate(const std::pair<double, double>& x) {
     ++N;
@@ -23,17 +23,14 @@ class GaussianEmission : public Emission<double> {
     return zmn.logp(x.second - x.first);
   }
 
-  double logp_score() const {
-    return zmn.logp_score();
-  }
+  double logp_score() const { return zmn.logp_score(); }
 
-  void transition_hyperparameters() {
-    zmn.transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng) {
+    zmn.transition_hyperparameters(prng);
   }
 
   double sample_corrupted(const double& clean, std::mt19937* prng) {
-    zmn.prng = prng;
-    return clean + zmn.sample();
+    return clean + zmn.sample(prng);
   }
 
   double propose_clean(const std::vector<double>& corrupted,
