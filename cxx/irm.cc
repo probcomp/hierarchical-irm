@@ -1,14 +1,13 @@
 // Copyright 2021 MIT Probabilistic Computing Project
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#include "hirm.hh"
+#include "irm.hh"
 
 #include <cstdio>
 #include <ctime>
+#include <functional>
 #include <iostream>
-
-#include "cxxopts.hpp"
-#include "util_io.hh"
+#include <variant>
 
 IRM::IRM(const T_schema& schema) {
   for (const auto& [name, relation] : schema) {

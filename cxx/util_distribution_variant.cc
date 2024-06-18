@@ -11,8 +11,6 @@
 #include "distributions/crp.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
-#include "domain.hh"
-#include "relation.hh"
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution) {
@@ -73,23 +71,6 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec) {
     }
     case DistributionEnum::normal:
       return new Normal;
-    default:
-      assert(false && "Unsupported distribution enum value.");
-  }
-}
-
-RelationVariant relation_from_spec(const std::string& name,
-                                   const DistributionSpec& dist_spec,
-                                   std::vector<Domain*>& domains) {
-  switch (dist_spec.distribution) {
-    case DistributionEnum::bernoulli:
-      return new Relation<BetaBernoulli>(name, dist_spec, domains);
-    case DistributionEnum::bigram:
-      return new Relation<Bigram>(name, dist_spec, domains);
-    case DistributionEnum::categorical:
-      return new Relation<DirichletCategorical>(name, dist_spec, domains);
-    case DistributionEnum::normal:
-      return new Relation<Normal>(name, dist_spec, domains);
     default:
       assert(false && "Unsupported distribution enum value.");
   }

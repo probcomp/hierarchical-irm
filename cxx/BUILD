@@ -1,15 +1,6 @@
 licenses(["notice"])
 
 cc_library(
-    name = "headers",
-    hdrs = glob(
-        ["*.hh"],
-        allow_empty = False,
-    ),
-    visibility = [":__subpackages__"],
-)
-
-cc_library(
     name = "cxxopts",
     srcs = ["cxxopts.hpp"],
     visibility = [":__subpackages__"],
@@ -30,19 +21,28 @@ cc_library(
     srcs = ["irm.cc"],
     visibility = [":__subpackages__"],
     deps = [
-        ":cxxopts",
         ":relation",
+        ":relation_variant",
         ":util_distribution_variant",
+    ],
+)
+
+cc_library(
+    name = "hirm_lib",
+    hdrs = ["hirm.hh"],
+    srcs = ["hirm.cc"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":irm",
     ],
 )
 
 cc_binary(
     name = "hirm",
-    srcs = ["hirm.cc"],
+    srcs = ["hirm_main.cc"],
     deps = [
         ":cxxopts",
-        ":headers",
-        ":irm",
+        ":hirm_lib",
         ":util_distribution_variant",
         ":util_hash",
         ":util_io",
@@ -54,6 +54,7 @@ cc_binary(
 cc_library(
     name = "relation",
     hdrs = ["relation.hh"],
+    visibility = [":__subpackages__"],
     deps = [
         ":domain",
         ":util_distribution_variant",
@@ -64,11 +65,24 @@ cc_library(
 )
 
 cc_library(
+    name = "relation_variant",
+    hdrs = ["relation_variant.hh"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":domain",
+        ":relation",
+        ":util_distribution_variant",
+        "//distributions",
+    ],
+)
+
+cc_library(
     name = "util_distribution_variant",
     srcs = ["util_distribution_variant.cc"],
     visibility = [":__subpackages__"],
     hdrs = ["util_distribution_variant.hh"],
     deps = [
+        ":domain",
         "//distributions",
     ],
 )
@@ -85,11 +99,10 @@ cc_library(
     srcs = ["util_io.cc"],
     visibility = [":__subpackages__"],
     hdrs = [
-        "hirm.hh",
         "util_io.hh",
     ],
     deps = [
-        ":headers",
+        ":hirm_lib",
         "//distributions",
     ],
 )
@@ -99,7 +112,7 @@ cc_library(
     srcs = ["util_math.cc"],
     hdrs = ["util_math.hh"],
     visibility = [":__subpackages__"],
-    deps = [":headers"],
+    deps = [],
 )
 
 cc_test(

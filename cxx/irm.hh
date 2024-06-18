@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "relation.hh"
+#include "relation_variant.hh"
 #include "util_distribution_variant.hh"
 
 // Map from names to T_relation's.

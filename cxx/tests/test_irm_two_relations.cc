@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "hirm.hh"
+#include "irm.hh"
 #include "util_io.hh"
 #include "util_math.hh"
 
