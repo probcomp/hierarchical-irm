@@ -67,6 +67,7 @@ cc_library(
 cc_library(
     name = "relation_variant",
     hdrs = ["relation_variant.hh"],
+    srcs = ["relation_variant.cc"],
     visibility = [":__subpackages__"],
     deps = [
         ":domain",
