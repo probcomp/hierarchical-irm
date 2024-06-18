@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "cxxopts.hpp"
+#include "irm.hh"
 #include "util_io.hh"
 
 #define GET_ELAPSED(t) double(clock() - t) / CLOCKS_PER_SEC
@@ -31,36 +32,6 @@
     printf("%f %f\n", var_t_total, x);                           \
     fflush(stdout);                                              \
   }
-
-void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose) {
-  // TRANSITION ASSIGNMENTS.
-  for (const auto& [d, domain] : irm->domains) {
-    for (const auto item : domain->items) {
-      clock_t t = clock();
-      irm->transition_cluster_assignment_item(prng, d, item);
-      REPORT_SCORE(verbose, t, t_total, irm);
-    }
-  }
-  // TRANSITION DISTRIBUTION HYPERPARAMETERS.
-  for (const auto& [r, relation] : irm->relations) {
-    std::visit(
-        [&](auto r) {
-          for (const auto& [c, distribution] : r->clusters) {
-            clock_t t = clock();
-            distribution->transition_hyperparameters(prng);
-            REPORT_SCORE(verbose, t, t_total, irm);
-          }
-        },
-        relation);
-  }
-  // TRANSITION ALPHA.
-  for (const auto& [d, domain] : irm->domains) {
-    clock_t t = clock();
-    domain->crp.transition_alpha(prng);
-    REPORT_SCORE(verbose, t, t_total, irm);
-  }
-}
 
 void inference_irm(std::mt19937* prng, IRM* irm, int iters, int timeout,
                    bool verbose) {

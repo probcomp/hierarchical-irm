@@ -24,12 +24,25 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "irm",
+    hdrs = ["irm.hh"],
+    srcs = ["irm.cc"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":cxxopts",
+        ":relation",
+        ":util_distribution_variant",
+    ],
+)
+
 cc_binary(
     name = "hirm",
     srcs = ["hirm.cc"],
     deps = [
         ":cxxopts",
         ":headers",
+        ":irm",
         ":util_distribution_variant",
         ":util_hash",
         ":util_io",
@@ -98,6 +111,14 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "irm_test",
+    srcs = ["irm_test.cc"],
+    deps = [
+        ":irm",
+        "@boost//:test",
+    ],
+)
 cc_test(
     name = "relation_test",
     srcs = ["relation_test.cc"],

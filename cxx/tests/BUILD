@@ -14,6 +14,7 @@ cc_binary(
     srcs = ["test_irm_two_relations.cc"],
     deps = [
         "//:headers",
+        "//:irm",
         "//:util_distribution_variant",
         "//:util_io",
         "//distributions",

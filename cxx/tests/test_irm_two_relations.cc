@@ -44,13 +44,10 @@ int main(int argc, char** argv) {
   IRM irm(schema);
   incorporate_observations(&prng, irm, encoding, observations);
   printf("running for %d iterations\n", iters);
+  double t_total = 0.0;
   for (int i = 0; i < iters; i++) {
-    irm.transition_cluster_assignments_all(&prng);
-    for (auto const& [d, domain] : irm.domains) {
-      domain->crp.transition_alpha(&prng);
-    }
-    double x = irm.logp_score();
-    printf("iter %d, score %f\n", i, x);
+    single_step_irm_inference(&prng, &irm, t_total, true);
+    printf("iter %d, score %f\n", i, irm.logp_score());
   }
 
   std::string path_clusters = path_base + ".irm";
