@@ -26,7 +26,6 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
-        "//:headers",
         "//:util_math",
     ],
 )
@@ -39,7 +38,6 @@ cc_library(
     deps = [
         ":base",
         ":dirichlet_categorical",
-        "//:headers",
         "//:util_math",
     ],
 )
@@ -50,7 +48,6 @@ cc_library(
     hdrs = ["crp.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//:headers",
         "//:util_math",
     ],
 )
