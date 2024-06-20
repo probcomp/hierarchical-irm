@@ -24,11 +24,17 @@ BOOST_AUTO_TEST_CASE(test_irm) {
 
   irm.remove_relation("R3");
 
-  irm.incorporate(
-      &prng, "R1", {1, 2},
-      observation_string_to_value("0", DistributionEnum::bernoulli));
+  auto obs0 = observation_string_to_value("0", DistributionEnum::bernoulli);
+
+  double logp_x = irm.logp({{"R1", {1, 2}, obs0}});
+
+  irm.incorporate(&prng, "R1", {1, 2}, obs0);
   double one_obs_score = irm.logp_score();
   BOOST_TEST(one_obs_score < 0.0);
+
+  // TODO(thomaswc): Figure out why the next test doesn't pass.
+  // BOOST_TEST(one_obs_score == logp_x);
+
   // Transitioning clusters shouldn't change the score with only one
   // observation.
   irm.transition_cluster_assignments_all(&prng);
