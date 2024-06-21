@@ -64,6 +64,15 @@ cc_library(
 )
 
 cc_library(
+    name = "nonconjugate",
+    hdrs = ["nonconjugate.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+    ],
+)
+
+cc_library(
     name = "normal",
     srcs = ["normal.cc"],
     hdrs = ["normal.hh"],
@@ -73,6 +82,15 @@ cc_library(
         "//:util_math",
     ],
 )
+
+cc_library(
+    name = "skellam",
+    hdrs = ["skellam.hh"],
+    deps = [
+        ":nonconjugate",
+    ],
+)
+
 cc_library(
     name = "zero_mean_normal",
     srcs = ["zero_mean_normal.cc"],

@@ -39,5 +39,13 @@ class Distribution {
   // e^logp_score() under those hyperparameters.
   virtual void transition_hyperparameters(std::mt19937* prng) = 0;
 
+  // Set the current latent values to a sample from the parameter prior.
+  // Only children of NonconjugateDistribution need define this.
+  virtual void init_theta(std::mt19937* prng) {};
+
+  // Transition the current latent values.  Only children of
+  // NonconjugateDistribution need define this.
+  virtual void transition_theta(std::mt19937* prng) {};
+
   virtual ~Distribution() = default;
 };
