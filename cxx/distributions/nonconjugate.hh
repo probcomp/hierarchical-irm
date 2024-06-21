@@ -8,6 +8,7 @@ template <typename T>
 class NonconjugateDistribution : public Distribution<T> {
  public:
   // Abstract base class for Distributions that don't have conjugate priors.
+  std::map<T, int> seen;
 
   // The log probability of x given the current latent values.
   virtual double logp(const T& x) const = 0;
@@ -24,19 +25,21 @@ class NonconjugateDistribution : public Distribution<T> {
   // Transition the current latent values.
   virtual void transition_theta(std::mt19937* prng) = 0;
 
-  double cumulative_logp = 0.0;
-
   void incorporate(const T& x) {
+    seen[x]++;
     (this->N)++;
-    cumulative_logp += logp(x);
   };
 
   void unincorporate(const T& x) {
+    --seen[x];
     --(this->N);
-    cumulative_logp -= logp(x);
   };
 
   double logp_score() const {
-    return cumulative_logp;
+    double score = 0.0;
+    for (const auto &it : seen) {
+      score += logp(it.first) * it.second;;
+    }
+    return score;
   }
 };
