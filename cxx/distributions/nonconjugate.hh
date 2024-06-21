@@ -27,10 +27,12 @@ class NonconjugateDistribution : public Distribution<T> {
 
   void incorporate(const T& x) {
     seen[x]++;
+    (this->N)++;
   };
 
   void unincorporate(const T& x) {
     --seen[x];
+    --(this->N);
   };
 
   double logp_score() const {
