@@ -6,11 +6,12 @@
 
 template <typename T>
 class NonconjugateDistribution : public Distribution<T> {
+ public:
   // Abstract base class for Distributions that don't have conjugate priors.
   std::map<T, int> seen;
 
   // The log probability of x given the current latent values.
-  virtual double logp(const T& x) = 0;
+  virtual double logp(const T& x) const = 0;
 
   // Sample a value from the distribution given the current latent values.
   virtual T sample(std::mt19937* prng) = 0;
@@ -35,8 +36,8 @@ class NonconjugateDistribution : public Distribution<T> {
   double logp_score() const {
     double score = 0.0;
     for (const auto &it : seen) {
-      score += logp(it->first) * it->second;;
+      score += logp(it.first) * it.second;;
     }
     return score;
   }
-}
+};

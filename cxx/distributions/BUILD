@@ -88,6 +88,7 @@ cc_library(
     hdrs = ["skellam.hh"],
     deps = [
         ":nonconjugate",
+        "//:util_math",
     ],
 )
 
@@ -149,6 +150,17 @@ cc_test(
     srcs = ["normal_test.cc"],
     deps = [
         ":normal",
+        "@boost//:algorithm",
+        "@boost//:math",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "skellam_test",
+    srcs = ["skellam_test.cc"],
+    deps = [
+        ":skellam",
         "@boost//:algorithm",
         "@boost//:math",
         "@boost//:test",
