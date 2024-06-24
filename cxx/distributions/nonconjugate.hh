@@ -2,6 +2,7 @@
 
 #include <map>
 #include <random>
+#include <vector>
 #include "distributions/base.hh"
 
 template <typename T>
@@ -52,7 +53,7 @@ class NonconjugateDistribution : public Distribution<T> {
   virtual void transition_theta(std::mt19937* prng) {
     std::vector<double> old_latents = store_latents();
     double old_logp_score = logp_score();
-    init_theta();
+    init_theta(prng);
     double new_logp_score = logp_score();
     double threshold = std::exp(new_logp_score - old_logp_score);
     std::uniform_real_distribution rnd(0.0, 1.0);

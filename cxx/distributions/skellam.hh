@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cmath>
 
 #include "distributions/nonconjugate.hh"
@@ -68,19 +69,15 @@ class Skellam : public NonconjugateDistribution<int> {
 
   std::vector<double> store_latents() {
     std::vector<double> v;
-    v.push_back(mean1);
-    v.push_back(mean2);
-    v.push_back(stddev1);
-    v.push_back(stddev2);
+    v.push_back(mu1);
+    v.push_back(mu2);
     return v;
   }
 
   void set_latents(const std::vector<double>& v) {
-    assert(v.size() == 4);
-    mean1 = v[0];
-    mean2 = v[1];
-    stddev1 = v[2];
-    stddev2 = v[3];
+    assert(v.size() == 2);
+    mu1 = v[0];
+    mu2 = v[1];
   }
 
 };

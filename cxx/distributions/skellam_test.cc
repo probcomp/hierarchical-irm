@@ -37,16 +37,14 @@ BOOST_AUTO_TEST_CASE(set_and_store_latents) {
   std::mt19937 prng;
 
   sd.init_theta(&prng);
-
   std::vector<double> v = sd.store_latents();
 
   sd.init_theta(&prng);
-
-  BOOST_TEST(v != sd.store_latents());
+  BOOST_TEST(v != sd.store_latents(), tt::per_element());
 
   sd.set_latents(v);
 
-  BOOST_TEST(v == sd.store_latents());
+  BOOST_TEST(v == sd.store_latents(), tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(transition_theta) {
@@ -66,5 +64,5 @@ BOOST_AUTO_TEST_CASE(transition_theta) {
     sd.transition_theta(&prng);
   }
 
-  BOOST_TEST(sd.mean1 > sd.mean2);
+  BOOST_TEST(sd.mu1 > sd.mu2);
 }
