@@ -66,8 +66,21 @@ class Skellam : public NonconjugateDistribution<int> {
     mu2 = std::exp(d2(*prng));
   }
 
-  void transition_theta(std::mt19937* prng) {
-    // TODO(thomaswc): This
+  std::vector<double> store_latents() {
+    std::vector<double> v;
+    v.push_back(mean1);
+    v.push_back(mean2);
+    v.push_back(stddev1);
+    v.push_back(stddev2);
+    return v;
+  }
+
+  void set_latents(const std::vector<double>& v) {
+    assert(v.size() == 4);
+    mean1 = v[0];
+    mean2 = v[1];
+    stddev1 = v[2];
+    stddev2 = v[3];
   }
 
 };
