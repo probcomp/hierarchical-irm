@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cmath>
 
 #include "distributions/nonconjugate.hh"
@@ -66,8 +67,17 @@ class Skellam : public NonconjugateDistribution<int> {
     mu2 = std::exp(d2(*prng));
   }
 
-  void transition_theta(std::mt19937* prng) {
-    // TODO(thomaswc): This
+  std::vector<double> store_latents() {
+    std::vector<double> v;
+    v.push_back(mu1);
+    v.push_back(mu2);
+    return v;
+  }
+
+  void set_latents(const std::vector<double>& v) {
+    assert(v.size() == 2);
+    mu1 = v[0];
+    mu2 = v[1];
   }
 
 };
