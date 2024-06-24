@@ -55,10 +55,10 @@ class NonconjugateDistribution : public Distribution<T> {
     double old_logp_score = logp_score();
     init_theta(prng);
     double new_logp_score = logp_score();
-    double threshold = std::exp(new_logp_score - old_logp_score);
+    double threshold = new_logp_score - old_logp_score;
     std::uniform_real_distribution rnd(0.0, 1.0);
     double p = rnd(*prng);
-    if (p <= threshold) {
+    if (log(p) <= threshold) {
       // Accept
       return;
     }
