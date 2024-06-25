@@ -75,6 +75,15 @@ class Relation {
     }
   }
 
+  Distribution<ValueType>* make_new_distribution() {
+    return std::visit([&](auto dist_variant) {
+      // In practice, the DistributionVariant returned by
+      // cluster_prior_from_spec will always be of type
+      // Distribution<ValueType>*, so this reinterpret_cast is a no-op.
+      return reinterpret_cast<Distribution<ValueType>*>(dist_variant);
+    }, cluster_prior_from_spec(dist_spec));
+  }
+
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
     assert(!data.contains(items));
     data[items] = value;
@@ -88,12 +97,7 @@ class Relation {
     }
     T_items z = get_cluster_assignment(items);
     if (!clusters.contains(z)) {
-      // Invalid discussion as using pointers now;
-      //      Cannot use clusters[z] because BetaBernoulli
-      //      does not have a default constructor, whereas operator[]
-      //      calls default constructor when the key does not exist.
-      clusters[z] = std::get<Distribution<ValueType>*>(
-          cluster_prior_from_spec(dist_spec));
+      clusters[z] = make_new_distribution();
     }
     clusters.at(z)->incorporate(value);
   }
@@ -173,10 +177,9 @@ class Relation {
       T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
       double lp;
       if (!clusters.contains(z)) {
-        Distribution<ValueType>* cluster =
-            std::get<Distribution<ValueType>*>(
-                cluster_prior_from_spec(dist_spec));
-        lp = cluster->logp(x);
+        Distribution<ValueType>* tmp_dist = make_new_distribution();
+        lp = tmp_dist->logp(x);
+        delete tmp_dist;
       } else {
         lp = clusters.at(z)->logp(x);
       }
@@ -234,8 +237,7 @@ class Relation {
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
-    Distribution<ValueType>* prior =
-        std::get<Distribution<ValueType>*>(cluster_prior_from_spec(dist_spec));
+    Distribution<ValueType>* prior = make_new_distribution();
     Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
@@ -249,6 +251,7 @@ class Relation {
       cluster->unincorporate(x);
     }
     assert(cluster->logp_score() == logp0);
+    delete prior;
     return logp1 - logp0;
   }
 
@@ -318,12 +321,12 @@ class Relation {
         z.push_back(zi);
         logp_w += wi;
       }
-      Distribution<ValueType>* prior =
-          std::get<Distribution<ValueType>*>(cluster_prior_from_spec(dist_spec));
+      Distribution<ValueType>* prior = make_new_distribution();
       Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
       logps.push_back(logp_zw);
+      delete prior;
     }
     return logsumexp(logps);
   }
@@ -354,8 +357,7 @@ class Relation {
       T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
-        clusters[z_new] =
-            std::get<Distribution<ValueType>*>(cluster_prior_from_spec(dist_spec));
+        clusters[z_new] = make_new_distribution();
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.
