@@ -33,7 +33,6 @@ void ZeroMeanNormal::unincorporate(const double& x) {
   var = (var * old_N - x * x) / N;
 }
 
-
 double ZeroMeanNormal::logp(const double& x) const {
   // Equation (119) of https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
   double alpha_n = alpha + N / 2.0;
