@@ -111,12 +111,13 @@ int main(int argc, char** argv) {
   // transitioned.
   assert(abs(irx.logp_score() - irm.logp_score()) > 1e-8);
   for (const auto& r : {"R1", "R2"}) {
-    auto r1m = std::get<Relation<BetaBernoulli>*>(irm.relations.at(r));
-    auto r1x = std::get<Relation<BetaBernoulli>*>(irx.relations.at(r));
+    auto r1m = std::get<Relation<bool>*>(irm.relations.at(r));
+    auto r1x = std::get<Relation<bool>*>(irx.relations.at(r));
     for (const auto& [c, distribution] : r1m->clusters) {
-      auto dx = r1x->clusters.at(c);
-      dx->alpha = distribution->alpha;
-      dx->beta = distribution->beta;
+      auto dx = reinterpret_cast<BetaBernoulli*>(r1x->clusters.at(c));
+      auto dy = reinterpret_cast<BetaBernoulli*>(distribution);
+      dx->alpha = dy->alpha;
+      dx->beta = dy->beta;
     }
   }
   assert(abs(irx.logp_score() - irm.logp_score()) < 1e-8);
