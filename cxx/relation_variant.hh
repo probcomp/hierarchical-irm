@@ -7,11 +7,9 @@
 #include <variant>
 #include <vector>
 
+#include "domain.hh"
+#include "relation.hh"
 #include "util_distribution_variant.hh"
-
-class Domain;
-template <typename ValueType>
-class Relation;
 
 using RelationVariant =
     std::variant<Relation<std::string>*, Relation<double>*,

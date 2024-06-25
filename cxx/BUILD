@@ -51,6 +51,14 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "typename_playground",
+    srcs = ["typename_playground.cc"],
+    deps = [
+        ":util_distribution_variant",
+    ],
+)
+
 cc_library(
     name = "relation",
     hdrs = ["relation.hh"],

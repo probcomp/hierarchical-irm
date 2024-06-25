@@ -11,10 +11,10 @@
 #include <variant>
 #include <vector>
 
-class BetaBernoulli;
-class Bigram;
-class DirichletCategorical;
-class Normal;
+#include "distributions/beta_bernoulli.hh"
+#include "distributions/bigram.hh"
+#include "distributions/dirichlet_categorical.hh"
+#include "distributions/normal.hh"
 
 enum class DistributionEnum { bernoulli, bigram, categorical, normal };
 

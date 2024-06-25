@@ -9,11 +9,6 @@
 #include <vector>
 
 #include "distributions/base.hh"
-#include "distributions/beta_bernoulli.hh"
-#include "distributions/bigram.hh"
-#include "distributions/crp.hh"
-#include "distributions/dirichlet_categorical.hh"
-#include "distributions/normal.hh"
 #include "domain.hh"
 #include "util_distribution_variant.hh"
 #include "util_hash.hh"
@@ -33,9 +28,11 @@ class T_relation {
   DistributionSpec distribution_spec;
 };
 
-template <typename ValueType>
+template <typename T>
 class Relation {
  public:
+  typedef T ValueType;
+
   // human-readable name
   const std::string name;
   // Relation spec.
