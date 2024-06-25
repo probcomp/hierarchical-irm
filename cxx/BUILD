@@ -55,6 +55,7 @@ cc_binary(
     name = "typename_playground",
     srcs = ["typename_playground.cc"],
     deps = [
+        ":relation_variant",
         ":util_distribution_variant",
     ],
 )

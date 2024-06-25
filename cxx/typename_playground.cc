@@ -1,4 +1,6 @@
 
+#include "domain.hh"
+#include "relation_variant.hh"
 #include "util_distribution_variant.hh"
 
 #include <type_traits>
@@ -51,4 +53,13 @@ int main() {
         std::cout << "typename std::remove_reference_t<decltype(*v)>::SampleType = " <<
                   type_name<typename std::remove_reference_t<decltype(*v)>::SampleType>() << '\n';
       }, dv);
+
+  std::vector<Domain*> domains;
+  domains.push_back(new Domain("D1"));
+  RelationVariant rv = relation_from_spec("r1", dist_spec, domains);
+
+  std::visit(
+      [&](const auto& relv) {
+        std::cout << "decltype(*relv) = " << type_name<decltype(*relv)>() << '\n';
+      }, rv);
 }
