@@ -73,7 +73,6 @@ cc_library(
         ":domain",
         ":relation",
         ":util_distribution_variant",
-        "//distributions",
     ],
 )
 
@@ -133,6 +132,7 @@ cc_test(
         "@boost//:test",
     ],
 )
+
 cc_test(
     name = "relation_test",
     srcs = ["relation_test.cc"],
@@ -140,6 +140,15 @@ cc_test(
         ":domain",
         ":relation",
         "//distributions",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "relation_variant_test",
+    srcs = ["relation_variant_test.cc"],
+    deps = [
+        ":relation_variant",
         "@boost//:test",
     ],
 )

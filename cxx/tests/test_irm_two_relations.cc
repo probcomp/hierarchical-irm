@@ -15,7 +15,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-using T_r = Relation<BetaBernoulli>*;
+using T_r = Relation<bool>*;
 
 int main(int argc, char** argv) {
   std::string path_base = "assets/two_relations";

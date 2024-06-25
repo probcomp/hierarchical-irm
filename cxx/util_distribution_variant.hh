@@ -2,8 +2,7 @@
 // See LICENSE.txt
 
 // Classes and functions for dealing with Distributions and their values in a
-// generic manner.  When a new subclass is added, this file and
-// relation_variant.{hh,cc} will need to be updated.
+// generic manner.  When a new subclass is added, this file needs to be updated.
 
 #pragma once
 
