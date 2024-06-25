@@ -26,7 +26,6 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
-        "//:headers",
         "//:util_math",
     ],
 )
@@ -39,7 +38,6 @@ cc_library(
     deps = [
         ":base",
         ":dirichlet_categorical",
-        "//:headers",
         "//:util_math",
     ],
 )
@@ -50,7 +48,6 @@ cc_library(
     hdrs = ["crp.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//:headers",
         "//:util_math",
     ],
 )
@@ -67,6 +64,15 @@ cc_library(
 )
 
 cc_library(
+    name = "nonconjugate",
+    hdrs = ["nonconjugate.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+    ],
+)
+
+cc_library(
     name = "normal",
     srcs = ["normal.cc"],
     hdrs = ["normal.hh"],
@@ -76,6 +82,16 @@ cc_library(
         "//:util_math",
     ],
 )
+
+cc_library(
+    name = "skellam",
+    hdrs = ["skellam.hh"],
+    deps = [
+        ":nonconjugate",
+        "//:util_math",
+    ],
+)
+
 cc_library(
     name = "zero_mean_normal",
     srcs = ["zero_mean_normal.cc"],
@@ -134,6 +150,17 @@ cc_test(
     srcs = ["normal_test.cc"],
     deps = [
         ":normal",
+        "@boost//:algorithm",
+        "@boost//:math",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "skellam_test",
+    srcs = ["skellam_test.cc"],
+    deps = [
+        ":skellam",
         "@boost//:algorithm",
         "@boost//:math",
         "@boost//:test",

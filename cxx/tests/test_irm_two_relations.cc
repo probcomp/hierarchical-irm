@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "hirm.hh"
+#include "irm.hh"
 #include "util_io.hh"
 #include "util_math.hh"
 
@@ -41,16 +41,13 @@ int main(int argc, char** argv) {
   auto observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
 
-  IRM irm(schema, &prng);
-  incorporate_observations(irm, encoding, observations);
+  IRM irm(schema);
+  incorporate_observations(&prng, irm, encoding, observations);
   printf("running for %d iterations\n", iters);
+  double t_total = 0.0;
   for (int i = 0; i < iters; i++) {
-    irm.transition_cluster_assignments_all();
-    for (auto const& [d, domain] : irm.domains) {
-      domain->crp.transition_alpha();
-    }
-    double x = irm.logp_score();
-    printf("iter %d, score %f\n", i, x);
+    single_step_irm_inference(&prng, &irm, t_total, true);
+    printf("iter %d, score %f\n", i, irm.logp_score());
   }
 
   std::string path_clusters = path_base + ".irm";
@@ -102,13 +99,25 @@ int main(int argc, char** argv) {
     assert(abs(Z) < 1e-10);
   }
 
-  IRM irx({}, &prng);
-  from_txt(&irx, path_schema, path_obs, path_clusters);
+  IRM irx({});
+  from_txt(&prng, &irx, path_schema, path_obs, path_clusters);
   // Check log scores agree.
   for (const auto& d : {"D1", "D2"}) {
     auto dm = irm.domains.at(d);
     auto dx = irx.domains.at(d);
     dx->crp.alpha = dm->crp.alpha;
+  }
+  // They shouldn't agree yet because irx's hyperparameters haven't been
+  // transitioned.
+  assert(abs(irx.logp_score() - irm.logp_score()) > 1e-8);
+  for (const auto& r : {"R1", "R2"}) {
+    auto r1m = std::get<Relation<BetaBernoulli>*>(irm.relations.at(r));
+    auto r1x = std::get<Relation<BetaBernoulli>*>(irx.relations.at(r));
+    for (const auto& [c, distribution] : r1m->clusters) {
+      auto dx = r1x->clusters.at(c);
+      dx->alpha = distribution->alpha;
+      dx->beta = distribution->beta;
+    }
   }
   assert(abs(irx.logp_score() - irm.logp_score()) < 1e-8);
   // Check domains agree.

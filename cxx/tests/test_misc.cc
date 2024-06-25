@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
       {"R2", T_relation{{"D1", "D2"}, DistributionSpec {DistributionEnum::normal}}},
       {"R3", T_relation{{"D3", "D1"}, DistributionSpec {DistributionEnum::bigram}}}
   };
-  IRM irm(schema1, &prng);
+  IRM irm(schema1);
 
   for (auto const& kv : irm.domains) {
     printf("%s %s; ", kv.first.c_str(), kv.second->name.c_str());
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     printf("\n");
   }
 
-  IRM irm3(schema, &prng);
+  IRM irm3(schema);
   auto observations = load_observations("assets/animals.binary.obs", schema);
   auto encoding = encode_observations(schema, observations);
   auto item_to_code = std::get<0>(encoding);
@@ -86,14 +86,14 @@ int main(int argc, char** argv) {
       items_code.push_back(code);
     }
     printf("\n");
-    irm3.incorporate(relation, items_code, value);
+    irm3.incorporate(&prng, relation, items_code, value);
   }
 
   for (int i = 0; i < 4; i++) {
-    irm3.transition_cluster_assignments({"animal", "feature"});
-    irm3.transition_cluster_assignments_all();
+    irm3.transition_cluster_assignments(&prng, {"animal", "feature"});
+    irm3.transition_cluster_assignments_all(&prng);
     for (auto const& [d, domain] : irm3.domains) {
-      domain->crp.transition_alpha();
+      domain->crp.transition_alpha(&prng);
     }
     double x = irm3.logp_score();
     printf("iter %d, score %f\n", i, x);
@@ -112,8 +112,8 @@ int main(int argc, char** argv) {
   printf("log prob of has(tail, bat)=1 is %1.2f\n", lp1);
   printf("logsumexp is %1.2f\n", lp_01);
 
-  IRM irm4({}, &prng);
-  from_txt(&irm4, "assets/animals.binary.schema", "assets/animals.binary.obs",
+  IRM irm4({});
+  from_txt(&prng, &irm4, "assets/animals.binary.schema", "assets/animals.binary.obs",
            path_clusters);
   irm4.domains.at("animal")->crp.alpha = irm3.domains.at("animal")->crp.alpha;
   irm4.domains.at("feature")->crp.alpha = irm3.domains.at("feature")->crp.alpha;

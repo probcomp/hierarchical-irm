@@ -16,15 +16,14 @@ class CRP {
   std::unordered_map<int, std::unordered_set<T_item>>
       tables;  // map from table id to set of customers
   std::unordered_map<T_item, int> assignments;  // map from customer to table id
-  std::mt19937* prng;
 
-  CRP(std::mt19937* prng) { this->prng = prng; }
+  CRP() {}
 
   void incorporate(const T_item& item, int table);
 
   void unincorporate(const T_item& item);
 
-  int sample();
+  int sample(std::mt19937* prng);
 
   double logp(int table) const;
 
@@ -34,5 +33,5 @@ class CRP {
 
   std::unordered_map<int, double> tables_weights_gibbs(int table) const;
 
-  void transition_alpha();
+  void transition_alpha(std::mt19937* prng);
 };

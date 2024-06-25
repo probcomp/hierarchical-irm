@@ -41,14 +41,14 @@ double DirichletCategorical::logp_score() const {
   return lgamma(a) - lgamma(a + N) + lg - k * lgamma(alpha);
 }
 
-int DirichletCategorical::sample() {
+int DirichletCategorical::sample(std::mt19937* prng) {
   std::vector<double> weights(counts.size());
   std::transform(counts.begin(), counts.end(), weights.begin(),
                  [&](size_t y) -> double { return y + alpha; });
   return choice(weights, prng);
 }
 
-void DirichletCategorical::transition_hyperparameters() {
+void DirichletCategorical::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<double> alphas;
   // C++ doesn't yet allow range for-loops over existing variables.  Sigh.

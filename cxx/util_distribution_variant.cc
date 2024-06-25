@@ -11,8 +11,6 @@
 #include "distributions/crp.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
-#include "domain.hh"
-#include "relation.hh"
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution) {
@@ -60,38 +58,19 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
   }
 }
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng) {
+DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
-      return new BetaBernoulli(prng);
+      return new BetaBernoulli;
     case DistributionEnum::bigram:
-      return new Bigram(prng);
+      return new Bigram;
     case DistributionEnum::categorical: {
       assert(spec.distribution_args.size() == 1);
       int num_categories = std::stoi(spec.distribution_args.at("k"));
-      return new DirichletCategorical(prng, num_categories);
+      return new DirichletCategorical(num_categories);
     }
     case DistributionEnum::normal:
-      return new Normal(prng);
-    default:
-      assert(false && "Unsupported distribution enum value.");
-  }
-}
-
-RelationVariant relation_from_spec(const std::string& name,
-                                   const DistributionSpec& dist_spec,
-                                   std::vector<Domain*>& domains,
-                                   std::mt19937* prng) {
-  switch (dist_spec.distribution) {
-    case DistributionEnum::bernoulli:
-      return new Relation<BetaBernoulli>(name, dist_spec, domains, prng);
-    case DistributionEnum::bigram:
-      return new Relation<Bigram>(name, dist_spec, domains, prng);
-    case DistributionEnum::categorical:
-      return new Relation<DirichletCategorical>(name, dist_spec, domains, prng);
-    case DistributionEnum::normal:
-      return new Relation<Normal>(name, dist_spec, domains, prng);
+      return new Normal;
     default:
       assert(false && "Unsupported distribution enum value.");
   }

@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 
   HIRM hirm(schema_unary, &prng);
   printf("--- initialized HIRM --- \n");
-  incorporate_observations(hirm, encoding_unary, observations_unary);
+  incorporate_observations(&prng, hirm, encoding_unary, observations_unary);
   printf("--- incorporated observations --- \n");
   size_t n_obs_unary = 0;
   for (const auto& [z, irm] : hirm.irms) {
@@ -37,21 +37,21 @@ int main(int argc, char** argv) {
   }
   assert(n_obs_unary == std::size(observations_unary));
 
-  hirm.transition_cluster_assignments_all();
-  hirm.transition_cluster_assignments_all();
+  hirm.transition_cluster_assignments_all(&prng);
+  hirm.transition_cluster_assignments_all(&prng);
   printf("--- made transition cluster assignments --- \n");
-  hirm.set_cluster_assignment_gibbs("solitary", 120);
-  hirm.set_cluster_assignment_gibbs("water", 741);
+  hirm.set_cluster_assignment_gibbs(&prng, "solitary", 120);
+  hirm.set_cluster_assignment_gibbs(&prng, "water", 741);
   printf("--- set cluster assignments --- \n");
   for (int i = 0; i < 20; i++) {
-    hirm.transition_cluster_assignments_all();
+    hirm.transition_cluster_assignments_all(&prng);
     for (const auto& [t, irm] : hirm.irms) {
-      irm->transition_cluster_assignments_all();
+      irm->transition_cluster_assignments_all(&prng);
       for (const auto& [d, domain] : irm->domains) {
-        domain->crp.transition_alpha();
+        domain->crp.transition_alpha(&prng);
       }
     }
-    hirm.crp.transition_alpha();
+    hirm.crp.transition_alpha(&prng);
     printf("%d %f [", i, hirm.logp_score());
     for (const auto& [t, customers] : hirm.crp.tables) {
       printf("%ld ", customers.size());
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 
   // Load the clusters.
   HIRM hirx({}, &prng);
-  from_txt(&hirx, path_schema, path_obs, path_clusters);
+  from_txt(&prng, &hirx, path_schema, path_obs, path_clusters);
 
   assert(hirm.irms.size() == hirx.irms.size());
   // Check IRMs agree.

@@ -21,10 +21,7 @@ class ZeroMeanNormal : public Distribution<double> {
   // Sufficient statistics of observed data.
   double var = 0.0;
 
-  std::mt19937* prng;
-
-  // ZeroMeanNormal does not take ownership of prng.
-  ZeroMeanNormal(std::mt19937* prng) { this->prng = prng; }
+  ZeroMeanNormal() {}
 
   void incorporate(const double& x);
 
@@ -36,9 +33,9 @@ class ZeroMeanNormal : public Distribution<double> {
 
   double logp_score() const;
 
-  double sample();
+  double sample(std::mt19937* prng);
 
-  void transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng);
 
   // Disable copying.
   ZeroMeanNormal& operator=(const ZeroMeanNormal&) = delete;

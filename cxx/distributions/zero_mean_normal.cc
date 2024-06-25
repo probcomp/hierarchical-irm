@@ -7,8 +7,7 @@
 #include <numbers>
 
 // Return log density of location-scaled T distribution with zero mean.
-double log_t_distribution(const double& x,
-                          const double& v,
+double log_t_distribution(const double& x, const double& v,
                           const double& variance) {
   // https://en.wikipedia.org/wiki/Student%27s_t-distribution#Density_and_first_two_moments
   double v_shift = (v + 1.0) / 2.0;
@@ -52,7 +51,7 @@ double ZeroMeanNormal::logp_score() const {
       - alpha_n * log(beta + 0.5 * var * N);
 }
 
-double ZeroMeanNormal::sample() {
+double ZeroMeanNormal::sample(std::mt19937* prng) {
   double alpha_n = alpha + N / 2.0;
   double beta_n = beta + var * N;
   double t_variance = beta_n / alpha_n;
@@ -65,18 +64,18 @@ double ZeroMeanNormal::sample() {
 #define BETA_GRID \
   { 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0 }
 
-void ZeroMeanNormal::transition_hyperparameters() {
+void ZeroMeanNormal::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<std::pair<double, double>> hypers;
   for (double a : ALPHA_GRID) {
     for (double b : BETA_GRID) {
-          alpha = a;
-          beta = b;
-          double lp = logp_score();
-          if (!std::isnan(lp)) {
-            logps.push_back(logp_score());
-            hypers.push_back(std::make_pair(a, b));
-          }
+      alpha = a;
+      beta = b;
+      double lp = logp_score();
+      if (!std::isnan(lp)) {
+        logps.push_back(logp_score());
+        hypers.push_back(std::make_pair(a, b));
+      }
     }
   }
 

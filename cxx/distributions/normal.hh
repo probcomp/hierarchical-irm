@@ -41,10 +41,7 @@ class Normal : public Distribution<double> {
   double mean = 0.0;  // Mean of observed values
   double var = 0.0;   // Variance of observed values
 
-  std::mt19937* prng;
-
-  // Normal does not take ownership of prng.
-  Normal(std::mt19937* prng) { this->prng = prng; }
+  Normal() {}
 
   void incorporate(const double& x);
 
@@ -56,9 +53,9 @@ class Normal : public Distribution<double> {
 
   double logp_score() const;
 
-  double sample();
+  double sample(std::mt19937* prng);
 
-  void transition_hyperparameters();
+  void transition_hyperparameters(std::mt19937* prng);
 
   // Disable copying.
   Normal& operator=(const Normal&) = delete;

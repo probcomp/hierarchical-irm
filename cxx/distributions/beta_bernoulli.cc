@@ -34,7 +34,7 @@ double BetaBernoulli::logp_score() const {
   return v1 - v2;
 }
 
-bool BetaBernoulli::sample() {
+bool BetaBernoulli::sample(std::mt19937* prng) {
   double p = exp(logp(1));
   std::vector<bool> items{false, true};
   std::vector<double> weights{1 - p, p};
@@ -42,7 +42,7 @@ bool BetaBernoulli::sample() {
   return items[idx];
 }
 
-void BetaBernoulli::transition_hyperparameters() {
+void BetaBernoulli::transition_hyperparameters(std::mt19937* prng) {
   std::vector<double> logps;
   std::vector<std::pair<double, double>> hypers;
   // C++ doesn't yet allow range for-loops over existing variables.  Sigh.

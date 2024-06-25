@@ -8,7 +8,7 @@
 template <typename SampleType = double>
 class Emission : public Distribution<std::pair<SampleType, SampleType>> {
  public:
-  virtual std::pair<SampleType, SampleType> sample() {
+  virtual std::pair<SampleType, SampleType> sample(std::mt19937* prng) {
     assert(false && "sample() should never be called on an Emission\n");
   }
 

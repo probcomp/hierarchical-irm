@@ -10,6 +10,19 @@ cc_library(
 )
 
 cc_library(
+    name = "get_emission",
+    srcs = ["get_emission.cc"],
+    hdrs = ["get_emission.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":bitflip",
+        ":gaussian",
+        ":simple_string",
+        ":sometimes",
+    ],
+)
+
+cc_library(
     name = "bitflip",
     srcs = ["bitflip.hh"],
     visibility = ["//:__subpackages__"],
@@ -43,6 +56,16 @@ cc_library(
     deps = [
         ":base",
         "//distributions:beta_bernoulli",
+    ],
+)
+
+cc_test(
+    name = "get_emission_test",
+    srcs = ["get_emission_test.cc"],
+    deps = [
+        ":get_emission",
+        "@boost//:algorithm",
+        "@boost//:test",
     ],
 )
 

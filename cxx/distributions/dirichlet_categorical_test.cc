@@ -10,10 +10,9 @@
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_matches_beta_bernoulli) {
-  std::mt19937 prng;
   // 2-category Dirichlet Categorical is the same as a BetaBernoulli.
-  DirichletCategorical dc(&prng, 2);
-  BetaBernoulli bb(&prng);
+  DirichletCategorical dc(2);
+  BetaBernoulli bb;
 
   for (int i = 0; i < 10; ++i) {
     dc.incorporate(i % 2);
@@ -35,9 +34,8 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
   // Sample from a Dirichlet and use that to create a MC estimate of the log
   // prob.
   std::mt19937 prng;
-  std::mt19937 prng2;
 
-  DirichletCategorical dc(&prng, 5);
+  DirichletCategorical dc(5);
 
   int num_samples = 1000;
   std::vector<std::vector<double>> dirichlet_samples;
@@ -45,7 +43,7 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
   for (int i = 0; i < num_samples; ++i) {
     std::vector<double> sample;
     for (int j = 0; j < 5; ++j) {
-      sample.emplace_back(gamma_dist(prng2));
+      sample.emplace_back(gamma_dist(prng));
     }
     double sum_of_elements = std::accumulate(sample.begin(), sample.end(), 0.);
     for (int j = 0; j < 5; ++j) {
@@ -73,10 +71,9 @@ BOOST_AUTO_TEST_CASE(test_logp) {
   // Sample from a Dirichlet and use that to create a MC estimate of the log
   // prob.
   std::mt19937 prng;
-  std::mt19937 prng2;
   int num_categories = 5;
 
-  DirichletCategorical dc(&prng, num_categories);
+  DirichletCategorical dc(num_categories);
 
   // We'll use the fact that the posterior distribution of a
   // DirichletCategorical is a Dirichlet.
@@ -105,7 +102,7 @@ BOOST_AUTO_TEST_CASE(test_logp) {
     for (int j = 0; j < num_samples; ++j) {
       std::vector<double> sample;
       for (int k = 0; k < num_categories; ++k) {
-        sample.emplace_back(gamma_dists[k](prng2));
+        sample.emplace_back(gamma_dists[k](prng));
       }
       double sum_of_elements =
           std::accumulate(sample.begin(), sample.end(), 0.);
@@ -123,15 +120,15 @@ BOOST_AUTO_TEST_CASE(test_logp) {
 
 BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   std::mt19937 prng;
-  DirichletCategorical dc(&prng, 10);
+  DirichletCategorical dc(10);
 
-  dc.transition_hyperparameters();
+  dc.transition_hyperparameters(&prng);
 
   for (int i = 0; i < 100; ++i) {
     dc.incorporate(i % 10);
   }
 
   BOOST_TEST(dc.N == 100);
-  dc.transition_hyperparameters();
+  dc.transition_hyperparameters(&prng);
   BOOST_TEST(dc.alpha > 1.0);
 }
