@@ -54,8 +54,7 @@ BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {
 }
 
 BOOST_AUTO_TEST_CASE(test_log_prob) {
-  std::mt19937 prng;
-  ZeroMeanNormal nd(&prng);
+  ZeroMeanNormal nd;
 
   bm::inverse_gamma_distribution inv_gamma_dist(nd.alpha, nd.beta);
   auto quad = bm::quadrature::gauss_kronrod<double, 200>();
@@ -81,8 +80,7 @@ BOOST_AUTO_TEST_CASE(test_log_prob) {
 }
 
 BOOST_AUTO_TEST_CASE(test_posterior_pred) {
-  std::mt19937 prng;
-  ZeroMeanNormal nd(&prng);
+  ZeroMeanNormal nd;
 
   bm::inverse_gamma_distribution inv_gamma_dist(nd.alpha, nd.beta);
   auto quad = bm::quadrature::gauss_kronrod<double, 200>();
