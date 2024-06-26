@@ -57,4 +57,4 @@ class IRM {
 
 // Run a single step of inference on an IRM model.
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose);
+                               bool verbose, int num_theta_steps = 10);

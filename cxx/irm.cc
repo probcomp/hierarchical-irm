@@ -290,7 +290,7 @@ void IRM::remove_relation(const std::string& name) {
   }
 
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose, int num_theta_steps = 10) {
+                               bool verbose, int num_theta_steps) {
   // TRANSITION ASSIGNMENTS.
   for (const auto& [d, domain] : irm->domains) {
     for (const auto item : domain->items) {

@@ -75,14 +75,14 @@ int main(int argc, char** argv) {
 
   // Marginally normalized.
   int persiancat = enc["animal"]["persiancat"];
-  auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}});
-  auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}});
+  auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}}, &prng);
+  auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}}, &prng);
   assert(abs(logsumexp({p0_black_persiancat, p1_black_persiancat})) < 1e-10);
 
   // Marginally normalized.
   int sheep = enc["animal"]["sheep"];
-  auto p0_solitary_sheep = hirm.logp({{"solitary", {sheep}, false}});
-  auto p1_solitary_sheep = hirm.logp({{"solitary", {sheep}, true}});
+  auto p0_solitary_sheep = hirm.logp({{"solitary", {sheep}, false}}, &prng);
+  auto p1_solitary_sheep = hirm.logp({{"solitary", {sheep}, true}}, &prng);
   assert(abs(logsumexp({p0_solitary_sheep, p1_solitary_sheep})) < 1e-10);
 
   // Jointly normalized.

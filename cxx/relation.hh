@@ -192,11 +192,11 @@ class Relation {
   }
 
   double logp_gibbs_approx(const Domain& domain, const T_item& item,
-                           int table) {
+                           int table, std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
     return table_current == table
                ? logp_gibbs_approx_current(domain, item)
-               : logp_gibbs_approx_variant(domain, item, table);
+               : logp_gibbs_approx_variant(domain, item, table, prng);
   }
 
   // Implementation of exact Gibbs data probabilities.
@@ -271,7 +271,7 @@ class Relation {
       for (const auto& [z, items_list] : cluster_to_items_list) {
         lp_cluster =
             (table == table_current)
-                ? logp_gibbs_exact_current(items_list, prng)
+                ? logp_gibbs_exact_current(items_list)
                 : logp_gibbs_exact_variant(domain, item, table, items_list, prng);
         lp_table += lp_cluster;
       }

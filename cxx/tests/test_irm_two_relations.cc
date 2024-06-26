@@ -77,10 +77,10 @@ int main(int argc, char** argv) {
     assert(l.size() == 2);
     auto x1 = l.at(0);
     auto x2 = l.at(1);
-    auto p0 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, false);
-    auto p0_irm = irm.logp({{"R1", {x1, x2}, false}});
+    auto p0 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, false, &prng);
+    auto p0_irm = irm.logp({{"R1", {x1, x2}, false}}, &prng);
     assert(abs(p0 - p0_irm) < 1e-10);
-    auto p1 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, true);
+    auto p1 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, true, &prng);
     auto Z = logsumexp({p0, p1});
     assert(abs(Z) < 1e-10);
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
