@@ -3,15 +3,16 @@
 #include "relation_variant.hh"
 #include "util_distribution_variant.hh"
 
-#include <type_traits>
-#include <typeinfo>
 #ifndef _MSC_VER
 #   include <cxxabi.h>
 #endif
-#include <memory>
-#include <string>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
+#include <random>
+#include <string>
+#include <type_traits>
+#include <typeinfo>
 
 template <class T>
 std::string
@@ -42,8 +43,9 @@ type_name()
 
 
 int main() {
+  std::mt19937 prng;
   DistributionSpec dist_spec = parse_distribution_spec("bernoulli");
-  DistributionVariant dv = cluster_prior_from_spec(dist_spec);
+  DistributionVariant dv = cluster_prior_from_spec(dist_spec, &prng);
 
   std::visit(
       [&](const auto& v) {

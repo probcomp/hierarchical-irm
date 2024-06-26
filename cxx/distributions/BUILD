@@ -86,6 +86,7 @@ cc_library(
 
 cc_library(
     name = "skellam",
+    srcs = ["skellam.cc"],
     hdrs = ["skellam.hh"],
     deps = [
         ":nonconjugate",

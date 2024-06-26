@@ -200,7 +200,7 @@ double IRM::logp(
       if (rel->clusters.contains(z)) {
         return rel->clusters.at(z)->logp(v);
       }
-      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec);
+      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec, prng);
       return std::visit(
           [&](const auto& dist_variant) {
             auto v2 = std::get<
