@@ -197,11 +197,16 @@ double IRM::logp(
       }
       auto v = std::get<
           typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
-      auto prior =
-          std::get<typename std::remove_reference_t<decltype(*rel)>::DType*>(
-              cluster_prior_from_spec(rel->dist_spec));
-      return rel->clusters.contains(z) ? rel->clusters.at(z)->logp(v)
-          : prior->logp(v);
+      if (rel->clusters.contains(z)) {
+        return rel->clusters.at(z)->logp(v);
+      }
+      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec);
+      return std::visit(
+          [&](const auto& dist_variant) {
+            auto v2 = std::get<
+                typename std::remove_reference_t<decltype(
+                    *dist_variant)>::SampleType>(value);
+            return dist_variant->logp(v2); }, prior);
     };
     for (const auto& [r, items, value] : observations) {
       auto g = std::bind(f_logp, std::placeholders::_1, items, value);

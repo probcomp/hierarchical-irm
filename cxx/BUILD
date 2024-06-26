@@ -51,6 +51,15 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "typename_playground",
+    srcs = ["typename_playground.cc"],
+    deps = [
+        ":relation_variant",
+        ":util_distribution_variant",
+    ],
+)
+
 cc_library(
     name = "relation",
     hdrs = ["relation.hh"],
@@ -73,7 +82,6 @@ cc_library(
         ":domain",
         ":relation",
         ":util_distribution_variant",
-        "//distributions",
     ],
 )
 
@@ -133,6 +141,7 @@ cc_test(
         "@boost//:test",
     ],
 )
+
 cc_test(
     name = "relation_test",
     srcs = ["relation_test.cc"],
@@ -140,6 +149,15 @@ cc_test(
         ":domain",
         ":relation",
         "//distributions",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "relation_variant_test",
+    srcs = ["relation_variant_test.cc"],
+    deps = [
+        ":relation_variant",
         "@boost//:test",
     ],
 )
