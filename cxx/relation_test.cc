@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
   DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
-  Relation<BetaBernoulli> R1("R1", spec, {&D1, &D2, &D3});
+  Relation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
   R1.incorporate(&prng, {3, 1, 3}, 1);
@@ -48,8 +48,13 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   lpg = R1.logp_gibbs_approx(D1, 0, 10, &prng);
   R1.set_cluster_assignment_gibbs(D1, 0, 1, &prng);
 
+  Distribution<bool>* db = R1.make_new_distribution();
+  BOOST_TEST(db->N == 0);
+  db->incorporate(false);
+  BOOST_TEST(db->N == 1);
+
   DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
-  Relation<Bigram> R2("R1", bigram_spec, {&D2, &D3});
+  Relation<std::string> R2("R1", bigram_spec, {&D2, &D3});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");
@@ -58,4 +63,9 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   lpg = R2.logp_gibbs_approx(D2, 2, 0, &prng);
   R2.set_cluster_assignment_gibbs(D3, 3, 1, &prng);
   D1.set_cluster_assignment_gibbs(0, 1);
+
+  Distribution<std::string>* db2 = R2.make_new_distribution();
+  BOOST_TEST(db2->N == 0);
+  db2->incorporate("hello");
+  BOOST_TEST(db2->N == 1);
 }

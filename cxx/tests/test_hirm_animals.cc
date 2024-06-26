@@ -137,8 +137,8 @@ int main(int argc, char** argv) {
     }
     // Check relations agree.
     for (const auto& [r, rm_var] : irm->relations) {
-      auto rx = std::get<Relation<BetaBernoulli>*>(irx->relations.at(r));
-      auto rm = std::get<Relation<BetaBernoulli>*>(rm_var);
+      auto rx = std::get<Relation<bool>*>(irx->relations.at(r));
+      auto rm = std::get<Relation<bool>*>(rm_var);
       assert(rm->data == rx->data);
       assert(rm->data_r == rx->data_r);
       assert(rm->clusters.size() == rx->clusters.size());

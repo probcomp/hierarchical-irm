@@ -7,19 +7,13 @@
 #include <variant>
 #include <vector>
 
+#include "domain.hh"
+#include "relation.hh"
 #include "util_distribution_variant.hh"
 
-class BetaBernoulli;
-class Bigram;
-class DirichletCategorical;
-class Normal;
-class Domain;
-template <typename DistributionType>
-class Relation;
-
 using RelationVariant =
-    std::variant<Relation<BetaBernoulli>*, Relation<Bigram>*,
-                 Relation<DirichletCategorical>*, Relation<Normal>*>;
+    std::variant<Relation<std::string>*, Relation<double>*,
+                 Relation<int>*, Relation<bool>*>;
 
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,
