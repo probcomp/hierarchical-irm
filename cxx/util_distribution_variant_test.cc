@@ -27,7 +27,11 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
   BOOST_TEST((dn.distribution == DistributionEnum::normal));
   BOOST_TEST(dn.distribution_args.empty());
 
-  DistributionSpec dc = parse_distribution_spec("categorical(k=6)");
+  DistributionSpec s = parse_distribution_spec("skellam");
+  BOOST_TEST((dn.distribution == DistributionEnum::skellam));
+  BOOST_TEST(dn.distribution_args.empty());
+
+  DistributionSpec dc = parse_distribution_spec("categorical(k=6), &prng");
   BOOST_TEST((dc.distribution == DistributionEnum::categorical));
   BOOST_TEST((dc.distribution_args.size() == 1));
   std::string expected = "6";
@@ -35,8 +39,9 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
 }
 
 BOOST_AUTO_TEST_CASE(test_cluster_prior_from_spec) {
+  std::mt19937 prng;
   DistributionSpec dc = {DistributionEnum::categorical, {{"k", "4"}}};
-  DistributionVariant dcdv = cluster_prior_from_spec(dc);
+  DistributionVariant dcdv = cluster_prior_from_spec(dc, &prng);
   DirichletCategorical* dcd = std::get<DirichletCategorical*>(dcdv);
   BOOST_TEST(dcd->counts.size() == 4);
 }

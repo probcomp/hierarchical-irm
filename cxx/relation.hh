@@ -100,7 +100,7 @@ class Relation {
       //      does not have a default constructor, whereas operator[]
       //      calls default constructor when the key does not exist.
       clusters[z] =
-          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
     }
     clusters.at(z)->incorporate(value);
   }
@@ -173,7 +173,7 @@ class Relation {
   }
 
   double logp_gibbs_approx_variant(const Domain& domain, const T_item& item,
-                                   int table) {
+                                   int table, std::mt19937* prng) {
     double logp = 0.;
     for (const T_items& items : data_r.at(domain.name).at(item)) {
       ValueType x = data.at(items);
@@ -181,7 +181,7 @@ class Relation {
       double lp;
       if (!clusters.contains(z)) {
         DistributionType* cluster =
-            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
         lp = cluster->logp(x);
       } else {
         lp = clusters.at(z)->logp(x);
@@ -233,15 +233,15 @@ class Relation {
     return logp0 - logp1;
   }
 
-  double logp_gibbs_exact_variant(const Domain& domain, const T_item& item,
-                                  int table,
-                                  const std::vector<T_items>& items_list) {
+  double logp_gibbs_exact_variant(
+      const Domain& domain, const T_item& item, int table,
+      const std::vector<T_items>& items_list, std::mt19937* prng) {
     assert(!items_list.empty());
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
     DistributionType* prior =
-        std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+        std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
     DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
@@ -258,8 +258,9 @@ class Relation {
     return logp1 - logp0;
   }
 
-  std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
-                                       std::vector<int> tables) {
+  std::vector<double> logp_gibbs_exact(
+      const Domain& domain, const T_item& item, std::vector<int> tables,
+      std::mt19937* prng) {
     auto cluster_to_items_list = get_cluster_to_items_list(domain, item);
     int table_current = domain.get_cluster_assignment(item);
     std::vector<double> logps;
@@ -270,8 +271,8 @@ class Relation {
       for (const auto& [z, items_list] : cluster_to_items_list) {
         lp_cluster =
             (table == table_current)
-                ? logp_gibbs_exact_current(items_list)
-                : logp_gibbs_exact_variant(domain, item, table, items_list);
+                ? logp_gibbs_exact_current(items_list, prng)
+                : logp_gibbs_exact_variant(domain, item, table, items_list, prng);
         lp_table += lp_cluster;
       }
       logps.push_back(lp_table);
@@ -279,7 +280,7 @@ class Relation {
     return logps;
   }
 
-  double logp(const T_items& items, ValueType value) {
+  double logp(const T_items& items, ValueType value, std::mt19937* prng) {
     // TODO: Falsely assumes cluster assignments of items
     // from same domain are identical, see note in hirm.py
     assert(items.size() == domains.size());
@@ -325,7 +326,7 @@ class Relation {
         logp_w += wi;
       }
       DistributionType* prior =
-          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+          std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
       DistributionType* cluster = clusters.contains(z) ? clusters.at(z) : prior;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
@@ -343,7 +344,7 @@ class Relation {
   }
 
   void set_cluster_assignment_gibbs(const Domain& domain, const T_item& item,
-                                    int table) {
+                                    int table, std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
     assert(table != table_current);
     for (const T_items& items : data_r.at(domain.name).at(item)) {
@@ -361,7 +362,7 @@ class Relation {
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
         clusters[z_new] =
-            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec));
+            std::get<DistributionType*>(cluster_prior_from_spec(dist_spec, prng));
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.

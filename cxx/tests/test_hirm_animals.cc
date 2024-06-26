@@ -87,13 +87,13 @@ int main(int argc, char** argv) {
 
   // Jointly normalized.
   auto p00_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, false}});
+      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, false}}, &prng);
   auto p01_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, true}});
+      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, true}}, &prng);
   auto p10_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, false}});
+      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, false}}, &prng);
   auto p11_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, true}});
+      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, true}}, &prng);
   auto Z = logsumexp({
       p00_black_persiancat_solitary_sheep,
       p01_black_persiancat_solitary_sheep,

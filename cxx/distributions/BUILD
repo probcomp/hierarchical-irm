@@ -10,6 +10,7 @@ cc_library(
         ":crp",
         ":dirichlet_categorical",
         ":normal",
+        ":skellam",
     ],
 )
 

@@ -91,10 +91,10 @@ int main(int argc, char** argv) {
     auto x1 = l.at(0);
     auto x2 = l.at(1);
     auto x3 = l.at(2);
-    auto p00 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, false}});
-    auto p01 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, true}});
-    auto p10 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}});
-    auto p11 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}});
+    auto p00 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, false}}, &prng);
+    auto p01 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, true}}, &prng);
+    auto p10 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}}, &prng);
+    auto p11 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}}, &prng);
     auto Z = logsumexp({p00, p01, p10, p11});
     assert(abs(Z) < 1e-10);
   }
