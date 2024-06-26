@@ -24,7 +24,7 @@ class NonconjugateDistribution : public Distribution<T> {
   virtual void init_theta(std::mt19937* prng) = 0;
 
   // Return the current latent values as a vector.
-  virtual std::vector<double> store_latents() = 0;
+  virtual std::vector<double> store_latents() const = 0;
 
   // Set the current latent values from a vector.
   virtual void set_latents(const std::vector<double>& v) = 0;

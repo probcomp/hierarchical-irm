@@ -74,7 +74,7 @@ void IRM::transition_cluster_assignment_item(std::mt19937* prng,
   auto accumulate_logps = [&](auto rel) {
     if (rel->has_observation(*domain, item)) {
       std::vector<double> lp_relation =
-          rel->logp_gibbs_exact(*domain, item, tables);
+          rel->logp_gibbs_exact(*domain, item, tables, prng);
       assert(lp_relation.size() == tables.size());
       assert(lp_relation.size() == logps.size());
       for (int i = 0; i < std::ssize(logps); ++i) {
@@ -93,7 +93,7 @@ void IRM::transition_cluster_assignment_item(std::mt19937* prng,
   if (choice != domain->get_cluster_assignment(item)) {
     auto set_cluster_r = [&](auto rel) {
       if (rel->has_observation(*domain, item)) {
-        rel->set_cluster_assignment_gibbs(*domain, item, choice);
+        rel->set_cluster_assignment_gibbs(*domain, item, choice, prng);
       }
     };
     for (const std::string& r : domain_to_relations.at(d)) {
@@ -105,7 +105,7 @@ void IRM::transition_cluster_assignment_item(std::mt19937* prng,
 
 double IRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-    observations) {
+    observations, std::mt19937* prng) {
   std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
       relation_items_seen;
   std::unordered_map<std::string, std::unordered_set<T_item>>
@@ -200,7 +200,7 @@ double IRM::logp(
       if (rel->clusters.contains(z)) {
         return rel->clusters.at(z)->logp(v);
       }
-      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec);
+      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec, prng);
       return std::visit(
           [&](const auto& dist_variant) {
             auto v2 = std::get<
@@ -295,7 +295,7 @@ void IRM::remove_relation(const std::string& name) {
   }
 
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose) {
+                               bool verbose, int num_theta_steps) {
   // TRANSITION ASSIGNMENTS.
   for (const auto& [d, domain] : irm->domains) {
     for (const auto item : domain->items) {
@@ -310,6 +310,9 @@ void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
         [&](auto r) {
           for (const auto& [c, distribution] : r->clusters) {
             clock_t t = clock();
+            for (int i = 0; i < num_theta_steps; ++i ) {
+              distribution->transition_theta(prng);
+            }
             distribution->transition_hyperparameters(prng);
             REPORT_SCORE(verbose, t, t_total, irm);
           }

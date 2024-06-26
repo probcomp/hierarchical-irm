@@ -7,6 +7,7 @@
 #pragma once
 
 #include <map>
+#include <random>
 #include <string>
 #include <variant>
 #include <vector>
@@ -15,8 +16,9 @@
 #include "distributions/bigram.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
+#include "distributions/skellam.hh"
 
-enum class DistributionEnum { bernoulli, bigram, categorical, normal };
+enum class DistributionEnum { bernoulli, bigram, categorical, normal, skellam };
 
 struct DistributionSpec {
   DistributionEnum distribution;
@@ -27,11 +29,13 @@ struct DistributionSpec {
 using ObservationVariant = std::variant<double, int, bool, std::string>;
 
 using DistributionVariant =
-    std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*>;
+    std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*,
+                 Skellam*>;
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution);
 
 DistributionSpec parse_distribution_spec(const std::string& dist_str);
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec);
+DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
+                                            std::mt19937* prng);

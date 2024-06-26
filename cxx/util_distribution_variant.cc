@@ -11,6 +11,7 @@
 #include "distributions/crp.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
+#include "distributions/skellam.hh"
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution) {
@@ -20,6 +21,7 @@ ObservationVariant observation_string_to_value(
     case DistributionEnum::bernoulli:
       return static_cast<bool>(std::stoi(value_str));
     case DistributionEnum::categorical:
+    case DistributionEnum::skellam:
       return std::stoi(value_str);
     case DistributionEnum::bigram:
       return value_str;
@@ -33,7 +35,9 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
       {"bernoulli", DistributionEnum::bernoulli},
       {"bigram", DistributionEnum::bigram},
       {"categorical", DistributionEnum::categorical},
-      {"normal", DistributionEnum::normal}};
+      {"normal", DistributionEnum::normal},
+      {"skellam", DistributionEnum::skellam}
+  };
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
   DistributionEnum dist = dist_name_to_enum.at(dist_name);
 
@@ -58,7 +62,8 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
   }
 }
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec) {
+DistributionVariant cluster_prior_from_spec(
+    const DistributionSpec& spec, std::mt19937* prng) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;
@@ -71,6 +76,11 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec) {
     }
     case DistributionEnum::normal:
       return new Normal;
+    case DistributionEnum::skellam: {
+      Skellam* s = new Skellam;
+      s->init_theta(prng);
+      return s;
+    }
     default:
       assert(false && "Unsupported distribution enum value.");
   }

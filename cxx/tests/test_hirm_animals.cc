@@ -75,25 +75,25 @@ int main(int argc, char** argv) {
 
   // Marginally normalized.
   int persiancat = enc["animal"]["persiancat"];
-  auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}});
-  auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}});
+  auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}}, &prng);
+  auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}}, &prng);
   assert(abs(logsumexp({p0_black_persiancat, p1_black_persiancat})) < 1e-10);
 
   // Marginally normalized.
   int sheep = enc["animal"]["sheep"];
-  auto p0_solitary_sheep = hirm.logp({{"solitary", {sheep}, false}});
-  auto p1_solitary_sheep = hirm.logp({{"solitary", {sheep}, true}});
+  auto p0_solitary_sheep = hirm.logp({{"solitary", {sheep}, false}}, &prng);
+  auto p1_solitary_sheep = hirm.logp({{"solitary", {sheep}, true}}, &prng);
   assert(abs(logsumexp({p0_solitary_sheep, p1_solitary_sheep})) < 1e-10);
 
   // Jointly normalized.
   auto p00_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, false}});
+      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, false}}, &prng);
   auto p01_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, true}});
+      hirm.logp({{"black", {persiancat}, false}, {"solitary", {sheep}, true}}, &prng);
   auto p10_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, false}});
+      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, false}}, &prng);
   auto p11_black_persiancat_solitary_sheep =
-      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, true}});
+      hirm.logp({{"black", {persiancat}, true}, {"solitary", {sheep}, true}}, &prng);
   auto Z = logsumexp({
       p00_black_persiancat_solitary_sheep,
       p01_black_persiancat_solitary_sheep,

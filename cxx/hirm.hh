@@ -49,7 +49,7 @@ class HIRM {
 
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-          observations);
+          observations, std::mt19937* prng);
 
   double logp_score() const;
 

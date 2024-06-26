@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_irm) {
 
   auto obs0 = observation_string_to_value("0", DistributionEnum::bernoulli);
 
-  double logp_x = irm.logp({{"R1", {1, 2}, obs0}});
+  double logp_x = irm.logp({{"R1", {1, 2}, obs0}}, &prng);
   BOOST_TEST(logp_x < 0.0);
 
   irm.incorporate(&prng, "R1", {1, 2}, obs0);

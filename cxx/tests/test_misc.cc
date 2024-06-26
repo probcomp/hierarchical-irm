@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
 
   auto rel = std::get<Relation<bool>*>(irm3.relations.at("has"));
   auto& enc = std::get<0>(encoding);
-  auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0);
-  auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1);
+  auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0, &prng);
+  auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1, &prng);
   auto lp_01 = logsumexp({lp0, lp1});
   assert(abs(lp_01) < 1e-5);
   printf("log prob of has(tail, bat)=0 is %1.2f\n", lp0);

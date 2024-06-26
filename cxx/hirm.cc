@@ -205,7 +205,7 @@ void HIRM::remove_relation(const std::string& name) {
 
 double HIRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-    observations) {
+    observations, std::mt19937* prng) {
   std::unordered_map<
       int, std::vector<std::tuple<std::string, T_items, ObservationVariant>>>
       obs_dict;
@@ -219,7 +219,7 @@ double HIRM::logp(
   }
   double logp = 0.0;
   for (const auto& [t, o] : obs_dict) {
-    logp += irms.at(t)->logp(o);
+    logp += irms.at(t)->logp(o, prng);
   }
   return logp;
 }

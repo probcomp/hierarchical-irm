@@ -75,13 +75,13 @@ class Relation {
     }
   }
 
-  Distribution<ValueType>* make_new_distribution() {
+  Distribution<ValueType>* make_new_distribution(std::mt19937* prng) {
     return std::visit([&](auto dist_variant) {
       // In practice, the DistributionVariant returned by
       // cluster_prior_from_spec will always be of type
       // Distribution<ValueType>*, so this reinterpret_cast is a no-op.
       return reinterpret_cast<Distribution<ValueType>*>(dist_variant);
-    }, cluster_prior_from_spec(dist_spec));
+    }, cluster_prior_from_spec(dist_spec, prng));
   }
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
@@ -97,7 +97,7 @@ class Relation {
     }
     T_items z = get_cluster_assignment(items);
     if (!clusters.contains(z)) {
-      clusters[z] = make_new_distribution();
+      clusters[z] = make_new_distribution(prng);
     }
     clusters.at(z)->incorporate(value);
   }
@@ -170,14 +170,14 @@ class Relation {
   }
 
   double logp_gibbs_approx_variant(const Domain& domain, const T_item& item,
-                                   int table) {
+                                   int table, std::mt19937* prng) {
     double logp = 0.;
     for (const T_items& items : data_r.at(domain.name).at(item)) {
       ValueType x = data.at(items);
       T_items z = get_cluster_assignment_gibbs(items, domain, item, table);
       double lp;
       if (!clusters.contains(z)) {
-        Distribution<ValueType>* tmp_dist = make_new_distribution();
+        Distribution<ValueType>* tmp_dist = make_new_distribution(prng);
         lp = tmp_dist->logp(x);
         delete tmp_dist;
       } else {
@@ -189,11 +189,11 @@ class Relation {
   }
 
   double logp_gibbs_approx(const Domain& domain, const T_item& item,
-                           int table) {
+                           int table, std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
     return table_current == table
                ? logp_gibbs_approx_current(domain, item)
-               : logp_gibbs_approx_variant(domain, item, table);
+               : logp_gibbs_approx_variant(domain, item, table, prng);
   }
 
   // Implementation of exact Gibbs data probabilities.
@@ -230,14 +230,14 @@ class Relation {
     return logp0 - logp1;
   }
 
-  double logp_gibbs_exact_variant(const Domain& domain, const T_item& item,
-                                  int table,
-                                  const std::vector<T_items>& items_list) {
+  double logp_gibbs_exact_variant(
+      const Domain& domain, const T_item& item, int table,
+      const std::vector<T_items>& items_list, std::mt19937* prng) {
     assert(!items_list.empty());
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
-    Distribution<ValueType>* prior = make_new_distribution();
+    Distribution<ValueType>* prior = make_new_distribution(prng);
     Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
@@ -255,8 +255,9 @@ class Relation {
     return logp1 - logp0;
   }
 
-  std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
-                                       std::vector<int> tables) {
+  std::vector<double> logp_gibbs_exact(
+      const Domain& domain, const T_item& item, std::vector<int> tables,
+      std::mt19937* prng) {
     auto cluster_to_items_list = get_cluster_to_items_list(domain, item);
     int table_current = domain.get_cluster_assignment(item);
     std::vector<double> logps;
@@ -268,7 +269,7 @@ class Relation {
         lp_cluster =
             (table == table_current)
                 ? logp_gibbs_exact_current(items_list)
-                : logp_gibbs_exact_variant(domain, item, table, items_list);
+                : logp_gibbs_exact_variant(domain, item, table, items_list, prng);
         lp_table += lp_cluster;
       }
       logps.push_back(lp_table);
@@ -276,7 +277,7 @@ class Relation {
     return logps;
   }
 
-  double logp(const T_items& items, ValueType value) {
+  double logp(const T_items& items, ValueType value, std::mt19937* prng) {
     // TODO: Falsely assumes cluster assignments of items
     // from same domain are identical, see note in hirm.py
     assert(items.size() == domains.size());
@@ -321,7 +322,7 @@ class Relation {
         z.push_back(zi);
         logp_w += wi;
       }
-      Distribution<ValueType>* prior = make_new_distribution();
+      Distribution<ValueType>* prior = make_new_distribution(prng);
       Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
@@ -340,7 +341,7 @@ class Relation {
   }
 
   void set_cluster_assignment_gibbs(const Domain& domain, const T_item& item,
-                                    int table) {
+                                    int table, std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
     assert(table != table_current);
     for (const T_items& items : data_r.at(domain.name).at(item)) {
@@ -357,7 +358,7 @@ class Relation {
       T_items z_new = get_cluster_assignment_gibbs(items, domain, item, table);
       if (!clusters.contains(z_new)) {
         // Move to fresh cluster.
-        clusters[z_new] = make_new_distribution();
+        clusters[z_new] = make_new_distribution(prng);
         clusters.at(z_new)->incorporate(x);
       } else {
         // Move to existing cluster.

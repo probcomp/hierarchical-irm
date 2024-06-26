@@ -2,6 +2,7 @@
 // See LICENSE.txt
 
 #include <cassert>
+#include <random>
 #include <type_traits>
 
 #include "domain.hh"
@@ -12,7 +13,8 @@
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,
                                    std::vector<Domain*>& domains) {
-  DistributionVariant dv = cluster_prior_from_spec(dist_spec);
+  std::mt19937 prng;
+  DistributionVariant dv = cluster_prior_from_spec(dist_spec, &prng);
 
   RelationVariant rv;
 

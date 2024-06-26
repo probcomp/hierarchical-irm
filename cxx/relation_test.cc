@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   BOOST_TEST(z2[2] == 0);
 
   double lpg __attribute__ ((unused));
-  lpg = R1.logp_gibbs_approx(D1, 0, 1);
-  lpg = R1.logp_gibbs_approx(D1, 0, 0);
-  lpg = R1.logp_gibbs_approx(D1, 0, 10);
-  R1.set_cluster_assignment_gibbs(D1, 0, 1);
+  lpg = R1.logp_gibbs_approx(D1, 0, 1, &prng);
+  lpg = R1.logp_gibbs_approx(D1, 0, 0, &prng);
+  lpg = R1.logp_gibbs_approx(D1, 0, 10, &prng);
+  R1.set_cluster_assignment_gibbs(D1, 0, 1, &prng);
 
-  Distribution<bool>* db = R1.make_new_distribution();
+  Distribution<bool>* db = R1.make_new_distribution(&prng);
   BOOST_TEST(db->N == 0);
   db->incorporate(false);
   BOOST_TEST(db->N == 1);
@@ -60,11 +60,11 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   R2.incorporate(&prng, {1, 4}, "catt");
   R2.incorporate(&prng, {2, 6}, "fish");
 
-  lpg = R2.logp_gibbs_approx(D2, 2, 0);
-  R2.set_cluster_assignment_gibbs(D3, 3, 1);
+  lpg = R2.logp_gibbs_approx(D2, 2, 0, &prng);
+  R2.set_cluster_assignment_gibbs(D3, 3, 1, &prng);
   D1.set_cluster_assignment_gibbs(0, 1);
 
-  Distribution<std::string>* db2 = R2.make_new_distribution();
+  Distribution<std::string>* db2 = R2.make_new_distribution(&prng);
   BOOST_TEST(db2->N == 0);
   db2->incorporate("hello");
   BOOST_TEST(db2->N == 1);
