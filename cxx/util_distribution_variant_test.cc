@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
   DistributionSpec dsc = parse_distribution_spec("stringcat(strings=a b c d)");
   BOOST_TEST((dsc.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc.distribution_args.size() == 1));
-  BOOST_CHECK_EQUAL(dc.distribution_args.at("strings"), "a b c d");
+  BOOST_CHECK_EQUAL(dsc.distribution_args.at("strings"), "a b c d");
   DistributionVariant dv = cluster_prior_from_spec(dsc, &prng);
   BOOST_TEST(std::get<StringCat*>(dv)->strings.size() == 4);
 
@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
       "stringcat(strings=yes:no,delim=:)");
   BOOST_TEST((dsc2.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc2.distribution_args.size() == 2));
-  BOOST_CHECK_EQUAL(dc.distribution_args.at("strings"), "yes:no");
-  DistributionVariant dv2 = cluster_prior_from_spec(dsc, &prng);
+  BOOST_CHECK_EQUAL(dsc2.distribution_args.at("strings"), "yes:no");
+  DistributionVariant dv2 = cluster_prior_from_spec(dsc2, &prng);
   BOOST_TEST(std::get<StringCat*>(dv2)->strings.size() == 2);
 }
 
