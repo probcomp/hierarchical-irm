@@ -15,6 +15,8 @@
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
+  std::mt19937 prng;
+
   DistributionSpec dbb = parse_distribution_spec("bernoulli");
   BOOST_TEST((dbb.distribution == DistributionEnum::bernoulli));
   BOOST_TEST(dbb.distribution_args.empty());
@@ -36,6 +38,21 @@ BOOST_AUTO_TEST_CASE(test_parse_distribution_spec) {
   BOOST_TEST((dc.distribution_args.size() == 1));
   std::string expected = "6";
   BOOST_CHECK_EQUAL(dc.distribution_args.at("k"), expected);
+
+  DistributionSpec dsc = parse_distribution_spec("stringcat(strings=a b c d)");
+  BOOST_TEST((dsc.distribution == DistributionEnum::stringcat));
+  BOOST_TEST((dsc.distribution_args.size() == 1));
+  BOOST_CHECK_EQUAL(dc.distribution_args.at("strings"), "a b c d");
+  DistributionVariant dv = cluster_prior_from_spec(dsc, &prng);
+  BOOST_TEST(std::get<StringCat*>(dv)->strings.size() == 4);
+
+  DistributionSpec dsc2 = parse_distribution_spec(
+      "stringcat(strings=yes:no,delim=:)");
+  BOOST_TEST((dsc2.distribution == DistributionEnum::stringcat));
+  BOOST_TEST((dsc2.distribution_args.size() == 2));
+  BOOST_CHECK_EQUAL(dc.distribution_args.at("strings"), "yes:no");
+  DistributionVariant dv2 = cluster_prior_from_spec(dsc, &prng);
+  BOOST_TEST(std::get<StringCat*>(dv2)->strings.size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_cluster_prior_from_spec) {

@@ -93,6 +93,7 @@ cc_library(
     deps = [
         ":domain",
         "//distributions",
+        "@boost//:algorithm",
     ],
 )
 
