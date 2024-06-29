@@ -8,7 +8,9 @@
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_simple) {
-  StringCat sc({"hello", "world", "train", "test", "other"});
+  std::vector<std::string> strings = {
+    "hello", "world", "train", "test", "other"};
+  StringCat sc(strings);
 
   sc.incorporate("hello");
   sc.incorporate("world");
@@ -21,4 +23,11 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   BOOST_TEST(sc.logp("test") == -1.791759469228055, tt::tolerance(1e-6));
   BOOST_TEST(sc.logp_score() == -1.6094379124341001, tt::tolerance(1e-6));
+
+  std::mt19937 prng;
+  std::string samp = sc.sample(&prng);
+
+  auto it = std::find(strings.begin(), strings.end(), samp);
+  bool found = (it != strings.end());
+  BOOST_TEST(found);
 }
