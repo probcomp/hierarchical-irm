@@ -1,11 +1,17 @@
 // Copyright 2024
 // See LICENSE.txt
 
-#include "util_distribution_variant.hh"
-
 #include <cassert>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include "util_distribution_variant.hh"
+#include "distributions/beta_bernoulli.hh"
+#include "distributions/bigram.hh"
+#include "distributions/dirichlet_categorical.hh"
+#include "distributions/normal.hh"
+#include "distributions/skellam.hh"
+#include "distributions/stringcat.hh"
+
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution) {
