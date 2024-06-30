@@ -11,6 +11,7 @@ cc_library(
         ":dirichlet_categorical",
         ":normal",
         ":skellam",
+        ":stringcat",
     ],
 )
 
@@ -95,6 +96,16 @@ cc_library(
 )
 
 cc_library(
+    name = "stringcat",
+    srcs = ["stringcat.cc"],
+    hdrs = ["stringcat.hh"],
+    deps = [
+        ":base",
+        ":dirichlet_categorical",
+    ],
+)
+
+cc_library(
     name = "zero_mean_normal",
     srcs = ["zero_mean_normal.cc"],
     hdrs = ["zero_mean_normal.hh"],
@@ -165,6 +176,15 @@ cc_test(
         ":skellam",
         "@boost//:algorithm",
         "@boost//:math",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "stringcat_test",
+    srcs = ["stringcat_test.cc"],
+    deps = [
+        ":stringcat",
         "@boost//:test",
     ],
 )

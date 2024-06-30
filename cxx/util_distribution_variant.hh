@@ -17,8 +17,10 @@
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
+#include "distributions/stringcat.hh"
 
-enum class DistributionEnum { bernoulli, bigram, categorical, normal, skellam };
+enum class DistributionEnum {
+  bernoulli, bigram, categorical, normal, skellam, stringcat };
 
 struct DistributionSpec {
   DistributionEnum distribution;
@@ -30,7 +32,7 @@ using ObservationVariant = std::variant<double, int, bool, std::string>;
 
 using DistributionVariant =
     std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*,
-                 Skellam*>;
+                 Skellam*, StringCat*>;
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution);

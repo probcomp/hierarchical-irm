@@ -1,17 +1,17 @@
 // Copyright 2024
 // See LICENSE.txt
 
-#include "util_distribution_variant.hh"
-
 #include <cassert>
 #include <sstream>
-
+#include <boost/algorithm/string.hpp>
+#include "util_distribution_variant.hh"
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
-#include "distributions/crp.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
+#include "distributions/stringcat.hh"
+
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution) {
@@ -24,6 +24,7 @@ ObservationVariant observation_string_to_value(
     case DistributionEnum::skellam:
       return std::stoi(value_str);
     case DistributionEnum::bigram:
+    case DistributionEnum::stringcat:
       return value_str;
     default:
       assert(false && "Unsupported distribution enum value.");
@@ -36,7 +37,8 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
       {"bigram", DistributionEnum::bigram},
       {"categorical", DistributionEnum::categorical},
       {"normal", DistributionEnum::normal},
-      {"skellam", DistributionEnum::skellam}
+      {"skellam", DistributionEnum::skellam},
+      {"stringcat", DistributionEnum::stringcat}
   };
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
   DistributionEnum dist = dist_name_to_enum.at(dist_name);
@@ -80,6 +82,18 @@ DistributionVariant cluster_prior_from_spec(
       Skellam* s = new Skellam;
       s->init_theta(prng);
       return s;
+    }
+    case DistributionEnum::stringcat: {
+      std::string delim = " ";  // Default deliminator
+      auto it = spec.distribution_args.find("delim");
+      if (it != spec.distribution_args.end()) {
+        delim = it->second;
+        assert(delim.length() == 1);
+      }
+      std::vector<std::string> strings;
+      boost::split(strings, spec.distribution_args.at("strings"),
+                   boost::is_any_of(delim));
+      return new StringCat(strings);
     }
     default:
       assert(false && "Unsupported distribution enum value.");
