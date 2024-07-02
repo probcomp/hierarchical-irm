@@ -15,7 +15,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-using T_r = Relation<bool>*;
+using T_r = NonNoisyRelation<bool>*;
 
 int main(int argc, char** argv) {
   std::string path_base = "assets/two_relations";
@@ -77,10 +77,10 @@ int main(int argc, char** argv) {
     assert(l.size() == 2);
     auto x1 = l.at(0);
     auto x2 = l.at(1);
-    auto p0 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, false, &prng);
+    auto p0 = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))->logp({x1, x2}, false, &prng);
     auto p0_irm = irm.logp({{"R1", {x1, x2}, false}}, &prng);
     assert(abs(p0 - p0_irm) < 1e-10);
-    auto p1 = std::get<T_r>(irm.relations.at("R1"))->logp({x1, x2}, true, &prng);
+    auto p1 = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))->logp({x1, x2}, true, &prng);
     auto Z = logsumexp({p0, p1});
     assert(abs(Z) < 1e-10);
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
@@ -111,8 +111,8 @@ int main(int argc, char** argv) {
   // transitioned.
   assert(abs(irx.logp_score() - irm.logp_score()) > 1e-8);
   for (const auto& r : {"R1", "R2"}) {
-    auto r1m = std::get<Relation<bool>*>(irm.relations.at(r));
-    auto r1x = std::get<Relation<bool>*>(irx.relations.at(r));
+    auto r1m = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at(r)));
+    auto r1x = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irx.relations.at(r)));
     for (const auto& [c, distribution] : r1m->clusters) {
       auto dx = reinterpret_cast<BetaBernoulli*>(r1x->clusters.at(c));
       auto dy = reinterpret_cast<BetaBernoulli*>(distribution);
@@ -135,8 +135,8 @@ int main(int argc, char** argv) {
   for (const auto& r : {"R1", "R2"}) {
     auto rm_var = irm.relations.at(r);
     auto rx_var = irx.relations.at(r);
-    T_r rm = std::get<T_r>(rm_var);
-    T_r rx = std::get<T_r>(rx_var);
+    T_r rm = reinterpret_cast<T_r>(std::get<Relation<bool>*>(rm_var));
+    T_r rx = reinterpret_cast<T_r>(std::get<Relation<bool>*>(rx_var));
     assert(rm->data == rx->data);
     assert(rm->data_r == rx->data_r);
     assert(rm->clusters.size() == rx->clusters.size());

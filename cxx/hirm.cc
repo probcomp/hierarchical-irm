@@ -54,8 +54,7 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
   int rc = relation_to_code.at(r);
   int table_current = crp.assignments.at(rc);
   RelationVariant relation = get_relation(r);
-  T_relation t_relation =
-      std::visit([](auto rel) { return rel->trel; }, relation);
+  T_relation t_relation = schema.at(r);
   auto crp_dist = crp.tables_weights_gibbs(table_current);
   std::vector<int> tables;
   std::vector<double> logps;
@@ -78,7 +77,7 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
       irm->add_relation(r, t_relation);
       std::visit(
           [&](auto rel) {
-            for (const auto& [items, value] : rel->data) {
+            for (const auto& [items, value] : rel->get_data()) {
               irm->incorporate(prng, r, items, value);
             }
           },
@@ -133,9 +132,9 @@ void HIRM::set_cluster_assignment_gibbs(
   int table_current = crp.assignments.at(rc);
   RelationVariant relation = get_relation(r);
   auto f_obs = [&](auto rel) {
-    T_relation trel = rel->trel;
+    T_relation trel = schema.at(r);
     IRM* irm = relation_to_irm(r);
-    auto observations = rel->data;
+    auto observations = rel->get_data();
     // Remove from current IRM.
     irm->remove_relation(r);
     if (irm->relations.empty()) {
