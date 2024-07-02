@@ -6,16 +6,18 @@
 #include "emissions/base.hh"
 
 // An Emission class that sometimes applies BaseEmissor and sometimes doesn't.
-// BaseEmissor must assign zero probability to <clean, dirty> pairs with 
+// BaseEmissor must assign zero probability to <clean, dirty> pairs with
 // clean == dirty.  [For example, BitFlip and Gaussian both satisfy this].
 template <typename BaseEmissor>
-class Sometimes : public Emission<typename std::tuple_element<0, typename BaseEmissor::SampleType>::type> {
+class Sometimes : public Emission<typename std::tuple_element<
+                      0, typename BaseEmissor::SampleType>::type> {
  public:
-  using SampleType = typename std::tuple_element<0, typename BaseEmissor::SampleType>::type;
+  using SampleType =
+      typename std::tuple_element<0, typename BaseEmissor::SampleType>::type;
   BetaBernoulli bb;
   BaseEmissor be;
 
-  Sometimes() {};
+  Sometimes(){};
 
   void incorporate(const std::pair<SampleType, SampleType>& x) {
     ++(this->N);
@@ -36,7 +38,7 @@ class Sometimes : public Emission<typename std::tuple_element<0, typename BaseEm
   double logp(const std::pair<SampleType, SampleType>& x) const {
     if (x.first != x.second) {
       return bb.logp(true) + be.logp(x);
-    } 
+    }
     return bb.logp(false);
   }
 

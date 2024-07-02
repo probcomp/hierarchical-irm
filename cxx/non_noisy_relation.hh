@@ -15,8 +15,8 @@
 #include "util_hash.hh"
 #include "util_math.hh"
 
-// T_non_noisy_relation is the text we get from reading a line of the schema file;
-// NonNoisyRelation is the object that does the work.
+// T_non_noisy_relation is the text we get from reading a line of the schema
+// file; NonNoisyRelation is the object that does the work.
 class T_non_noisy_relation {
  public:
   // The relation is a map from the domains to the space .distribution
@@ -41,8 +41,9 @@ class NonNoisyRelation : public Relation<T> {
   // Distribution or Emission spec over the relation's codomain.
   const std::variant<DistributionSpec, EmissionSpec> prior_spec;
   // map from cluster multi-index to Distribution pointer
-  std::unordered_map<
-      const std::vector<int>, Distribution<ValueType>*, VectorIntHash> clusters;
+  std::unordered_map<const std::vector<int>, Distribution<ValueType>*,
+                     VectorIntHash>
+      clusters;
   // map from item to observed data
   std::unordered_map<const T_items, ValueType, H_items> data;
   // map from domain name to reverse map from item to
@@ -52,8 +53,10 @@ class NonNoisyRelation : public Relation<T> {
       std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>
       data_r;
 
-  NonNoisyRelation(const std::string& name, const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
-                   const std::vector<Domain*>& domains)
+  NonNoisyRelation(
+      const std::string& name,
+      const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
+      const std::vector<Domain*>& domains)
       : name(name), domains(domains), prior_spec(prior_spec) {
     assert(!domains.empty());
     assert(!name.empty());
@@ -70,8 +73,14 @@ class NonNoisyRelation : public Relation<T> {
   }
 
   Distribution<ValueType>* make_new_distribution(std::mt19937* prng) const {
-    auto var_to_dist = [&](auto dist_variant) {return std::visit([&](auto v) {return reinterpret_cast<Distribution<ValueType>*>(v);}, dist_variant);};
-    auto spec_to_dist = [&](auto spec) {return var_to_dist(cluster_prior_from_spec(spec, prng));};
+    auto var_to_dist = [&](auto dist_variant) {
+      return std::visit(
+          [&](auto v) { return reinterpret_cast<Distribution<ValueType>*>(v); },
+          dist_variant);
+    };
+    auto spec_to_dist = [&](auto spec) {
+      return var_to_dist(cluster_prior_from_spec(spec, prng));
+    };
     return std::visit(spec_to_dist, prior_spec);
   }
 
@@ -124,8 +133,9 @@ class NonNoisyRelation : public Relation<T> {
     }
     return z;
   }
-  
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z, const ValueType& value) const {
+
+  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z,
+                               const ValueType& value) const {
     if (clusters.contains(z)) {
       return clusters.at(z)->logp(value);
     }
@@ -189,8 +199,8 @@ class NonNoisyRelation : public Relation<T> {
     return logp;
   }
 
-  double logp_gibbs_approx(const Domain& domain, const T_item& item,
-                           int table, std::mt19937* prng) {
+  double logp_gibbs_approx(const Domain& domain, const T_item& item, int table,
+                           std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
     return table_current == table
                ? logp_gibbs_approx_current(domain, item)
@@ -231,15 +241,17 @@ class NonNoisyRelation : public Relation<T> {
     return logp0 - logp1;
   }
 
-  double logp_gibbs_exact_variant(
-      const Domain& domain, const T_item& item, int table,
-      const std::vector<T_items>& items_list, std::mt19937* prng) {
+  double logp_gibbs_exact_variant(const Domain& domain, const T_item& item,
+                                  int table,
+                                  const std::vector<T_items>& items_list,
+                                  std::mt19937* prng) {
     assert(!items_list.empty());
     T_items z =
         get_cluster_assignment_gibbs(items_list[0], domain, item, table);
 
     Distribution<ValueType>* prior = make_new_distribution(prng);
-    Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
+    Distribution<ValueType>* cluster =
+        clusters.contains(z) ? clusters.at(z) : prior;
     double logp0 = cluster->logp_score();
     for (const T_items& items : items_list) {
       // assert(z == get_cluster_assignment_gibbs(items, domain, item, table));
@@ -256,9 +268,9 @@ class NonNoisyRelation : public Relation<T> {
     return logp1 - logp0;
   }
 
-  std::vector<double> logp_gibbs_exact(
-      const Domain& domain, const T_item& item, std::vector<int> tables,
-      std::mt19937* prng) {
+  std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
+                                       std::vector<int> tables,
+                                       std::mt19937* prng) {
     auto cluster_to_items_list = get_cluster_to_items_list(domain, item);
     int table_current = domain.get_cluster_assignment(item);
     std::vector<double> logps;
@@ -267,10 +279,10 @@ class NonNoisyRelation : public Relation<T> {
     for (const int& table : tables) {
       double lp_table = 0;
       for (const auto& [z, items_list] : cluster_to_items_list) {
-        lp_cluster =
-            (table == table_current)
-                ? logp_gibbs_exact_current(items_list)
-                : logp_gibbs_exact_variant(domain, item, table, items_list, prng);
+        lp_cluster = (table == table_current)
+                         ? logp_gibbs_exact_current(items_list)
+                         : logp_gibbs_exact_variant(domain, item, table,
+                                                    items_list, prng);
         lp_table += lp_cluster;
       }
       logps.push_back(lp_table);
@@ -324,7 +336,8 @@ class NonNoisyRelation : public Relation<T> {
         logp_w += wi;
       }
       Distribution<ValueType>* prior = make_new_distribution(prng);
-      Distribution<ValueType>* cluster = clusters.contains(z) ? clusters.at(z) : prior;
+      Distribution<ValueType>* cluster =
+          clusters.contains(z) ? clusters.at(z) : prior;
       double logp_z = cluster->logp(value);
       double logp_zw = logp_z + logp_w;
       logps.push_back(logp_zw);
@@ -374,21 +387,20 @@ class NonNoisyRelation : public Relation<T> {
     return data_r.at(domain.name).contains(item);
   }
 
-  const std::vector<Domain*>& get_domains() const {
-    return domains;
-  }
+  const std::vector<Domain*>& get_domains() const { return domains; }
 
   const ValueType& get_value(const T_items& items) const {
     return data.at(items);
   }
 
-  const std::unordered_map<const T_items, ValueType, H_items>& get_data() const {
+  const std::unordered_map<const T_items, ValueType, H_items>& get_data()
+      const {
     return data;
   }
-  
+
   void transition_cluster_hparams(std::mt19937* prng, int num_theta_steps) {
     for (const auto& [c, distribution] : clusters) {
-      for (int i = 0; i < num_theta_steps; ++i ) {
+      for (int i = 0; i < num_theta_steps; ++i) {
         distribution->transition_theta(prng);
       }
       distribution->transition_hyperparameters(prng);

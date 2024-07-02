@@ -1,14 +1,14 @@
 // Copyright 2024
 // See LICENSE.txt
 
+#include "relation_variant.hh"
+
 #include <cassert>
 #include <random>
 #include <type_traits>
 
 #include "domain.hh"
 #include "non_noisy_relation.hh"
-#include "relation_variant.hh"
-
 
 // TODO(emilyaf): Implement this for NoisyRelation.
 RelationVariant relation_from_spec(const std::string& name,
@@ -34,10 +34,11 @@ RelationVariant relation_from_spec(const std::string& name,
   //    the right kind of Relation.
   std::visit(
       [&](const auto& v) {
-        rv = new NonNoisyRelation<typename
-            std::remove_reference_t<decltype(*v)>::SampleType>(
-                name, dist_spec, domains);
-      }, dv);
+        rv = new NonNoisyRelation<
+            typename std::remove_reference_t<decltype(*v)>::SampleType>(
+            name, dist_spec, domains);
+      },
+      dv);
 
   return rv;
 }

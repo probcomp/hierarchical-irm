@@ -1,13 +1,12 @@
 // Copyright 2021 MIT Probabilistic Computing Project
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#include "hirm.hh"
-
 #include <cstdio>
 #include <ctime>
 #include <iostream>
 
 #include "cxxopts.hpp"
+#include "hirm.hh"
 #include "irm.hh"
 #include "util_io.hh"
 

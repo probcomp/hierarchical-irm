@@ -12,7 +12,6 @@
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 
-
 class HIRM {
  public:
   T_schema schema;                     // schema of relations
@@ -49,7 +48,8 @@ class HIRM {
 
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-          observations, std::mt19937* prng);
+          observations,
+      std::mt19937* prng);
 
   double logp_score() const;
 

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   BOOST_TEST(z2[1] == 191);
   BOOST_TEST(z2[2] == 0);
 
-  double lpg __attribute__ ((unused));
+  double lpg __attribute__((unused));
   lpg = R1.logp_gibbs_approx(D1, 0, 1, &prng);
   lpg = R1.logp_gibbs_approx(D1, 0, 0, &prng);
   lpg = R1.logp_gibbs_approx(D1, 0, 10, &prng);

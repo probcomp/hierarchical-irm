@@ -29,8 +29,7 @@ void IRM::incorporate(std::mt19937* prng, const std::string& r,
   std::visit(
       [&](auto rel) {
         auto v = std::get<
-            typename std::remove_reference_t<decltype(*rel)>::ValueType>(
-                value);
+            typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
         rel->incorporate(prng, items, v);
       },
       relations.at(r));
@@ -105,18 +104,18 @@ void IRM::transition_cluster_assignment_item(std::mt19937* prng,
 
 double IRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-    observations, std::mt19937* prng) {
+        observations,
+    std::mt19937* prng) {
   std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
       relation_items_seen;
-  std::unordered_map<std::string, std::unordered_set<T_item>>
-      domain_item_seen;
+  std::unordered_map<std::string, std::unordered_set<T_item>> domain_item_seen;
   std::vector<std::tuple<std::string, T_item>> item_universe;
   std::vector<std::vector<int>> index_universe;
   std::vector<std::vector<double>> weight_universe;
   std::unordered_map<
       std::string,
       std::unordered_map<T_item, std::tuple<int, std::vector<int>>>>
-          cluster_universe;
+      cluster_universe;
   // Compute all cluster combinations.
   for (const auto& [r, items, value] : observations) {
     // Assert observation is unique.
@@ -124,13 +123,13 @@ double IRM::logp(
     relation_items_seen[r].insert(items);
     // Process each (domain, item) in the observations.
     RelationVariant relation = relations.at(r);
-    int arity =
-        std::visit([](auto rel) { return rel->get_domains().size(); }, relation);
+    int arity = std::visit([](auto rel) { return rel->get_domains().size(); },
+                           relation);
     assert(std::ssize(items) == arity);
     for (int i = 0; i < arity; ++i) {
       // Skip if (domain, item) processed.
-      Domain* domain =
-          std::visit([&](auto rel) { return rel->get_domains().at(i); }, relation);
+      Domain* domain = std::visit(
+          [&](auto rel) { return rel->get_domains().at(i); }, relation);
       T_item item = items.at(i);
       if (domain_item_seen[domain->name].contains(item)) {
         assert(cluster_universe[domain->name].contains(item));
@@ -195,8 +194,9 @@ double IRM::logp(
         T_item t = t_list.at(indexes.at(loc));
         z.push_back(t);
       }
-      auto v = std::get<
-          typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
+      auto v =
+          std::get<typename std::remove_reference_t<decltype(*rel)>::ValueType>(
+              value);
       return rel->cluster_or_prior_logp(prng, z, v);
     };
     for (const auto& [r, items, value] : observations) {
@@ -236,8 +236,7 @@ void IRM::add_relation(const std::string& name, const T_relation& relation) {
     domain_to_relations.at(d).insert(name);
     doms.push_back(domains.at(d));
   }
-  relations[name] =
-      relation_from_spec(name, relation.distribution_spec, doms);
+  relations[name] = relation_from_spec(name, relation.distribution_spec, doms);
   schema[name] = relation;
 }
 
@@ -261,7 +260,6 @@ void IRM::remove_relation(const std::string& name) {
   relations.erase(name);
   schema.erase(name);
 }
-
 
 #define GET_ELAPSED(t) double(clock() - t) / CLOCKS_PER_SEC
 
@@ -312,4 +310,3 @@ void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
     REPORT_SCORE(verbose, t, t_total, irm);
   }
 }
-

@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   BOOST_TEST(z1[1] == 0);
   BOOST_TEST(z1[2] == 0);
 
-  double lpg __attribute__ ((unused));
+  double lpg __attribute__((unused));
   lpg = NR1.logp_gibbs_approx(D1, 0, 1, &prng);
   lpg = NR1.logp_gibbs_approx(D1, 0, 0, &prng);
   lpg = NR1.logp_gibbs_approx(D1, 0, 10, &prng);
@@ -71,5 +71,4 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   lpg = NR2.logp_gibbs_approx(D2, 2, 0, &prng);
   NR2.set_cluster_assignment_gibbs(D3, 3, 1, &prng);
   D1.set_cluster_assignment_gibbs(0, 1);
-
 }

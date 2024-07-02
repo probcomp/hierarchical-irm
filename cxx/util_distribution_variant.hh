@@ -24,9 +24,15 @@
 #include "emissions/sometimes.hh"
 
 enum class DistributionEnum {
-  bernoulli, bigram, categorical, normal, skellam, stringcat };
+  bernoulli,
+  bigram,
+  categorical,
+  normal,
+  skellam,
+  stringcat
+};
 
-enum class EmissionEnum { sometimes_bitflip, gaussian, simple_string};
+enum class EmissionEnum { sometimes_bitflip, gaussian, simple_string };
 
 struct DistributionSpec {
   DistributionEnum distribution;

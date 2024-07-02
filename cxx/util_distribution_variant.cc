@@ -1,17 +1,18 @@
 // Copyright 2024
 // See LICENSE.txt
 
+#include "util_distribution_variant.hh"
+
+#include <boost/algorithm/string.hpp>
 #include <cassert>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
-#include "util_distribution_variant.hh"
+
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
 #include "distributions/dirichlet_categorical.hh"
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
 #include "distributions/stringcat.hh"
-
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
@@ -42,8 +43,7 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
       {"categorical", DistributionEnum::categorical},
       {"normal", DistributionEnum::normal},
       {"skellam", DistributionEnum::skellam},
-      {"stringcat", DistributionEnum::stringcat}
-  };
+      {"stringcat", DistributionEnum::stringcat}};
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
   DistributionEnum dist = dist_name_to_enum.at(dist_name);
 
@@ -68,8 +68,8 @@ DistributionSpec parse_distribution_spec(const std::string& dist_str) {
   }
 }
 
-DistributionVariant cluster_prior_from_spec(
-    const DistributionSpec& spec, std::mt19937* prng) {
+DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
+                                            std::mt19937* prng) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;
@@ -104,8 +104,8 @@ DistributionVariant cluster_prior_from_spec(
   }
 }
 
-EmissionVariant cluster_prior_from_spec(
-    const EmissionSpec& spec, std::mt19937* prng) {
+EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
+                                        std::mt19937* prng) {
   switch (spec.emission) {
     case EmissionEnum::sometimes_bitflip:
       return new Sometimes<BitFlip>;

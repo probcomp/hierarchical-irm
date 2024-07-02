@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "distributions/base.hh"
-#include "emissions/base.hh"
 #include "domain.hh"
+#include "emissions/base.hh"
 #include "non_noisy_relation.hh"
 #include "relation.hh"
 #include "util_distribution_variant.hh"
@@ -53,9 +53,11 @@ class NoisyRelation : public Relation<T> {
   NonNoisyRelation<std::pair<ValueType, ValueType>> emission_relation;
 
   NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
-           const std::vector<Domain*>& domains, Relation<T>* base_relation)
-      : name(name), domains(domains), base_relation(base_relation), emission_relation(name + "_emission", emission_spec, domains) {
-  }
+                const std::vector<Domain*>& domains, Relation<T>* base_relation)
+      : name(name),
+        domains(domains),
+        base_relation(base_relation),
+        emission_relation(name + "_emission", emission_spec, domains) {}
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
     data[items] = value;
@@ -67,14 +69,14 @@ class NoisyRelation : public Relation<T> {
     emission_relation.unincorporate(items);
   }
 
-  double logp_gibbs_approx(const Domain& domain, const T_item& item,
-                           int table, std::mt19937* prng) {
+  double logp_gibbs_approx(const Domain& domain, const T_item& item, int table,
+                           std::mt19937* prng) {
     return emission_relation.logp_gibbs_approx(domain, item, table, prng);
   }
 
-  std::vector<double> logp_gibbs_exact(
-      const Domain& domain, const T_item& item, std::vector<int> tables,
-      std::mt19937* prng) {
+  std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
+                                       std::vector<int> tables,
+                                       std::mt19937* prng) {
     return emission_relation.logp_gibbs_exact(domain, item, tables, prng);
   }
 
@@ -83,9 +85,7 @@ class NoisyRelation : public Relation<T> {
     return emission_relation.logp(items, std::make_pair(_val, value), prng);
   }
 
-  double logp_score() const {
-    return emission_relation.logp_score();
-  }
+  double logp_score() const { return emission_relation.logp_score(); }
 
   void set_cluster_assignment_gibbs(const Domain& domain, const T_item& item,
                                     int table, std::mt19937* prng) {
@@ -95,18 +95,17 @@ class NoisyRelation : public Relation<T> {
   bool has_observation(const Domain& domain, const T_item& item) const {
     return emission_relation.has_observation(domain, item);
   }
-  
+
   const ValueType& get_value(const T_items& items) const {
     return std::get<0>(emission_relation.get_value(items));
   }
-  
-  const std::unordered_map<const T_items, ValueType, H_items>& get_data() const {
+
+  const std::unordered_map<const T_items, ValueType, H_items>& get_data()
+      const {
     return data;
   }
 
-  const std::vector<Domain*>& get_domains() const {
-    return domains;
-  }
+  const std::vector<Domain*>& get_domains() const { return domains; }
 
   const ValueType get_base_value(const T_items& items) const {
     size_t base_arity = base_relation->get_domains().size();
@@ -122,13 +121,16 @@ class NoisyRelation : public Relation<T> {
     return emission_relation.get_cluster_assignment(items);
   }
 
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z, const ValueType& value) const {
+  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z,
+                               const ValueType& value) const {
     const ValueType base_value = get_base_value(z);
     if (emission_relation.clusters.contains(z)) {
-      return emission_relation.clusters.at(z)->logp(std::make_pair(base_value, value));
+      return emission_relation.clusters.at(z)->logp(
+          std::make_pair(base_value, value));
     }
     auto emission_prior = emission_relation.make_new_distribution(prng);
-    double emission_logp = emission_prior->logp(std::make_pair(base_value, value));
+    double emission_logp =
+        emission_prior->logp(std::make_pair(base_value, value));
     delete emission_prior;
     return emission_logp;
   }
