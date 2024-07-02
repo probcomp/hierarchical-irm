@@ -53,9 +53,6 @@ using DistributionVariant =
 using EmissionVariant =
     std::variant<Sometimes<BitFlip>*, GaussianEmission*, SimpleStringEmission*>;
 
-using EmissionVariant =
-    std::variant<Sometimes<BitFlip>*, GaussianEmission*, SimpleStringEmission*>;
-
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution);
 
