@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
   }
   for (auto const& kv : irm.relations) {
     printf("%s ", kv.first.c_str());
-    for (auto const d : std::visit([&](auto r) {return r->domains;}, kv.second)) {
+    for (auto const d : std::visit([&](auto r) {return r->get_domains();}, kv.second)) {
       printf("%s ", d->name.c_str());
     }
     printf("\n");
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
   std::string path_clusters = "assets/animals.binary.irm";
   to_txt(path_clusters, irm3, encoding);
 
-  auto rel = std::get<Relation<bool>*>(irm3.relations.at("has"));
+  auto rel = reinterpret_cast<NonNoisyRelation<bool>*>(std::get<Relation<bool>*>(irm3.relations.at("has")));
   auto& enc = std::get<0>(encoding);
   auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0, &prng);
   auto lp1 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 1, &prng);
@@ -128,8 +128,8 @@ int main(int argc, char** argv) {
     assert(d3->crp.alpha == d4->crp.alpha);
   }
   for (const auto& r : {"has"}) {
-    auto r3 = std::get<Relation<bool>*>(irm3.relations.at(r));
-    auto r4 = std::get<Relation<bool>*>(irm4.relations.at(r));
+    auto r3 = reinterpret_cast<NonNoisyRelation<bool>*>(std::get<Relation<bool>*>(irm3.relations.at(r)));
+    auto r4 = reinterpret_cast<NonNoisyRelation<bool>*>(std::get<Relation<bool>*>(irm4.relations.at(r)));
     assert(r3->data == r4->data);
     assert(r3->data_r == r4->data_r);
     assert(r3->clusters.size() == r4->clusters.size());

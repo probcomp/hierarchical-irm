@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   size_t n_obs_unary = 0;
   for (const auto& [z, irm] : hirm.irms) {
     for (const auto& [r, relation] : irm->relations) {
-      n_obs_unary += std::visit([](const auto r) {return r->data.size();}, relation);
+      n_obs_unary += std::visit([](const auto r) {return r->get_data().size();}, relation);
     }
   }
   assert(n_obs_unary == std::size(observations_unary));
@@ -137,8 +137,8 @@ int main(int argc, char** argv) {
     }
     // Check relations agree.
     for (const auto& [r, rm_var] : irm->relations) {
-      auto rx = std::get<Relation<bool>*>(irx->relations.at(r));
-      auto rm = std::get<Relation<bool>*>(rm_var);
+      auto rx = reinterpret_cast<NonNoisyRelation<bool>*>(std::get<Relation<bool>*>(irx->relations.at(r)));
+      auto rm = reinterpret_cast<NonNoisyRelation<bool>*>(std::get<Relation<bool>*>(rm_var));
       assert(rm->data == rx->data);
       assert(rm->data_r == rx->data_r);
       assert(rm->clusters.size() == rx->clusters.size());

@@ -34,7 +34,10 @@ class Sometimes : public Emission<typename std::tuple_element<0, typename BaseEm
   }
 
   double logp(const std::pair<SampleType, SampleType>& x) const {
-    return bb.logp(x.first != x.second) + be.logp(x);
+    if (x.first != x.second) {
+      return bb.logp(true) + be.logp(x);
+    } 
+    return bb.logp(false);
   }
 
   double logp_score() const { return bb.logp_score() + be.logp_score(); }

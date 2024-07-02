@@ -1,6 +1,19 @@
 licenses(["notice"])
 
 cc_library(
+    name = "emissions",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        ":get_emission",
+        ":bitflip",
+        ":gaussian",
+        ":simple_string",
+        ":sometimes",
+    ],
+)
+
+cc_library(
     name = "base",
     hdrs = ["base.hh"],
     visibility = ["//:__subpackages__"],
