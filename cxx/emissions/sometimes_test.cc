@@ -16,6 +16,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(sbf.N == 0);
   sbf.incorporate(std::make_pair<bool, bool>(true, false));
   BOOST_TEST(sbf.logp_score() < 0.0);
+  BOOST_TEST(exp(sbf.logp(std::make_pair<bool, bool>(true, false))) + exp(sbf.logp(std::make_pair<bool, bool>(true, true))) == 1.0);
   BOOST_TEST(sbf.N == 1);
   sbf.unincorporate(std::make_pair<bool, bool>(true, false));
   BOOST_TEST(sbf.logp_score() == orig_lp);

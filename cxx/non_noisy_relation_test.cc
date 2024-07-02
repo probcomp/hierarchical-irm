@@ -2,7 +2,7 @@
 
 #define BOOST_TEST_MODULE test Relation
 
-#include "relation.hh"
+#include "non_noisy_relation.hh"
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
   DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
-  Relation<bool> R1("R1", spec, {&D1, &D2, &D3});
+  NonNoisyRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
   R1.incorporate(&prng, {3, 1, 3}, 1);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   BOOST_TEST(db->N == 1);
 
   DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
-  Relation<std::string> R2("R1", bigram_spec, {&D2, &D3});
+  NonNoisyRelation<std::string> R2("R1", bigram_spec, {&D2, &D3});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");

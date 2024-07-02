@@ -125,12 +125,12 @@ double IRM::logp(
     // Process each (domain, item) in the observations.
     RelationVariant relation = relations.at(r);
     int arity =
-        std::visit([](auto rel) { return rel->domains.size(); }, relation);
+        std::visit([](auto rel) { return rel->get_domains().size(); }, relation);
     assert(std::ssize(items) == arity);
     for (int i = 0; i < arity; ++i) {
       // Skip if (domain, item) processed.
       Domain* domain =
-          std::visit([&](auto rel) { return rel->domains.at(i); }, relation);
+          std::visit([&](auto rel) { return rel->get_domains().at(i); }, relation);
       T_item item = items.at(i);
       if (domain_item_seen[domain->name].contains(item)) {
         assert(cluster_universe[domain->name].contains(item));
@@ -188,8 +188,8 @@ double IRM::logp(
                       const ObservationVariant& value) -> double {
       std::vector<int> z;
       z.reserve(domains.size());
-      for (int i = 0; i < std::ssize(rel->domains); ++i) {
-        Domain* domain = rel->domains.at(i);
+      for (int i = 0; i < std::ssize(rel->get_domains()); ++i) {
+        Domain* domain = rel->get_domains().at(i);
         T_item item = items.at(i);
         auto& [loc, t_list] = cluster_universe.at(domain->name).at(item);
         T_item t = t_list.at(indexes.at(loc));
@@ -197,16 +197,7 @@ double IRM::logp(
       }
       auto v = std::get<
           typename std::remove_reference_t<decltype(*rel)>::ValueType>(value);
-      if (rel->clusters.contains(z)) {
-        return rel->clusters.at(z)->logp(v);
-      }
-      DistributionVariant prior = cluster_prior_from_spec(rel->dist_spec, prng);
-      return std::visit(
-          [&](const auto& dist_variant) {
-            auto v2 = std::get<
-                typename std::remove_reference_t<decltype(
-                    *dist_variant)>::SampleType>(value);
-            return dist_variant->logp(v2); }, prior);
+      return rel->cluster_or_prior_logp(prng, z, v);
     };
     for (const auto& [r, items, value] : observations) {
       auto g = std::bind(f_logp, std::placeholders::_1, items, value);
@@ -253,7 +244,7 @@ void IRM::add_relation(const std::string& name, const T_relation& relation) {
 void IRM::remove_relation(const std::string& name) {
   std::unordered_set<std::string> ds;
   auto rel_domains =
-      std::visit([](auto r) { return r->domains; }, relations.at(name));
+      std::visit([](auto r) { return r->get_domains(); }, relations.at(name));
   for (const Domain* const domain : rel_domains) {
     ds.insert(domain->name);
   }
@@ -308,14 +299,9 @@ void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
   for (const auto& [r, relation] : irm->relations) {
     std::visit(
         [&](auto r) {
-          for (const auto& [c, distribution] : r->clusters) {
-            clock_t t = clock();
-            for (int i = 0; i < num_theta_steps; ++i ) {
-              distribution->transition_theta(prng);
-            }
-            distribution->transition_hyperparameters(prng);
-            REPORT_SCORE(verbose, t, t_total, irm);
-          }
+          clock_t t = clock();
+          r->transition_cluster_hparams(prng, num_theta_steps);
+          REPORT_SCORE(verbose, t, t_total, irm);
         },
         relation);
   }
