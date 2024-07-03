@@ -15,7 +15,7 @@
 #include "util_io.hh"
 #include "util_math.hh"
 
-using T_r = NonNoisyRelation<bool>*;
+using T_r = CleanRelation<bool>*;
 
 int main(int argc, char** argv) {
   std::string path_base = "assets/two_relations";
@@ -77,10 +77,14 @@ int main(int argc, char** argv) {
     assert(l.size() == 2);
     auto x1 = l.at(0);
     auto x2 = l.at(1);
-    auto p0 = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))->logp({x1, x2}, false, &prng);
+    auto p0 =
+        reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))
+            ->logp({x1, x2}, false, &prng);
     auto p0_irm = irm.logp({{"R1", {x1, x2}, false}}, &prng);
     assert(abs(p0 - p0_irm) < 1e-10);
-    auto p1 = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))->logp({x1, x2}, true, &prng);
+    auto p1 =
+        reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))
+            ->logp({x1, x2}, true, &prng);
     auto Z = logsumexp({p0, p1});
     assert(abs(Z) < 1e-10);
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
@@ -91,10 +95,14 @@ int main(int argc, char** argv) {
     auto x1 = l.at(0);
     auto x2 = l.at(1);
     auto x3 = l.at(2);
-    auto p00 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, false}}, &prng);
-    auto p01 = irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, true}}, &prng);
-    auto p10 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}}, &prng);
-    auto p11 = irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}}, &prng);
+    auto p00 =
+        irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, false}}, &prng);
+    auto p01 =
+        irm.logp({{"R1", {x1, x2}, false}, {"R1", {x1, x3}, true}}, &prng);
+    auto p10 =
+        irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}}, &prng);
+    auto p11 =
+        irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}}, &prng);
     auto Z = logsumexp({p00, p01, p10, p11});
     assert(abs(Z) < 1e-10);
   }
@@ -111,8 +119,10 @@ int main(int argc, char** argv) {
   // transitioned.
   assert(abs(irx.logp_score() - irm.logp_score()) > 1e-8);
   for (const auto& r : {"R1", "R2"}) {
-    auto r1m = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at(r)));
-    auto r1x = reinterpret_cast<T_r>(std::get<Relation<bool>*>(irx.relations.at(r)));
+    auto r1m =
+        reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at(r)));
+    auto r1x =
+        reinterpret_cast<T_r>(std::get<Relation<bool>*>(irx.relations.at(r)));
     for (const auto& [c, distribution] : r1m->clusters) {
       auto dx = reinterpret_cast<BetaBernoulli*>(r1x->clusters.at(c));
       auto dy = reinterpret_cast<BetaBernoulli*>(distribution);

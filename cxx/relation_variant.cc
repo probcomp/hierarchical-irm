@@ -7,8 +7,8 @@
 #include <random>
 #include <type_traits>
 
+#include "clean_relation.hh"
 #include "domain.hh"
-#include "non_noisy_relation.hh"
 
 // TODO(emilyaf): Implement this for NoisyRelation.
 RelationVariant relation_from_spec(const std::string& name,
@@ -34,7 +34,7 @@ RelationVariant relation_from_spec(const std::string& name,
   //    the right kind of Relation.
   std::visit(
       [&](const auto& v) {
-        rv = new NonNoisyRelation<
+        rv = new CleanRelation<
             typename std::remove_reference_t<decltype(*v)>::SampleType>(
             name, dist_spec, domains);
       },

@@ -9,10 +9,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "clean_relation.hh"
 #include "distributions/base.hh"
 #include "domain.hh"
 #include "emissions/base.hh"
-#include "non_noisy_relation.hh"
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 #include "util_hash.hh"
@@ -50,7 +50,7 @@ class NoisyRelation : public Relation<T> {
   // Base relation for "" values.
   const Relation<ValueType>* base_relation;
   // A Relation for the Emission that models noisy values given  values.
-  NonNoisyRelation<std::pair<ValueType, ValueType>> emission_relation;
+  CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
   NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
                 const std::vector<Domain*>& domains, Relation<T>* base_relation)

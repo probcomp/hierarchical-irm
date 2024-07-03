@@ -6,12 +6,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "non_noisy_relation.hh"
+#include "clean_relation.hh"
 #include "relation_variant.hh"
 #include "util_distribution_variant.hh"
 
 // TODO(emilyaf): Support noisy relations.
-using T_relation = T_non_noisy_relation;
+using T_relation = T_clean_relation;
 
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;

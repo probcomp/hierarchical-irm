@@ -15,9 +15,9 @@
 #include "util_hash.hh"
 #include "util_math.hh"
 
-// T_non_noisy_relation is the text we get from reading a line of the schema
-// file; NonNoisyRelation is the object that does the work.
-class T_non_noisy_relation {
+// T_clean_relation is the text we get from reading a line of the schema
+// file; CleanRelation is the object that does the work.
+class T_clean_relation {
  public:
   // The relation is a map from the domains to the space .distribution
   // is a distribution over.
@@ -30,7 +30,7 @@ class T_non_noisy_relation {
 };
 
 template <typename T>
-class NonNoisyRelation : public Relation<T> {
+class CleanRelation : public Relation<T> {
  public:
   typedef T ValueType;
 
@@ -53,10 +53,9 @@ class NonNoisyRelation : public Relation<T> {
       std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>
       data_r;
 
-  NonNoisyRelation(
-      const std::string& name,
-      const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
-      const std::vector<Domain*>& domains)
+  CleanRelation(const std::string& name,
+                const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
+                const std::vector<Domain*>& domains)
       : name(name), domains(domains), prior_spec(prior_spec) {
     assert(!domains.empty());
     assert(!name.empty());
@@ -66,7 +65,7 @@ class NonNoisyRelation : public Relation<T> {
     }
   }
 
-  ~NonNoisyRelation() {
+  ~CleanRelation() {
     for (auto [z, cluster] : clusters) {
       delete cluster;
     }
@@ -408,6 +407,6 @@ class NonNoisyRelation : public Relation<T> {
   }
 
   // Disable copying.
-  NonNoisyRelation& operator=(const NonNoisyRelation&) = delete;
-  NonNoisyRelation(const NonNoisyRelation&) = delete;
+  CleanRelation& operator=(const CleanRelation&) = delete;
+  CleanRelation(const CleanRelation&) = delete;
 };

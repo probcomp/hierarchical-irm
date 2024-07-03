@@ -8,10 +8,10 @@
 #include <iostream>
 #include <random>
 
+#include "clean_relation.hh"
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
 #include "domain.hh"
-#include "non_noisy_relation.hh"
 
 namespace tt = boost::test_tools;
 
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
   DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
-  NonNoisyRelation<bool> R1("R1", spec, {&D1, &D2});
+  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, 1);
   R1.incorporate(&prng, {1, 1}, 1);
   R1.incorporate(&prng, {3, 1}, 1);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   NR1.set_cluster_assignment_gibbs(D1, 0, 1, &prng);
 
   DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
-  NonNoisyRelation<std::string> R2("R2", bigram_spec, {&D2, &D3});
+  CleanRelation<std::string> R2("R2", bigram_spec, {&D2, &D3});
   EmissionSpec str_emspec = EmissionSpec(EmissionEnum::simple_string);
   NoisyRelation<std::string> NR2("NR2", str_emspec, {&D2, &D3}, &R2);
 

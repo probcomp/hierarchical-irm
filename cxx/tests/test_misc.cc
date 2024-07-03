@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
   std::string path_clusters = "assets/animals.binary.irm";
   to_txt(path_clusters, irm3, encoding);
 
-  auto rel = reinterpret_cast<NonNoisyRelation<bool>*>(
+  auto rel = reinterpret_cast<CleanRelation<bool>*>(
       std::get<Relation<bool>*>(irm3.relations.at("has")));
   auto& enc = std::get<0>(encoding);
   auto lp0 = rel->logp({enc["animal"]["tail"], enc["animal"]["bat"]}, 0, &prng);
@@ -132,9 +132,9 @@ int main(int argc, char** argv) {
     assert(d3->crp.alpha == d4->crp.alpha);
   }
   for (const auto& r : {"has"}) {
-    auto r3 = reinterpret_cast<NonNoisyRelation<bool>*>(
+    auto r3 = reinterpret_cast<CleanRelation<bool>*>(
         std::get<Relation<bool>*>(irm3.relations.at(r)));
-    auto r4 = reinterpret_cast<NonNoisyRelation<bool>*>(
+    auto r4 = reinterpret_cast<CleanRelation<bool>*>(
         std::get<Relation<bool>*>(irm4.relations.at(r)));
     assert(r3->data == r4->data);
     assert(r3->data_r == r4->data_r);

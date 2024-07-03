@@ -138,9 +138,9 @@ int main(int argc, char** argv) {
     }
     // Check relations agree.
     for (const auto& [r, rm_var] : irm->relations) {
-      auto rx = reinterpret_cast<NonNoisyRelation<bool>*>(
+      auto rx = reinterpret_cast<CleanRelation<bool>*>(
           std::get<Relation<bool>*>(irx->relations.at(r)));
-      auto rm = reinterpret_cast<NonNoisyRelation<bool>*>(
+      auto rm = reinterpret_cast<CleanRelation<bool>*>(
           std::get<Relation<bool>*>(rm_var));
       assert(rm->data == rx->data);
       assert(rm->data_r == rx->data_r);
