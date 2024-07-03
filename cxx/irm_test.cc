@@ -3,17 +3,20 @@
 #define BOOST_TEST_MODULE test IRM
 
 #include "irm.hh"
-#include "util_distribution_variant.hh"
 
 #include <boost/test/included/unit_test.hpp>
+
+#include "util_distribution_variant.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_irm) {
   std::map<std::string, T_relation> schema1{
-      {"R1", T_relation{{"D1", "D1"}, DistributionSpec {DistributionEnum::bernoulli}}},
-      {"R2", T_relation{{"D1", "D2"}, DistributionSpec {DistributionEnum::normal}}},
-      {"R3", T_relation{{"D3", "D1"}, DistributionSpec {DistributionEnum::bigram}}}
-  };
+      {"R1",
+       T_relation{{"D1", "D1"}, DistributionSpec{DistributionEnum::bernoulli}}},
+      {"R2",
+       T_relation{{"D1", "D2"}, DistributionSpec{DistributionEnum::normal}}},
+      {"R3",
+       T_relation{{"D3", "D1"}, DistributionSpec{DistributionEnum::bigram}}}};
   IRM irm(schema1);
 
   BOOST_TEST(irm.logp_score() == 0.0);

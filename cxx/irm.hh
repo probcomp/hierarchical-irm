@@ -6,9 +6,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "relation.hh"
+#include "clean_relation.hh"
 #include "relation_variant.hh"
 #include "util_distribution_variant.hh"
+
+// TODO(emilyaf): Support noisy relations.
+using T_relation = T_clean_relation;
 
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;
@@ -41,7 +44,8 @@ class IRM {
                                           const T_item& item);
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-          observations, std::mt19937* prng);
+          observations,
+      std::mt19937* prng);
 
   double logp_score() const;
 
@@ -53,7 +57,6 @@ class IRM {
   IRM& operator=(const IRM&) = delete;
   IRM(const IRM&) = delete;
 };
-
 
 // Run a single step of inference on an IRM model.
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,

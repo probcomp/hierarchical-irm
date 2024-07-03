@@ -2,7 +2,7 @@
 
 #define BOOST_TEST_MODULE test Relation
 
-#include "relation.hh"
+#include "clean_relation.hh"
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
@@ -13,7 +13,7 @@
 
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_relation) {
+BOOST_AUTO_TEST_CASE(test_clean_relation) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
   DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
-  Relation<bool> R1("R1", spec, {&D1, &D2, &D3});
+  CleanRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
   R1.incorporate(&prng, {3, 1, 3}, 1);
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   BOOST_TEST(z2[1] == 191);
   BOOST_TEST(z2[2] == 0);
 
-  double lpg __attribute__ ((unused));
+  double lpg __attribute__((unused));
   lpg = R1.logp_gibbs_approx(D1, 0, 1, &prng);
   lpg = R1.logp_gibbs_approx(D1, 0, 0, &prng);
   lpg = R1.logp_gibbs_approx(D1, 0, 10, &prng);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_relation) {
   BOOST_TEST(db->N == 1);
 
   DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
-  Relation<std::string> R2("R1", bigram_spec, {&D2, &D3});
+  CleanRelation<std::string> R2("R1", bigram_spec, {&D2, &D3});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");

@@ -11,9 +11,8 @@
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 
-using RelationVariant =
-    std::variant<Relation<std::string>*, Relation<double>*,
-                 Relation<int>*, Relation<bool>*>;
+using RelationVariant = std::variant<Relation<std::string>*, Relation<double>*,
+                                     Relation<int>*, Relation<bool>*>;
 
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,

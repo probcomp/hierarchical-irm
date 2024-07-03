@@ -1,15 +1,16 @@
 // Copyright 2024
 // See LICENSE.txt
 
+#include "relation_variant.hh"
+
 #include <cassert>
 #include <random>
 #include <type_traits>
 
+#include "clean_relation.hh"
 #include "domain.hh"
-#include "relation.hh"
-#include "relation_variant.hh"
 
-
+// TODO(emilyaf): Implement this for NoisyRelation.
 RelationVariant relation_from_spec(const std::string& name,
                                    const DistributionSpec& dist_spec,
                                    std::vector<Domain*>& domains) {
@@ -33,10 +34,11 @@ RelationVariant relation_from_spec(const std::string& name,
   //    the right kind of Relation.
   std::visit(
       [&](const auto& v) {
-        rv = new Relation<typename
-            std::remove_reference_t<decltype(*v)>::SampleType>(
-                name, dist_spec, domains);
-      }, dv);
+        rv = new CleanRelation<
+            typename std::remove_reference_t<decltype(*v)>::SampleType>(
+            name, dist_spec, domains);
+      },
+      dv);
 
   return rv;
 }
