@@ -49,6 +49,23 @@ void HIRM::transition_cluster_assignments(std::mt19937* prng,
   }
 }
 
+void HIRM::add_relation_to_irm(IRM* irm, const std::string& r,
+                               const T_relation& t_relation) {
+  std::visit(
+      [&](const auto& trel) {
+        using T = std::decay_t<decltype(trel)>;
+        if constexpr (std::is_same_v<T, T_clean_relation>) {
+          irm->add_relation(r, trel);
+        } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
+          RelationVariant base_relation = get_relation(trel.base_relation);
+          irm->add_relation(r, trel, base_relation);
+        } else {
+          assert(false && "Unexpected T_relation variant.");
+        }
+      },
+      t_relation);
+}
+
 void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
                                                   const std::string& r) {
   int rc = relation_to_code.at(r);
@@ -74,7 +91,7 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
       irm = irms.at(table);
     }
     if (table != table_current) {
-      irm->add_relation(r, t_relation);
+      add_relation_to_irm(irm, r, t_relation);
       std::visit(
           [&](auto rel) {
             for (const auto& [items, value] : rel->get_data()) {
@@ -123,10 +140,30 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
   for (const auto& [table, irm] : irms) {
     assert(crp.tables.contains(table));
   }
+
+  // Update any parent relations to point to the new relation as a base
+  // relation.
+  update_base_relation(r);
 }
 
-void HIRM::set_cluster_assignment_gibbs(
-    std::mt19937* prng, const std::string& r, int table) {
+void HIRM::update_base_relation(const std::string& r) {
+  // Updates the pointer to the base relation in each noisy relation.
+  if (base_to_noisy_relation.contains(r)) {
+    for (const std::string& nrel : base_to_noisy_relation.at(r)) {
+      RelationVariant noisy_rel_var = get_relation(nrel);
+      std::visit(
+          [&](auto nr) {
+            using T = typename std::remove_pointer_t<decltype(nr)>::ValueType;
+            auto noisy_rel = reinterpret_cast<NoisyRelation<T>*>(nr);
+            noisy_rel->base_relation = std::get<Relation<T>*>(get_relation(r));
+          },
+          noisy_rel_var);
+    }
+  }
+}
+
+void HIRM::set_cluster_assignment_gibbs(std::mt19937* prng,
+                                        const std::string& r, int table) {
   assert(irms.size() == crp.tables.size());
   int rc = relation_to_code.at(r);
   int table_current = crp.assignments.at(rc);
@@ -147,7 +184,7 @@ void HIRM::set_cluster_assignment_gibbs(
       irms[table] = irm;
     }
     irm = irms.at(table);
-    irm->add_relation(r, trel);
+    add_relation_to_irm(irm, r, trel);
     for (const auto& [items, value] : observations) {
       irm->incorporate(prng, r, items, value);
     }
@@ -156,6 +193,7 @@ void HIRM::set_cluster_assignment_gibbs(
   // Update CRP.
   crp.unincorporate(rc);
   crp.incorporate(rc, table);
+  update_base_relation(r);
   assert(irms.size() == crp.tables.size());
   for (const auto& [table, irm] : irms) {
     assert(crp.tables.contains(table));
@@ -168,17 +206,28 @@ void HIRM::add_relation(std::mt19937* prng, const std::string& name,
   schema[name] = rel;
   int offset =
       (code_to_relation.empty())
-      ? 0
-      : std::max_element(code_to_relation.begin(), code_to_relation.end())
-      ->first;
+          ? 0
+          : std::max_element(code_to_relation.begin(), code_to_relation.end())
+                ->first;
   int rc = 1 + offset;
   int table = crp.sample(prng);
   crp.incorporate(rc, table);
-  if (irms.count(table) == 1) {
-    irms.at(table)->add_relation(name, rel);
-  } else {
-    irms[table] = new IRM({{name, rel}});
+  if (!irms.contains(table)) {
+    irms[table] = new IRM({});
   }
+  std::visit(
+      [&](const auto& trel) {
+        using T = std::decay_t<decltype(trel)>;
+        if constexpr (std::is_same_v<T, T_noisy_relation>) {
+          if (!relation_to_code.contains(trel.base_relation)) {
+            add_relation(prng, trel.base_relation,
+                         schema.at(trel.base_relation));
+          }
+          base_to_noisy_relation[trel.base_relation].push_back(name);
+        }
+      },
+      rel);
+  add_relation_to_irm(irms.at(table), name, rel);
   assert(!relation_to_code.contains(name));
   assert(!code_to_relation.contains(rc));
   relation_to_code[name] = rc;
@@ -204,7 +253,8 @@ void HIRM::remove_relation(const std::string& name) {
 
 double HIRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
-    observations, std::mt19937* prng) {
+        observations,
+    std::mt19937* prng) {
   std::unordered_map<
       int, std::vector<std::tuple<std::string, T_items, ObservationVariant>>>
       obs_dict;

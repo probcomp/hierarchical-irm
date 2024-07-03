@@ -10,6 +10,7 @@
 
 #include "distributions/base.hh"
 #include "domain.hh"
+#include "emissions/get_emission.hh"
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 #include "util_hash.hh"
@@ -26,7 +27,7 @@ class T_clean_relation {
   // TODO(emilyaf): Enable observed vs. latent.
   // bool is_observed;
 
-  DistributionSpec distribution_spec;
+  DistributionSpec spec;
 };
 
 template <typename T>

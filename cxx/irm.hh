@@ -7,11 +7,12 @@
 #include <unordered_set>
 
 #include "clean_relation.hh"
-#include "relation_variant.hh"
+#include "noisy_relation.hh"
 #include "util_distribution_variant.hh"
 
-// TODO(emilyaf): Support noisy relations.
-using T_relation = T_clean_relation;
+using T_relation = std::variant<T_clean_relation, T_noisy_relation>;
+using RelationVariant = std::variant<Relation<std::string>*, Relation<double>*,
+                                     Relation<int>*, Relation<bool>*>;
 
 // Map from names to T_relation's.
 typedef std::map<std::string, T_relation> T_schema;
@@ -25,7 +26,7 @@ class IRM {
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
 
-  IRM(const T_schema& schema);
+  IRM(const T_schema& init_schema);
 
   ~IRM();
 
@@ -49,7 +50,15 @@ class IRM {
 
   double logp_score() const;
 
-  void add_relation(const std::string& name, const T_relation& relation);
+  std::vector<Domain*> add_domains(const std::string& name,
+                                   const std::vector<std::string>& domains);
+
+  void add_relation(const std::string& name, const T_clean_relation& relation);
+
+  void add_relation(const std::string& name, const T_noisy_relation& relation);
+
+  void add_relation(const std::string& name, const T_noisy_relation& relation,
+                    RelationVariant base_relation);
 
   void remove_relation(const std::string& name);
 

@@ -19,7 +19,10 @@ T_schema load_schema(const std::string& path) {
   std::string line;
   while (std::getline(fp, line)) {
     std::istringstream stream(line);
-    T_relation relation;
+
+    // TODO(emilyaf): Handle noisy relations. Need to include an emission type
+    // and a base relation in the spec.
+    T_clean_relation relation;
 
     std::string relname;
     std::string distribution_spec_str;
@@ -30,7 +33,7 @@ T_schema load_schema(const std::string& path) {
       relation.domains.push_back(w);
     }
     assert(relation.domains.size() > 0);
-    relation.distribution_spec = parse_distribution_spec(distribution_spec_str);
+    relation.spec = DistributionSpec(distribution_spec_str);
     schema[relname] = relation;
   }
   fp.close();
@@ -54,7 +57,9 @@ T_observations load_observations(const std::string& path,
     stream >> value_str;
     stream >> relname;
     ObservationVariant value = observation_string_to_value(
-        value_str, schema.at(relname).distribution_spec.distribution);
+        value_str,
+        std::visit([](const auto& trel) { return trel.spec.observation_type; },
+                   schema.at(relname)));
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }
@@ -75,7 +80,8 @@ T_encoding encode_observations(const T_schema& schema,
   T_encoding_r code_to_item;
   // Create a counter of items for each domain.
   for (const auto& [r, relation] : schema) {
-    for (const std::string& domain : relation.domains) {
+    for (const std::string& domain :
+         std::visit([](const auto& r) { return r.domains; }, relation)) {
       domain_item_counter[domain] = 0;
       item_to_code[domain] = std::map<std::string, T_item>();
       code_to_item[domain] = std::map<T_item, std::string>();
@@ -86,9 +92,11 @@ T_encoding encode_observations(const T_schema& schema,
     std::string relation = std::get<0>(i);
     std::vector<std::string> items = std::get<1>(i);
     int counter = 0;
+    std::vector<std::string> domains =
+        std::visit([](const auto& r) { return r.domains; }, schema.at(relation));
     for (const std::string& item : items) {
       // Obtain domain that item belongs to.
-      std::string domain = schema.at(relation).domains.at(counter);
+      std::string domain = domains.at(counter);
       // Compute its code, if necessary.
       if (!item_to_code.at(domain).contains(item)) {
         int code = domain_item_counter[domain];
@@ -109,8 +117,10 @@ void incorporate_observations(std::mt19937* prng, IRM& irm,
   for (const auto& [relation, items, value] : observations) {
     int counter = 0;
     T_items items_e;
+    std::vector<std::string> domains = std::visit(
+        [&](const auto& trel) { return trel.domains; }, irm.schema.at(relation));
     for (const std::string& item : items) {
-      std::string domain = irm.schema.at(relation).domains[counter];
+      std::string domain = domains[counter];
       counter += 1;
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
@@ -126,8 +136,10 @@ void incorporate_observations(std::mt19937* prng, HIRM& hirm,
   for (const auto& [relation, items, value] : observations) {
     int counter = 0;
     T_items items_e;
+    std::vector<std::string> domains = std::visit(
+        [&](const auto& trel) { return trel.domains; }, hirm.schema.at(relation));
     for (const std::string& item : items) {
-      std::string domain = hirm.schema.at(relation).domains[counter];
+      std::string domain = domains[counter];
       counter += 1;
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
@@ -343,7 +355,7 @@ void from_txt(std::mt19937* prng, IRM* const irm,
   assert(irm->relations.empty());
   assert(irm->domain_to_relations.empty());
   for (const auto& [r, ds] : schema) {
-    irm->add_relation(r, ds);
+    std::visit([&](const auto& trel) { irm->add_relation(r, trel); }, ds);
   }
   // Add the domain entities with fixed clustering.
   T_encoding_f item_to_code = std::get<0>(encoding);

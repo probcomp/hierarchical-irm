@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
+  DistributionSpec spec = DistributionSpec("bernoulli");
   CleanRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   db->incorporate(false);
   BOOST_TEST(db->N == 1);
 
-  DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
+  DistributionSpec bigram_spec = DistributionSpec("bigram");
   CleanRelation<std::string> R2("R1", bigram_spec, {&D2, &D3});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
