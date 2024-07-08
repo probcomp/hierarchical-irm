@@ -43,6 +43,16 @@ cc_library(
 )
 
 cc_library(
+    name = "categorical",
+    srcs = ["categorical.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        "//distributions:dirichlet_categorical",
+    ],
+)
+
+cc_library(
     name = "gaussian",
     srcs = ["gaussian.hh"],
     visibility = ["//:__subpackages__"],
@@ -92,6 +102,15 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "categorical_test",
+    srcs = ["categorical_test.cc"],
+    deps = [
+        ":categorical",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
 cc_test(
     name = "gaussian_test",
     srcs = ["gaussian_test.cc"],
