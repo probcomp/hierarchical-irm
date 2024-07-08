@@ -7,18 +7,10 @@
 
 #include "util_math.hh"
 
-void BetaBernoulli::incorporate(const bool& x) {
+void BetaBernoulli::incorporate(const bool& x, double weight = 1.0) {
   assert(x == 0 || x == 1);
-  ++N;
-  s += x;
-}
-
-void BetaBernoulli::unincorporate(const bool& x) {
-  assert(x == 0 || x == 1);
-  --N;
-  s -= x;
-  assert(0 <= s);
-  assert(0 <= N);
+  N += weight;
+  s += weight * x;
 }
 
 double BetaBernoulli::logp(const bool& x) const {

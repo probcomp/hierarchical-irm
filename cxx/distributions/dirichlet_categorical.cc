@@ -9,19 +9,10 @@
 
 #include "util_math.hh"
 
-void DirichletCategorical::incorporate(const int& x) {
+void DirichletCategorical::incorporate(const int& x, double weight = 1.0) {
   assert(x >= 0 && x < std::ssize(counts));
-  counts[size_t(x)] += 1;
-  ++N;
-}
-
-void DirichletCategorical::unincorporate(const int& x) {
-  const size_t y = x;
-  assert(y < counts.size());
-  counts[y] -= 1;
-  --N;
-  assert(0 <= counts[y]);
-  assert(0 <= N);
+  counts[size_t(x)] += weight;
+  N += weight;
 }
 
 double DirichletCategorical::logp(const int& x) const {
@@ -35,8 +26,8 @@ double DirichletCategorical::logp_score() const {
   const size_t k = counts.size();
   const double a = alpha * k;
   double lg = 0;
-  for (size_t x : counts) {
-    lg += lgamma(static_cast<double>(x) + alpha);
+  for (double x : counts) {
+    lg += lgamma(x + alpha);
   }
   return lgamma(a) - lgamma(a + N) + lg - k * lgamma(alpha);
 }

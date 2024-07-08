@@ -21,9 +21,7 @@ class BetaBernoulli : public Distribution<bool> {
     beta_grid = log_linspace(1e-4, 1e4, 10, true);
   }
 
-  void incorporate(const bool& x);
-
-  void unincorporate(const bool& x);
+  void incorporate(const bool& x, double weight = 1.0);
 
   double logp(const bool& x) const;
 

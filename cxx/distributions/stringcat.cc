@@ -13,14 +13,9 @@ int StringCat::string_to_index(const std::string& s) const {
   return it - strings.begin();
 }
 
-void StringCat::incorporate(const std::string& s) {
-  dc.incorporate(string_to_index(s));
-  ++N;
-}
-
-void StringCat::unincorporate(const std::string& s) {
-  dc.unincorporate(string_to_index(s));
-  --N;
+void StringCat::incorporate(const std::string& s, double weight = 1.0) {
+  dc.incorporate(string_to_index(s), weight);
+  N += weight;
 }
 
 double StringCat::logp(const std::string& s) const {

@@ -17,19 +17,9 @@ double log_t_distribution(const double& x, const double& v,
       - v_shift * log1p(x * x / (variance * v));
 }
 
-void ZeroMeanNormal::incorporate(const double& x) {
-  ++N;
-  var += (x * x - var) / N;
-}
-
-void ZeroMeanNormal::unincorporate(const double& x) {
-  int old_N = N;
-  --N;
-  if (N == 0) {
-    var = 0.0;
-    return;
-  }
-  var = (var * old_N - x * x) / N;
+void ZeroMeanNormal::incorporate(const double& x, double weight = 1.0) {
+  N += weight;
+  var += (x * x * weight - var) / N;
 }
 
 double ZeroMeanNormal::logp(const double& x) const {
