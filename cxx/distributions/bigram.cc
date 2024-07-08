@@ -33,7 +33,7 @@ std::vector<size_t> Bigram::string_to_indices(const std::string& str) const {
   return inds;
 }
 
-void Bigram::incorporate(const std::string& x, double weight = 1.0) {
+void Bigram::incorporate(const std::string& x, double weight) {
   const std::vector<size_t> indices = string_to_indices(x);
   for (size_t i = 0; i != indices.size() - 1; ++i) {
     transition_dists[indices[i]].incorporate(indices[i + 1], weight);

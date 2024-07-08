@@ -7,7 +7,7 @@
 
 #include "util_math.hh"
 
-void BetaBernoulli::incorporate(const bool& x, double weight = 1.0) {
+void BetaBernoulli::incorporate(const bool& x, double weight) {
   assert(x == 0 || x == 1);
   N += weight;
   s += weight * x;

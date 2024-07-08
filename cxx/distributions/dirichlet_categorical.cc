@@ -9,7 +9,7 @@
 
 #include "util_math.hh"
 
-void DirichletCategorical::incorporate(const int& x, double weight = 1.0) {
+void DirichletCategorical::incorporate(const int& x, double weight) {
   assert(x >= 0 && x < std::ssize(counts));
   counts[size_t(x)] += weight;
   N += weight;

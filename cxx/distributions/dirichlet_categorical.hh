@@ -16,7 +16,7 @@ class DirichletCategorical : public Distribution<int> {
   std::vector<double> counts;  // counts of observed categories
 
   DirichletCategorical(int k) {  // k is number of categories
-    counts = std::vector<int>(k, 0);
+    counts = std::vector<double>(k, 0.0);
   }
   void incorporate(const int& x, double weight = 1.0);
 

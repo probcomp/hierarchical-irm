@@ -13,7 +13,7 @@ int StringCat::string_to_index(const std::string& s) const {
   return it - strings.begin();
 }
 
-void StringCat::incorporate(const std::string& s, double weight = 1.0) {
+void StringCat::incorporate(const std::string& s, double weight) {
   dc.incorporate(string_to_index(s), weight);
   N += weight;
 }
