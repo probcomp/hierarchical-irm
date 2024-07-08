@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <limits>
+#include <utility>
 
 #include "distributions/dirichlet_categorical.hh"
 #include "emissions/base.hh"
@@ -10,7 +11,7 @@
 // clean categorical state.
 class CategoricalEmission : public Emission<int> {
  public:
-  mutable std::vector<DirichletCateogrical> emission_dists;
+  mutable std::vector<DirichletCategorical> emission_dists;
 
   CategoricalEmission(int num_states) {
     emission_dists.reserve(num_states);
@@ -31,8 +32,8 @@ class CategoricalEmission : public Emission<int> {
 
   double logp(const std::pair<int, int>& x) const {
     double lp;
-    for (int i = 0; i < emission_dists.length(); ++i) {
-      if (i == x.first) {
+    for (size_t i = 0; i < emission_dists.size(); ++i) {
+      if (std::cmp_equal(i, x.first)) {
         lp += emission_dists[i].logp(x.second);
       } else {
         lp += emission_dists[i].logp_score();
@@ -64,7 +65,7 @@ class CategoricalEmission : public Emission<int> {
     // Brute force; compute log prob over all possible clean states.
     int best_clean;
     double best_clean_logp = std::numeric_limits<double>::lowest();
-    for (int i = 0; i < emission_dists.length(); ++i) {
+    for (size_t i = 0; i < emission_dists.size(); ++i) {
       double lp = 0.0;
       for (const auto& c : corrupted) {
         lp += emission_dists[i].logp(c);
