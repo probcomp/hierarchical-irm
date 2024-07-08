@@ -103,6 +103,15 @@ cc_test(
 )
 
 cc_test(
+    name = "categorical_test",
+    srcs = ["categorical_test.cc"],
+    deps = [
+        ":categorical",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+cc_test(
     name = "gaussian_test",
     srcs = ["gaussian_test.cc"],
     deps = [
