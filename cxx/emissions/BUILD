@@ -43,6 +43,16 @@ cc_library(
 )
 
 cc_library(
+    name = "categorical",
+    srcs = ["categorical.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        "//distributions:dirichlet_categorical",
+    ],
+)
+
+cc_library(
     name = "gaussian",
     srcs = ["gaussian.hh"],
     visibility = ["//:__subpackages__"],
