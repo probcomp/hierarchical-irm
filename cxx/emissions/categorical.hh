@@ -31,15 +31,7 @@ class CategoricalEmission : public Emission<int> {
   }
 
   double logp(const std::pair<int, int>& x) const {
-    double lp;
-    for (size_t i = 0; i < emission_dists.size(); ++i) {
-      if (std::cmp_equal(i, x.first)) {
-        lp += emission_dists[i].logp(x.second);
-      } else {
-        lp += emission_dists[i].logp_score();
-      }
-    }
-    return lp;
+    return emission_dists[x.first].logp(x.second);
   }
 
   double logp_score() const {

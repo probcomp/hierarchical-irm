@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   ce.incorporate(std::make_pair<int, int>(4, 4));
   BOOST_TEST(ce.N == 2);
 
-  BOOST_TEST(ce.logp(std::make_pair<int, int>(2, 2)) == -4.8283137373023006,
+  BOOST_TEST(ce.logp(std::make_pair<int, int>(2, 2)) == -1.6094379124341003,
              tt::tolerance(1e-6));
 
   std::mt19937 prng;
