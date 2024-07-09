@@ -21,7 +21,7 @@ class Relation {
   typedef T ValueType;
 
   virtual void incorporate(std::mt19937* prng, const T_items& items, ValueType value) = 0;
-  
+
   virtual void unincorporate(const T_items& items) = 0;
 
   virtual double logp(const T_items& items, ValueType value, std::mt19937* prng) = 0;
@@ -38,7 +38,7 @@ class Relation {
                                             int table, std::mt19937* prng) = 0;
 
   virtual void transition_cluster_hparams(std::mt19937* prng, int num_theta_steps) = 0;
-  
+
   // Accessor/convenience methods, mostly for subclass members that can't be accessed through the base class.
   virtual const std::vector<Domain*>& get_domains() const = 0;
 

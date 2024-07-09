@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(crp.logp(1) == log(2. / (crp.alpha + crp.N)), tt::tolerance(1e-6));
   BOOST_TEST(crp.logp(0) == log(1. / (crp.alpha + crp.N)), tt::tolerance(1e-6));
   BOOST_TEST(crp.logp(3) == log(3. / (crp.alpha + crp.N)), tt::tolerance(1e-6));
-  
+
   // This should be log(alpha ^ 3 * 0! * 2! * 1! * 0! / (6!)) = -log(360)
   BOOST_CHECK_CLOSE(crp.logp_score(), -log(360.), 1e-6);
 }
