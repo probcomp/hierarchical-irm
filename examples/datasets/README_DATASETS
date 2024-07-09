@@ -1,4 +1,4 @@
-Data analyzed by 
+Data analyzed by
 
 Kemp, C., Tenenbaum, J. B., Griffiths, T. L., Yamada, T. & Ueda, N. (2006).
 Learning systems of concepts with an infinite relational model. AAAI 2006
@@ -12,9 +12,9 @@ http://charleskemp.com/papers/KempTGYU06.pdf
 3) alyawarradata: kinship terms collected by Denham.
     atts: kinship sections for each person
     datass: kinship sections (one of n coding)
-    features: column 4 is gender, column 5 is age, column 9 is kinship section. 
+    features: column 4 is gender, column 5 is age, column 9 is kinship section.
 
-    The other features are described by Denham at 
+    The other features are described by Denham at
 
     https://www.kinsources.net/kidarep/dataset-49-alyawarra-1971-au01.xhtml
 
@@ -29,4 +29,3 @@ http://charleskemp.com/papers/KempTGYU06.pdf
 		 Nations project (Rummel). We've thresholded each continuous
 		 variable at its mean and used one-of-n coding for the
 		 categorical variables.
-

@@ -222,4 +222,3 @@ plt.show()
 # from hirm.util_math import log_normalize
 # p1, p2 = np.exp(log_normalize([score, score1 + score2]))
 # print((p1, p2))
-
