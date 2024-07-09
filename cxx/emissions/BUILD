@@ -82,6 +82,13 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "string_alignment",
+    srcs = ["string_alignment.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [],
+)
+
 cc_test(
     name = "get_emission_test",
     srcs = ["get_emission_test.cc"],
@@ -138,6 +145,16 @@ cc_test(
     deps = [
         ":bitflip",
         ":sometimes",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "string_alignment_test",
+    srcs = ["string_alignment_test.cc"],
+    deps = [
+        ":string_alignment",
         "@boost//:algorithm",
         "@boost//:test",
     ],
