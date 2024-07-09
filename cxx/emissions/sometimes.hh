@@ -1,6 +1,6 @@
 #pragma once
 
-#include <math>
+#include <cmath>
 #include <unordered_map>
 
 #include "distributions/beta_bernoulli.hh"
