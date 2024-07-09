@@ -1,8 +1,8 @@
 // Copyright 2024
 // See LICENSE.txt
 
-// Classes and functions for dealing with Distributions and their values in a
-// generic manner.  When a new subclass is added, this file needs to be updated.
+// Classes and functions for dealing with observations of different types in a
+// generic manner.
 
 #pragma once
 
