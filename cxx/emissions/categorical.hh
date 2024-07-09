@@ -20,14 +20,9 @@ class CategoricalEmission : public Emission<int> {
     }
   };
 
-  void incorporate(const std::pair<int, int>& x) {
-    ++N;
-    emission_dists[x.first].incorporate(x.second);
-  }
-
-  void unincorporate(const std::pair<int, int>& x) {
-    --N;
-    emission_dists[x.first].unincorporate(x.second);
+  void incorporate(const std::pair<int, int>& x, double weight = 1.0) {
+    N += weight;
+    emission_dists[x.first].incorporate(x.second, weight);
   }
 
   double logp(const std::pair<int, int>& x) const {
