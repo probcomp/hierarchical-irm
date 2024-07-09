@@ -123,6 +123,9 @@ BOOST_AUTO_TEST_CASE(simple) {
 
   nd.unincorporate(-2.0);
   BOOST_TEST(nd.N == 1);
+
+  nd.incorporate(3.14, 2.71);
+  BOOST_TEST(nd.N == 3.71);
 }
 
 BOOST_AUTO_TEST_CASE(no_nan_after_incorporate_unincorporate) {

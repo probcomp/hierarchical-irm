@@ -21,6 +21,9 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   BOOST_TEST(bg.logp("test") == -22.169938638053061, tt::tolerance(1e-6));
   BOOST_TEST(bg.logp_score() == -27.386089148807059, tt::tolerance(1e-6));
+
+  bg.incorporate("fractions", 1.23);
+  BOOST_TEST(bg.N == 2.23);
 }
 
 BOOST_AUTO_TEST_CASE(test_set_alpha) {

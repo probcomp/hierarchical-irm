@@ -9,7 +9,7 @@ template <typename T>
 class NonconjugateDistribution : public Distribution<T> {
  public:
   // Abstract base class for Distributions that don't have conjugate priors.
-  std::map<T, int> seen;
+  std::map<T, double> seen;
 
   // The log probability of x given the current latent values.
   virtual double logp(const T& x) const = 0;
@@ -29,14 +29,9 @@ class NonconjugateDistribution : public Distribution<T> {
   // Set the current latent values from a vector.
   virtual void set_latents(const std::vector<double>& v) = 0;
 
-  void incorporate(const T& x) {
-    seen[x]++;
-    (this->N)++;
-  };
-
-  void unincorporate(const T& x) {
-    --seen[x];
-    --(this->N);
+  void incorporate(const T& x, double weight = 1.0) {
+    seen[x] += weight;
+    this->N += weight;
   };
 
   double logp_score() const {

@@ -8,15 +8,17 @@ class Distribution {
   // `util_distribution_variant` to be used in the (H)IRM models.
  public:
   typedef T SampleType;
-  // N is the number of incorporated observations.
-  int N = 0;
+  // N is the sum of the weights of the incorporated observations.
+  double N = 0;
 
   // Accumulate x.
-  virtual void incorporate(const T& x) = 0;
+  virtual void incorporate(const T& x, double weight = 1.0) = 0;
 
   // Undo the accumulation of x.  Should only be called with x's that
   // have been previously passed to incorporate().
-  virtual void unincorporate(const T& x) = 0;
+  virtual void unincorporate(const T& x) {
+    incorporate(x, -1.0);
+  }
 
   // The log probability of x according to the posterior predictive
   // distribution:  log P(x | incorporated_data), where P(x | data) =

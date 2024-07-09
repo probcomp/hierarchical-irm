@@ -9,14 +9,9 @@ class GaussianEmission : public Emission<double> {
 
   GaussianEmission() {}
 
-  void incorporate(const std::pair<double, double>& x) {
-    ++N;
-    zmn.incorporate(x.second - x.first);
-  }
-
-  void unincorporate(const std::pair<double, double>& x) {
-    --N;
-    zmn.unincorporate(x.second - x.first);
+  void incorporate(const std::pair<double, double>& x, double weight = 1.0) {
+    N += weight;
+    zmn.incorporate(x.second - x.first, weight);
   }
 
   double logp(const std::pair<double, double>& x) const {
