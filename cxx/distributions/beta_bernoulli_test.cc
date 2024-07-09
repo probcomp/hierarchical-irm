@@ -34,6 +34,9 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   // We expect a 50% chance when we see a single observation, since alpha = beta
   // = 1.
   BOOST_TEST(bb.logp_score() == -std::numbers::ln2, tt::tolerance(1e-6));
+
+  bb.incorporate(1, 2.5);
+  BOOST_TEST(bb.N == 3.5);
 }
 
 BOOST_AUTO_TEST_CASE(test_log_prob) {

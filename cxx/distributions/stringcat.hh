@@ -20,9 +20,7 @@ class StringCat : public Distribution<std::string> {
 
   int string_to_index(const std::string& s) const;
 
-  void incorporate(const std::string& s);
-
-  void unincorporate(const std::string& s);
+  void incorporate(const std::string& s, double weight = 1.0);
 
   double logp(const std::string& s) const;
 

@@ -21,110 +21,90 @@ class SimpleStringEmission : public Emission<std::string> {
 
   SimpleStringEmission() {};
 
-  void incorporate(const std::pair<std::string, std::string>& x) {
-    ++N;
-    corporate(x.first, x.second, true);
-  }
-
-  void unincorporate(const std::pair<std::string, std::string>& x) {
-    --N;
-    corporate(x.first, x.second, false);
+  void incorporate(const std::pair<std::string, std::string>& x,
+                   double weight = 1.0) {
+    N += weight;
+    corporate(x.first, x.second, weight);
   }
 
   // Calculate the insertions, deletion and substitutions between clean and
   // dirty through a greedy, recursive search.  Incorporate those diffs into
   // the corresponding BetaBernoulli models if d is true; otherwise
   // unincorporate them.
-  void corporate(const std::string& clean, const std::string& dirty, bool d) {
+  void corporate(const std::string& clean, const std::string& dirty,
+                 double weight) {
     if (clean.empty() && dirty.empty()) {
       // If both are empty, this is evidence of the lack of an insertion!
-      d ? insertions.incorporate(0) : insertions.unincorporate(0);
+      insertions.incorporate(0, weight);
       return;
     }
 
     if (clean.empty()) {
       // All of dirty must be insertions.
-      for (size_t i = 0; i < dirty.length(); ++i) {
-        d ? insertions.incorporate(1) : insertions.unincorporate(1);
-      }
+      insertions.incorporate(1, weight * dirty.length());
       return;
     }
 
     if (dirty.empty()) {
       // All of clean must have be deleted.
-      for (size_t i = 0; i < clean.length(); ++i) {
-        d ? deletions.incorporate(1) : deletions.unincorporate(1);
-        // This is also evidence that clean.length()+1 insertions didn't happen.
-        d ? insertions.incorporate(0) : insertions.unincorporate(0);
-      }
+      deletions.incorporate(1, weight * clean.length());
+      // This is also evidence that clean.length()+1 insertions didn't happen.
+      insertions.incorporate(0, weight * clean.length());
       return;
     }
 
     if (clean[0] == dirty[0]) {
       // A match means there was no insertion, substitution or deletion.
-      if (d) {
-        substitutions.incorporate(0);
-        insertions.incorporate(0);
-        deletions.incorporate(0);
-      } else {
-        substitutions.unincorporate(0);
-        insertions.unincorporate(0);
-        deletions.unincorporate(0);
-      }
+      substitutions.incorporate(0, weight);
+      insertions.incorporate(0, weight);
+      deletions.incorporate(0, weight);
       // Recurse on the rest of clean and dirty.
       corporate(clean.substr(1, std::string::npos),
-                dirty.substr(1, std::string::npos), d);
+                dirty.substr(1, std::string::npos), weight);
       return;
     }
 
     if (clean.back() == dirty.back()) {
       // Check if clean[-1] == dirty[-1].  This block might be removeable.
-      if (d) {
-        substitutions.incorporate(0);
-        insertions.incorporate(0);
-        deletions.incorporate(0);
-      } else {
-        substitutions.unincorporate(0);
-        insertions.unincorporate(0);
-        deletions.unincorporate(0);
-      }
+      substitutions.incorporate(0, weight);
+      insertions.incorporate(0, weight);
+      deletions.incorporate(0, weight);
       corporate(clean.substr(0, clean.length() - 1),
-                dirty.substr(0, dirty.length() - 1), d);
+                dirty.substr(0, dirty.length() - 1), weight);
       return;
     }
 
     // Here, the "right" thing to do would be to run a std::string alignment
     // algorithm.  But that would require a cost model, which we don't have.
     // Also, dealing with multiple alignments (which again, is the right thing
-    // to do) would require passing fractional counts to our BetaBernoulli
-    // distributions, which we can't do right now.
+    // to do).
     // So instead, we just guess based on the std::string lengths.  Fun fact:
     // this will never overcount insertions or deletions!  It will merely
     // overcount substitutions by possibly putting the insertion or deletions
     // in less than optimal places.
     if (clean.length() < dirty.length()) {
       // Probably an insertion.
-      d ? insertions.incorporate(1) : insertions.unincorporate(1);
-      corporate(clean, dirty.substr(1, std::string::npos), d);
+      insertions.incorporate(1, weight);
+      corporate(clean, dirty.substr(1, std::string::npos), weight);
       return;
     }
 
     if (clean.length() > dirty.length()) {
       // Probably a deletion.
-      d ? deletions.incorporate(1) : deletions.unincorporate(1);
+      deletions.incorporate(1, weight);
       // Which means there (probably) wasn't an insertion.
-      d ? insertions.incorporate(0) : insertions.unincorporate(0);
-      corporate(clean.substr(1, std::string::npos), dirty, d);
+      insertions.incorporate(0, weight);
+      corporate(clean.substr(1, std::string::npos), dirty, weight);
       return;
     }
 
     // Probably a substitution.
-    d ? substitutions.incorporate(1) : substitutions.unincorporate(1);
+    substitutions.incorporate(1, weight);
     // Which is evidence of no insertion or deletion.
-    d ? insertions.incorporate(0) : insertions.unincorporate(0);
-    d ? deletions.incorporate(0) : deletions.unincorporate(0);
+    insertions.incorporate(0, weight);
+    deletions.incorporate(0, weight);
     corporate(clean.substr(1, std::string::npos),
-              dirty.substr(1, std::string::npos), d);
+              dirty.substr(1, std::string::npos), weight);
   }
 
   double logp(const std::pair<std::string, std::string>& x) const {
