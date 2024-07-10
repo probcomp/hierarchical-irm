@@ -234,6 +234,9 @@ void HIRM::add_relation(std::mt19937* prng, const std::string& name,
   code_to_relation[rc] = name;
 }
 
+// Note that remove_relation does not also remove all of the NoisyRelations that
+// have the removed relation as a base. The NoisyRelations will be in an invalid
+// state after their base relation is removed.
 void HIRM::remove_relation(const std::string& name) {
   schema.erase(name);
   int rc = relation_to_code.at(name);
