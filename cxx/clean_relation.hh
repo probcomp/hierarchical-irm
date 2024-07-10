@@ -126,6 +126,26 @@ class CleanRelation : public Relation<T> {
     data.erase(items);
   }
 
+  // incorporate_to_cluster and unincorporate_from_cluster should be used with
+  // extreme care, since they mutate the clusters only and not the relation. In
+  // particular, for every call to unincorporate_from_cluster, there must be a 
+  // corresponding call to incorporate_to_cluster with the same items, or the
+  // Relation will be in an invalid state. See the Attribute class for usage/
+  // justification of this choice.
+  void incorporate_to_cluster(const T_items& items, const ValueType& value) {
+    T_items z = get_cluster_assignment(items);
+    assert(clusters.contains(z));
+    clusters.at(z)->incorporate(value);
+  }
+
+  void unincorporate_from_cluster(const T_items& items) {
+    T_items z = get_cluster_assignment(items);
+    assert(clusters.contains(z));
+
+    const ValueType& value = get_value(items);
+    clusters.at(z)->unincorporate(value);
+  }
+
   std::vector<int> get_cluster_assignment(const T_items& items) const {
     assert(items.size() == domains.size());
     std::vector<int> z(domains.size());
@@ -392,6 +412,12 @@ class CleanRelation : public Relation<T> {
 
   const ValueType& get_value(const T_items& items) const {
     return data.at(items);
+  }
+
+  void update_value(const T_items& items, const ValueType& value) {
+    unincorporate_from_cluster(items);
+    incorporate_to_cluster(items, value);
+    data.at(items) = value;
   }
 
   const std::unordered_map<const T_items, ValueType, H_items>& get_data()
