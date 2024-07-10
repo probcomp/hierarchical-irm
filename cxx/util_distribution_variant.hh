@@ -20,6 +20,7 @@
 #include "distributions/stringcat.hh"
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
+#include "emissions/get_emission.hh"
 #include "emissions/simple_string.hh"
 #include "emissions/sometimes.hh"
 
@@ -32,15 +33,14 @@ enum class DistributionEnum {
   stringcat
 };
 
-enum class EmissionEnum { sometimes_bitflip, gaussian, simple_string };
-
 struct DistributionSpec {
   DistributionEnum distribution;
   std::map<std::string, std::string> distribution_args = {};
 };
 
 struct EmissionSpec {
-  EmissionEnum emission;
+  std::string emission_name;
+  std::map<std::string, std::string> emission_args = {};
 };
 
 // Set of all distribution sample types.
@@ -49,9 +49,6 @@ using ObservationVariant = std::variant<double, int, bool, std::string>;
 using DistributionVariant =
     std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*,
                  Skellam*, StringCat*>;
-
-using EmissionVariant =
-    std::variant<Sometimes<BitFlip>*, GaussianEmission*, SimpleStringEmission*>;
 
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const DistributionEnum& distribution);

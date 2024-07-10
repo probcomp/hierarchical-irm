@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   R1.incorporate(&prng, {4, 1}, 1);
   R1.incorporate(&prng, {5, 1}, 1);
 
-  EmissionSpec em_spec = EmissionSpec(EmissionEnum::sometimes_bitflip);
+  EmissionSpec em_spec = EmissionSpec("sometimes_bitflip");
   NoisyRelation<bool> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
   NR1.incorporate(&prng, {0, 1, 3}, 0);
   NR1.incorporate(&prng, {1, 1, 3}, 1);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
 
   DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
   CleanRelation<std::string> R2("R2", bigram_spec, {&D2, &D3});
-  EmissionSpec str_emspec = EmissionSpec(EmissionEnum::simple_string);
+  EmissionSpec str_emspec = EmissionSpec("simple_string");
   NoisyRelation<std::string> NR2("NR2", str_emspec, {&D2, &D3}, &R2);
 
   R2.incorporate(&prng, {1, 3}, "cat");

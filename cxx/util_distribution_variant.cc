@@ -106,15 +106,5 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
 
 EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
                                         std::mt19937* prng) {
-  switch (spec.emission) {
-    case EmissionEnum::sometimes_bitflip:
-      return new Sometimes<BitFlip>;
-    case EmissionEnum::gaussian:
-      return new GaussianEmission;
-    case EmissionEnum::simple_string: {
-      return new SimpleStringEmission;
-    }
-    default:
-      assert(false && "Unsupported emission enum value.");
-  }
+  return get_emission(spec.emission_name, spec.emission_args);
 }
