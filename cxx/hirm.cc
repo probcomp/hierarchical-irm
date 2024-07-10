@@ -58,7 +58,7 @@ void HIRM::add_relation_to_irm(IRM* irm, const std::string& r,
           irm->add_relation(r, trel);
         } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
           RelationVariant base_relation = get_relation(trel.base_relation);
-          irm->add_relation(r, trel, base_relation);
+          irm->add_relation_with_base(r, trel, base_relation);
         } else {
           assert(false && "Unexpected T_relation variant.");
         }

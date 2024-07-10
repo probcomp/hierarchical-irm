@@ -9,7 +9,7 @@
 #include "emissions/simple_string.hh"
 
 BOOST_AUTO_TEST_CASE(test_get_emission_gaussian) {
-  EmissionVariant ev = cluster_prior_from_spec(EmissionSpec("gaussian"));
+  EmissionVariant ev = get_prior(EmissionSpec("gaussian"));
   GaussianEmission* ge = std::get<GaussianEmission*>(ev);
 
   ge->incorporate(std::make_pair<double, double>(2.0, 2.1));
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_gaussian) {
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_simple_string) {
-  EmissionVariant ev = cluster_prior_from_spec(EmissionSpec("simple_string"));
+  EmissionVariant ev = get_prior(EmissionSpec("simple_string"));
   SimpleStringEmission* sse = std::get<SimpleStringEmission*>(ev);
 
   sse->incorporate(std::make_pair<std::string, std::string>("hello", "hi"));
@@ -25,8 +25,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_simple_string) {
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
-  EmissionVariant ev =
-      cluster_prior_from_spec(EmissionSpec("sometimes_gaussian"));
+  EmissionVariant ev = get_prior(EmissionSpec("sometimes_gaussian"));
   SometimesGaussian* sg = std::get<SometimesGaussian*>(ev);
 
   sg->incorporate(std::make_pair<double, double>(2.0, 2.1));
@@ -34,8 +33,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
-  EmissionVariant ev =
-      cluster_prior_from_spec(EmissionSpec("sometimes_bitflip"));
+  EmissionVariant ev = get_prior(EmissionSpec("sometimes_bitflip"));
   SometimesBitFlip* sbf = std::get<SometimesBitFlip*>(ev);
 
   sbf->incorporate(std::make_pair<bool, bool>(true, true));

@@ -53,12 +53,14 @@ class IRM {
   std::vector<Domain*> add_domains(const std::string& name,
                                    const std::vector<std::string>& domains);
 
+  // add_relation is overloaded for ease of use with std::visit.
   void add_relation(const std::string& name, const T_clean_relation& relation);
 
   void add_relation(const std::string& name, const T_noisy_relation& relation);
 
-  void add_relation(const std::string& name, const T_noisy_relation& relation,
-                    RelationVariant base_relation);
+  void add_relation_with_base(const std::string& name,
+                              const T_noisy_relation& relation,
+                              RelationVariant base_relation);
 
   void remove_relation(const std::string& name);
 

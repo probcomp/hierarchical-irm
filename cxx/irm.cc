@@ -291,9 +291,9 @@ void IRM::add_relation(const std::string& name,
   schema[name] = relation;
 }
 
-void IRM::add_relation(const std::string& name,
-                       const T_noisy_relation& relation,
-                       RelationVariant base_relation) {
+void IRM::add_relation_with_base(const std::string& name,
+                                 const T_noisy_relation& relation,
+                                 RelationVariant base_relation) {
   // Adds a noisy relation from a spec and a base relation pointer.
   // This is meant to be called from HIRM, where the base relation may be in a
   // different IRM.
