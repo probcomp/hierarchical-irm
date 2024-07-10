@@ -237,4 +237,3 @@ HIRM::~HIRM() {
     delete irm;
   }
 }
-
