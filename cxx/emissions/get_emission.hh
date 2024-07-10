@@ -16,4 +16,4 @@ using EmissionVariant = std::variant<Emission<double>*,
 
 EmissionVariant get_emission(
     const std::string& emission_name,
-    std::map<std::string, std::string> distribution_args = {});
+    std::map<std::string, std::string> emission_args = {});
