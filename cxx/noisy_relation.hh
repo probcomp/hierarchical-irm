@@ -30,7 +30,7 @@ class T_noisy_relation {
   // bool is_observed;
 
   // Describes the Emission that models the noise.
-  EmissionSpec spec;
+  EmissionSpec emission_spec;
 
   // Name of the relation for the "true" values that the NoisyRelation observes.
   std::string base_relation;

@@ -262,7 +262,7 @@ void IRM::add_relation(const std::string& name,
   assert(!relations.contains(name));
   std::vector<Domain*> doms = add_domains(name, relation.domains);
 
-  relations[name] = clean_relation_from_spec(name, relation.spec, doms);
+  relations[name] = clean_relation_from_spec(name, relation.distribution_spec, doms);
   schema[name] = relation;
 }
 
@@ -284,7 +284,7 @@ void IRM::add_relation(const std::string& name,
   std::visit(
       [&](const auto& br) {
         using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
-        rv = new NoisyRelation<T>(name, relation.spec, doms, br);
+        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
       },
       base_relation);
   relations[name] = rv;
@@ -305,7 +305,7 @@ void IRM::add_relation(const std::string& name,
   std::visit(
       [&](const auto& br) {
         using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
-        rv = new NoisyRelation<T>(name, relation.spec, doms, br);
+        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
       },
       base_relation);
   relations[name] = rv;

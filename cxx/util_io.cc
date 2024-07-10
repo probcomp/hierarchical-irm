@@ -33,7 +33,7 @@ T_schema load_schema(const std::string& path) {
       relation.domains.push_back(w);
     }
     assert(relation.domains.size() > 0);
-    relation.spec = DistributionSpec(distribution_spec_str);
+    relation.distribution_spec = DistributionSpec(distribution_spec_str);
     schema[relname] = relation;
   }
   fp.close();
@@ -58,8 +58,16 @@ T_observations load_observations(const std::string& path,
     stream >> relname;
     ObservationVariant value = observation_string_to_value(
         value_str,
-        std::visit([](const auto& trel) { return trel.spec.observation_type; },
-                   schema.at(relname)));
+        std::visit([](const auto& trel) { 
+          using T = std::decay_t<decltype(trel)>;
+          if constexpr (std::is_same_v<T, T_clean_relation>) {
+            return trel.distribution_spec.observation_type; 
+          } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
+            return trel.emission_spec.observation_type;
+          } else {
+            assert(false && "Unrecognized relation type.");
+          }
+        }, schema.at(relname)));
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }

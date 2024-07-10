@@ -27,7 +27,7 @@ class T_clean_relation {
   // TODO(emilyaf): Enable observed vs. latent.
   // bool is_observed;
 
-  DistributionSpec spec;
+  DistributionSpec distribution_spec;
 };
 
 template <typename T>
