@@ -6,35 +6,37 @@
 #include "distributions/beta_bernoulli.hh"
 #include "emissions/base.hh"
 
-// An Emission class that sometimes applies BaseEmissor and sometimes doesn't.
-template <typename BaseEmissor>
-class Sometimes : public Emission<typename std::tuple_element<
-                      0, typename BaseEmissor::SampleType>::type> {
+// An Emission class that sometimes applies another Emission and sometimes
+// doesn't.
+template <typename SampleType = double>
+class Sometimes : public Emission<SampleType> {
  public:
-  using SampleType =
-      typename std::tuple_element<0, typename BaseEmissor::SampleType>::type;
   BetaBernoulli bb;
-  BaseEmissor be;
+  Emission<SampleType>* be;  // We own be.
   bool can_dirty_equal_clean;
 
   // By default, Sometimes only works with BaseEmissors that assign zero
   // probability to dirty == clean.  Pass _can_dirty_equal_clean=true to
   // override that assumption.
-  Sometimes(bool _can_dirty_equal_clean = false):
-    can_dirty_equal_clean(_can_dirty_equal_clean) {};
+  Sometimes(Emission<SampleType>* _be, bool _can_dirty_equal_clean = false):
+    be(_be), can_dirty_equal_clean(_can_dirty_equal_clean) {};
+
+  ~Sometimes(): {
+    delete be;
+  }
 
   void incorporate(const std::pair<SampleType, SampleType>& x,
                    double weight = 1.0) {
     this->N += weight;
     if (x.first != x.second) {
       bb.incorporate(true);
-      be.incorporate(x);
+      be->incorporate(x);
       return;
     }
     if (can_dirty_equal_clean) {
       double p_came_from_be = exp(bb.logp(true) + be.logp(x));
       bb.incorporate(true, p_came_from_be);
-      be.incorporate(x, p_came_from_be);
+      be->incorporate(x, p_came_from_be);
       bb.incorporate(false, 1.0 - p_came_from_be);
       return;
     }
@@ -43,25 +45,25 @@ class Sometimes : public Emission<typename std::tuple_element<
 
   double logp(const std::pair<SampleType, SampleType>& x) const {
     if (x.first != x.second) {
-      return bb.logp(true) + be.logp(x);
+      return bb.logp(true) + be->logp(x);
     }
     double lp = bb.logp(false);
     if (can_dirty_equal_clean) {
-      lp += bb.logp(true) + be.logp(x);
+      lp += bb.logp(true) + be->logp(x);
     }
     return lp;
   }
 
-  double logp_score() const { return bb.logp_score() + be.logp_score(); }
+  double logp_score() const { return bb.logp_score() + be->logp_score(); }
 
   void transition_hyperparameters(std::mt19937* prng) {
-    be.transition_hyperparameters(prng);
+    be->transition_hyperparameters(prng);
     bb.transition_hyperparameters(prng);
   }
 
   SampleType sample_corrupted(const SampleType& clean, std::mt19937* prng) {
     if (bb.sample(prng)) {
-      return be.sample_corrupted(clean, prng);
+      return be->sample_corrupted(clean, prng);
     }
     return clean;
   }

@@ -6,15 +6,13 @@
 #include <string>
 #include <variant>
 
-#include "emissions/sometimes.hh"
+#include "emissions/base.hh"
 
-class BitFlip;
-class GaussianEmission;
-class SimpleStringEmission;
-using SometimesBitFlip = Sometimes<BitFlip>;
-using SometimesGaussian = Sometimes<GaussianEmission>;
+using EmissionVariant = std::variant<Emission<double>*,
+                                     Emission<bool>*,
+                                     Emission<std::string>*,
+                                     Emission<int>*>
 
-using EmissionVariant = std::variant<GaussianEmission*, SometimesGaussian*,
-                                     SometimesBitFlip*, SimpleStringEmission*>;
-
-EmissionVariant get_emission(const std::string& emission_name);
+EmissionVariant get_emission(
+    const std::string& emission_name,
+    std::map<std::string, std::string> distribution_args = {});

@@ -29,6 +29,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":bitflip",
+        ":categorical",
         ":gaussian",
         ":simple_string",
         ":sometimes",
