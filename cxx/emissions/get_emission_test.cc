@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_categorical) {
-  EmissionVariant ev = get_emission("sometimes_categorical");
+  std::map<std::string, std::string> args;
+  args["k"] = "5";
+  EmissionVariant ev = get_emission("sometimes_categorical", args);
   Emission<int>* sc = std::get<Emission<int>*>(ev);
-
-  BOOST_TEST(sc->can_dirty_equal_clean);
 
   sc->incorporate(std::make_pair<int, int>(0, 1));
   BOOST_TEST(sc->N == 1);

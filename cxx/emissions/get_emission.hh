@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <variant>
 
@@ -11,7 +12,7 @@
 using EmissionVariant = std::variant<Emission<double>*,
                                      Emission<bool>*,
                                      Emission<std::string>*,
-                                     Emission<int>*>
+                                     Emission<int>*>;
 
 EmissionVariant get_emission(
     const std::string& emission_name,

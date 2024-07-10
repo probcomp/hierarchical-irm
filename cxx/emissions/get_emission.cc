@@ -22,9 +22,9 @@ EmissionVariant get_emission(
     return new Sometimes<bool>(new BitFlip());
   } else if (emission_name == "sometimes_categorical") {
     int num_states = std::stoi(distribution_args.at("k"));
-    return new Sometimes<int>(new Categorical(num_states), true);
+    return new Sometimes<int>(new CategoricalEmission(num_states), true);
   } else if (emission_name == "sometimes_gaussian") {
-    return new Sometimes<double>(new Gaussian());
+    return new Sometimes<double>(new GaussianEmission());
   }
   printf("Unknown emission name %s\n", emission_name.c_str());
   assert(false);

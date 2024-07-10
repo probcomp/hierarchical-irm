@@ -21,7 +21,7 @@ class Sometimes : public Emission<SampleType> {
   Sometimes(Emission<SampleType>* _be, bool _can_dirty_equal_clean = false):
     be(_be), can_dirty_equal_clean(_can_dirty_equal_clean) {};
 
-  ~Sometimes(): {
+  ~Sometimes() {
     delete be;
   }
 
@@ -34,7 +34,7 @@ class Sometimes : public Emission<SampleType> {
       return;
     }
     if (can_dirty_equal_clean) {
-      double p_came_from_be = exp(bb.logp(true) + be.logp(x));
+      double p_came_from_be = exp(bb.logp(true) + be->logp(x));
       bb.incorporate(true, p_came_from_be);
       be->incorporate(x, p_came_from_be);
       bb.incorporate(false, 1.0 - p_came_from_be);
