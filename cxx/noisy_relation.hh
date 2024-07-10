@@ -72,7 +72,7 @@ class NoisyRelation : public Relation<T> {
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
   // care, since they mutate the clusters only and not the relation. In
-  // particular, for every call to unincorporate_from_cluster, there must be a
+  // particular, for every call to unincorporate_from_cluster, there must be a 
   // corresponding call to incorporate_to_cluster with the same items, or the
   // Relation will be in an invalid state. See the Attribute class for usage/
   // justification of this choice.
