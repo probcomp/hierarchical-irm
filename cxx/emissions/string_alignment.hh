@@ -15,7 +15,7 @@ struct Insertion {
 
 struct Substitution {
   char original;
-  char replacment;
+  char replacement;
 };
 
 struct Match {
