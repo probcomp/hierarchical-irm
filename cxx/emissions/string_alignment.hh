@@ -7,19 +7,23 @@
 
 struct Deletion {
   char deleted_char;
+  auto operator<=>(const Deletion&) const = default;
 };
 
 struct Insertion {
   char inserted_char;
+  auto operator<=>(const Insertion&) const = default;
 };
 
 struct Substitution {
   char original;
   char replacement;
+  auto operator<=>(const Substitution&) const = default;
 };
 
 struct Match {
   char c;
+  auto operator<=>(const Match&) const = default;
 };
 
 using AlignPiece = std::variant<Deletion, Insertion, Substitution, Match>;
@@ -29,7 +33,10 @@ class StrAlignment {
   int s1_position;
   int s2_position;
   std::vector<AlignPiece> align_pieces;
+
+  auto operator<=>(const StrAlignment&) const = default;
 };
+
 
 // A CostFunction takes a string alignment and the previous cost (i.e., the
 // cost of the StrAlignment minus its last AlignPiece) and returns the new
