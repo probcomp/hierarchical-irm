@@ -84,7 +84,8 @@ cc_library(
 
 cc_library(
     name = "string_alignment",
-    srcs = ["string_alignment.hh"],
+    srcs = ["string_alignment.cc"],
+    hdrs = ["string_alignment.hh"],
     visibility = ["//:__subpackages__"],
     deps = [],
 )

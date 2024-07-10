@@ -1,4 +1,4 @@
-#include "cxx/emissions/string_alignment.h"
+#include "emissions/string_alignment.hh"
 
 // Our heap will hold (-cost, alignment) pairs.
 using HeapElement = std::pair<double, StrAlignment>;
