@@ -32,5 +32,7 @@ struct EmissionSpec {
   EmissionSpec() = default;
 };
 
-EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
-                                        std::mt19937* prng = nullptr);
+// `get_prior` is an overloaded function with one version that returns
+// DistributionVariant and one that returns EmissionVariant, for ease of use in
+// CleanRelation.
+EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng = nullptr);

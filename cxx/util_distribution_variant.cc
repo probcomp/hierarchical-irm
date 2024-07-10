@@ -55,8 +55,8 @@ DistributionSpec::DistributionSpec(const std::string& dist_str) {
   }
 }
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng) {
+DistributionVariant get_prior(const DistributionSpec& spec,
+                              std::mt19937* prng) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;

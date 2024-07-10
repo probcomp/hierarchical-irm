@@ -40,7 +40,7 @@ std::string type_name() {
 int main() {
   std::mt19937 prng;
   DistributionSpec dist_spec = DistributionSpec("bernoulli");
-  DistributionVariant dv = cluster_prior_from_spec(dist_spec, &prng);
+  DistributionVariant dv = get_prior(dist_spec, &prng);
 
   std::visit(
       [&](const auto& v) {

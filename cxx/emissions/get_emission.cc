@@ -29,8 +29,7 @@ EmissionSpec::EmissionSpec(const std::string& emission_str) {
   }
 }
 
-EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
-                                        std::mt19937* prng) {
+EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
   switch (spec.emission) {
     case EmissionEnum::gaussian:
       return new GaussianEmission();

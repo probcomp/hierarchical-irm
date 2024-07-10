@@ -39,21 +39,21 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((dsc.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc.distribution_args.size() == 1));
   BOOST_CHECK_EQUAL(dsc.distribution_args.at("strings"), "a b c d");
-  DistributionVariant dv = cluster_prior_from_spec(dsc, &prng);
+  DistributionVariant dv = get_prior(dsc, &prng);
   BOOST_TEST(std::get<StringCat*>(dv)->strings.size() == 4);
 
   DistributionSpec dsc2 = DistributionSpec("stringcat(strings=yes:no,delim=:)");
   BOOST_TEST((dsc2.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc2.distribution_args.size() == 2));
   BOOST_CHECK_EQUAL(dsc2.distribution_args.at("strings"), "yes:no");
-  DistributionVariant dv2 = cluster_prior_from_spec(dsc2, &prng);
+  DistributionVariant dv2 = get_prior(dsc2, &prng);
   BOOST_TEST(std::get<StringCat*>(dv2)->strings.size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_cluster_prior_from_spec) {
+BOOST_AUTO_TEST_CASE(test_get_prior) {
   std::mt19937 prng;
   DistributionSpec dc = DistributionSpec("categorical(k=4)");
-  DistributionVariant dcdv = cluster_prior_from_spec(dc, &prng);
+  DistributionVariant dcdv = get_prior(dc, &prng);
   DirichletCategorical* dcd = std::get<DirichletCategorical*>(dcdv);
   BOOST_TEST(dcd->counts.size() == 4);
 }

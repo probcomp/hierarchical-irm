@@ -45,5 +45,7 @@ using DistributionVariant =
 ObservationVariant observation_string_to_value(
     const std::string& value_str, const ObservationEnum& observation_type);
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng);
+// `get_prior` is an overloaded function with one version that returns
+// DistributionVariant and one that returns EmissionVariant, for ease of use in
+// CleanRelation.
+DistributionVariant get_prior(const DistributionSpec& spec, std::mt19937* prng);

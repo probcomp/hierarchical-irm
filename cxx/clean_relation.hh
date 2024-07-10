@@ -79,7 +79,7 @@ class CleanRelation : public Relation<T> {
           dist_variant);
     };
     auto spec_to_dist = [&](auto spec) {
-      return var_to_dist(cluster_prior_from_spec(spec, prng));
+      return var_to_dist(get_prior(spec, prng));
     };
     return std::visit(spec_to_dist, prior_spec);
   }

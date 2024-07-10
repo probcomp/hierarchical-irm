@@ -49,7 +49,7 @@ class NoisyRelation : public Relation<T> {
   std::unordered_map<const T_items, ValueType, H_items> data;
   // Base relation for "true" values.
   Relation<ValueType>* base_relation;
-  // A Relation for the Emission that models noisy values given  values.
+  // A Relation for the Emission that models noisy values given true values.
   CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
   NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
