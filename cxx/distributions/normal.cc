@@ -11,24 +11,16 @@ double logZ(double r, double v, double s) {
          0.5 * log(r) - 0.5 * v * log(s) + lgamma(0.5 * v);
 }
 
-void Normal::incorporate(const double& x) {
-  ++N;
-  double old_mean = mean;
-  mean += (x - mean) / N;
-  var += ((x - mean) * (x - old_mean) - var) / N;
-}
-
-void Normal::unincorporate(const double& x) {
-  int old_N = N;
-  --N;
-  if (N == 0) {
+void Normal::incorporate(const double& x, double weight) {
+  N += weight;
+  if (N == 0.0) {
     mean = 0.0;
     var = 0.0;
     return;
   }
   double old_mean = mean;
-  mean = (mean * old_N - x) / N;
-  var = (var * old_N - (x - mean) * (x - old_mean)) / N;
+  mean += weight * (x - mean) / N;
+  var += weight * ((x - mean) * (x - old_mean) - var) / N;
 }
 
 void Normal::posterior_hypers(double* mprime, double* sprime) const {

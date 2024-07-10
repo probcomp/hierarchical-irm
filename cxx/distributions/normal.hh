@@ -43,9 +43,7 @@ class Normal : public Distribution<double> {
 
   Normal() {}
 
-  void incorporate(const double& x);
-
-  void unincorporate(const double& x);
+  void incorporate(const double& x, double weight = 1.0);
 
   void posterior_hypers(double* mprime, double* sprime) const;
 

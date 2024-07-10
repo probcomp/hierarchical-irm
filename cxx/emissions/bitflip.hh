@@ -10,14 +10,9 @@ class BitFlip : public Emission<bool> {
  public:
   BitFlip() {};
 
-  void incorporate(const std::pair<bool, bool>& x) {
+  void incorporate(const std::pair<bool, bool>& x, double weight = 1.0) {
     assert(x.first != x.second);
-    ++N;
-  }
-
-  void unincorporate(const std::pair<bool, bool>& x) {
-    assert(x.first != x.second);
-    --N;
+    N += weight;
   }
 
   double logp(const std::pair<bool, bool>& x) const {

@@ -31,9 +31,7 @@ class Bigram : public Distribution<std::string> {
     }
   }
 
-  void incorporate(const std::string& x);
-
-  void unincorporate(const std::string& s);
+  void incorporate(const std::string& x, double weight = 1.0);
 
   double logp(const std::string& s) const;
 

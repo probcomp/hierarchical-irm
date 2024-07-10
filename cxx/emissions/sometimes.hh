@@ -19,19 +19,12 @@ class Sometimes : public Emission<typename std::tuple_element<
 
   Sometimes(){};
 
-  void incorporate(const std::pair<SampleType, SampleType>& x) {
-    ++(this->N);
-    bb.incorporate(x.first != x.second);
+  void incorporate(const std::pair<SampleType, SampleType>& x,
+                   double weight = 1.0) {
+    this->N += weight;
+    bb.incorporate(x.first != x.second, weight);
     if (x.first != x.second) {
-      be.incorporate(x);
-    }
-  }
-
-  void unincorporate(const std::pair<SampleType, SampleType>& x) {
-    --(this->N);
-    bb.unincorporate(x.first != x.second);
-    if (x.first != x.second) {
-      be.unincorporate(x);
+      be.incorporate(x, weight);
     }
   }
 
