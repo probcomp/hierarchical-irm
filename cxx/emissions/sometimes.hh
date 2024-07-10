@@ -29,18 +29,18 @@ class Sometimes : public Emission<SampleType> {
                    double weight = 1.0) {
     this->N += weight;
     if (x.first != x.second) {
-      bb.incorporate(true);
-      be->incorporate(x);
+      bb.incorporate(true, weight);
+      be->incorporate(x, weight);
       return;
     }
     if (can_dirty_equal_clean) {
       double p_came_from_be = exp(bb.logp(true) + be->logp(x));
-      bb.incorporate(true, p_came_from_be);
-      be->incorporate(x, p_came_from_be);
-      bb.incorporate(false, 1.0 - p_came_from_be);
+      bb.incorporate(true, p_came_from_be * weight);
+      be->incorporate(x, p_came_from_be * weight);
+      bb.incorporate(false, (1.0 - p_came_from_be) * weight);
       return;
     }
-    bb.incorporate(false);
+    bb.incorporate(false, weight);
   }
 
   double logp(const std::pair<SampleType, SampleType>& x) const {
