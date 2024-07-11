@@ -1,7 +1,7 @@
 #include <utility>
 #include "emissions/string_alignment.hh"
 
-void topn_alignments(int n, const std::string& s1, const std::string& s2,
+void topk_alignments(int k, const std::string& s1, const std::string& s2,
                      CostFunction cost_function,
                      std::vector<StrAlignment>* alignments) {
   std::vector<StrAlignment> heap;
@@ -15,7 +15,7 @@ void topn_alignments(int n, const std::string& s1, const std::string& s2,
 
   int num_found = 0;
 
-  while ((num_found < n) && heap.size() > 0) {
+  while ((num_found < k) && heap.size() > 0) {
     // Pop the lowest cost element off the heap.
     StrAlignment heap_top(heap.front());
     std::pop_heap(heap.begin(), heap.end());

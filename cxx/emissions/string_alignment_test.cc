@@ -8,7 +8,7 @@
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   std::vector<StrAlignment> alignments;
-  topn_alignments(1, "hello", "world", edit_distance, &alignments);
+  topk_alignments(1, "hello", "world", edit_distance, &alignments);
   BOOST_TEST(alignments.size() == 1);
   BOOST_TEST(alignments[0].cost == 4);  // 4 substitutions, 1 match
   BOOST_TEST(alignments[0].s1_position == 5);
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
 BOOST_AUTO_TEST_CASE(test_lookahead) {
   std::vector<StrAlignment> alignments;
-  topn_alignments(1, "world", "w0rld!", edit_distance, &alignments);
+  topk_alignments(1, "world", "w0rld!", edit_distance, &alignments);
   BOOST_TEST(alignments.size() == 1);
   BOOST_TEST(alignments[0].cost == 2);  // 4 match, 1 substitution, 1 insertion
   BOOST_TEST(alignments[0].s1_position == 5);
@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(test_lookahead) {
   BOOST_TEST(alignments[0].align_pieces[5].index() == 1);  // Insertion !
 }
 
-BOOST_AUTO_TEST_CASE(test_topn) {
+BOOST_AUTO_TEST_CASE(test_topk) {
   std::vector<StrAlignment> alignments;
-  topn_alignments(5, "world", "w0rld!", edit_distance, &alignments);
+  topk_alignments(5, "world", "w0rld!", edit_distance, &alignments);
   BOOST_TEST(alignments.size() == 5);
 
   for (int i = 0; i < 5; ++i) {
@@ -68,7 +68,7 @@ double bio_edit_distance(const StrAlignment& alignment, double old_cost) {
 
 BOOST_AUTO_TEST_CASE(test_custom_edit_distance) {
   std::vector<StrAlignment> alignments;
-  topn_alignments(5, "AACAGTTACC", "TAAGGTCA", bio_edit_distance, &alignments);
+  topk_alignments(5, "AACAGTTACC", "TAAGGTCA", bio_edit_distance, &alignments);
   BOOST_TEST(alignments.size() == 5);
   BOOST_TEST(alignments[0].cost == 7);  // 2 deletions, 3 substitutions
 }

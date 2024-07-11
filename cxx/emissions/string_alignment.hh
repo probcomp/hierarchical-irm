@@ -44,8 +44,8 @@ class StrAlignment {
 // cost of the alignment.
 using CostFunction = std::function<double(const StrAlignment&, double)>;
 
-// Put the top-n lowest cost alignments between s1 and s2 into *alignments.
-void topn_alignments(int n, const std::string& s1, const std::string& s2,
+// Put the top-k lowest cost alignments between s1 and s2 into *alignments.
+void topk_alignments(int k, const std::string& s1, const std::string& s2,
                      CostFunction cost_function,
                      std::vector<StrAlignment>* alignments);
 
