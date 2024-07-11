@@ -26,7 +26,7 @@ class T_clean_relation {
   // TODO(emilyaf): Enable observed vs. latent.
   // bool is_observed;
 
-  DistributionSpec distribution_spec;
+  std::string distribution_spec;
 };
 
 template <typename T>
@@ -39,7 +39,7 @@ class CleanRelation : public Relation<T> {
   // list of domain pointers
   const std::vector<Domain*> domains;
   // Distribution or Emission spec over the relation's codomain.
-  const std::variant<DistributionSpec, EmissionSpec> prior_spec;
+  const std::string prior_spec;
   // map from cluster multi-index to Distribution pointer
   std::unordered_map<const std::vector<int>, Distribution<ValueType>*,
                      VectorIntHash>
@@ -54,7 +54,7 @@ class CleanRelation : public Relation<T> {
       data_r;
 
   CleanRelation(const std::string& name,
-                const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
+                const std::string& prior_spec,
                 const std::vector<Domain*>& domains)
       : name(name), domains(domains), prior_spec(prior_spec) {
     assert(!domains.empty());

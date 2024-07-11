@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  DistributionSpec spec = DistributionSpec("bernoulli");
+  std::string spec = "bernoulli";
   CleanRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);

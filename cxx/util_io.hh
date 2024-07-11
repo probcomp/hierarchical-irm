@@ -9,7 +9,7 @@ typedef std::map<std::string, std::map<std::string, T_item>> T_encoding_f;
 typedef std::map<std::string, std::map<T_item, std::string>> T_encoding_r;
 typedef std::tuple<T_encoding_f, T_encoding_r> T_encoding;
 
-typedef std::tuple<std::string, std::vector<std::string>, ObservationVariant>
+typedef std::tuple<std::string, std::vector<std::string>, std::string>
     T_observation;
 typedef std::vector<T_observation> T_observations;
 
