@@ -75,9 +75,9 @@ BOOST_AUTO_TEST_CASE(test_irm_one_data_point) {
   irm.transition_cluster_assignments_all(&prng);
   BOOST_TEST(irm.logp_score() == 0.0);
 
-  auto obs0 = observation_string_to_value("0", ObservationEnum::bool_type);
-  auto obs1 = observation_string_to_value("1", ObservationEnum::double_type);
-  auto obs2 = observation_string_to_value("2", ObservationEnum::double_type);
+  bool obs0 = false;
+  double obs1 = 1.;
+  double obs2 = 2.;
 
   double logp_x = irm.logp({{"R1", {1,}, obs0}}, &prng);
   BOOST_TEST(logp_x < 0.0);
