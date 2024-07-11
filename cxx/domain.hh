@@ -27,15 +27,9 @@ class Domain {
     }
   }
   void unincorporate(const T_item& item) {
-    printf("Not implemented\n");
-    exit(EXIT_FAILURE);
-    // assert(items.count(item) == 1);
-    // assert(items.at(item).count(relation) == 1);
-    // items.at(item).erase(relation);
-    // if (items.at(item).size() == 0) {
-    //     crp.unincorporate(item);
-    //     items.erase(item);
-    // }
+    assert(items.count(item) == 1);
+    crp.unincorporate(item);
+    items.erase(item);
   }
   int get_cluster_assignment(const T_item& item) const {
     assert(items.contains(item));

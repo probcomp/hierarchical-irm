@@ -41,10 +41,8 @@ BOOST_AUTO_TEST_CASE(test_irm) {
   irm.transition_cluster_assignments_all(&prng);
   BOOST_TEST(irm.logp_score() == one_obs_score);
 
-  // TODO(thomaswc):  Uncomment below when relation::unincorporate is
-  // implemented.
-  // irm.unincorporate("R1", {1, 2});
-  // BOOST_TEST(irm.logp_score() == 0.0);
+  irm.unincorporate("R1", {1, 2});
+  BOOST_TEST(irm.logp_score() == 0.0);
 
   irm.incorporate(&prng, "R2", {0, 3}, 1.);
   irm.incorporate(&prng, "R4", {0, 3, 1}, 1.2);

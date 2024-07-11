@@ -66,7 +66,9 @@ class NoisyRelation : public Relation<T> {
   }
 
   void unincorporate(const T_items& items) {
+    assert(data.contains(items));
     emission_relation.unincorporate(items);
+    data.erase(items);
   }
 
   double logp_gibbs_approx(const Domain& domain, const T_item& item, int table,

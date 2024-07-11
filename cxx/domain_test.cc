@@ -26,4 +26,9 @@ BOOST_AUTO_TEST_CASE(test_domain) {
   int ca = d.get_cluster_assignment(apple);
   BOOST_TEST(ca == 5);
   BOOST_TEST(cb == 12);
+
+  d.unincorporate(banana);
+  BOOST_TEST(!d.items.contains(banana));
+  BOOST_TEST(d.items.contains(apple));
+  BOOST_TEST(d.items.size() == 1);
 }
