@@ -31,8 +31,8 @@ using AlignPiece = std::variant<Deletion, Insertion, Substitution, Match>;
 class StrAlignment {
  public:
   double cost;
-  int s1_position;
-  int s2_position;
+  size_t s1_position;
+  size_t s2_position;
   std::vector<AlignPiece> align_pieces;
 
   auto operator<=>(const StrAlignment&) const = default;
