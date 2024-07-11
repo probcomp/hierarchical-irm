@@ -10,6 +10,7 @@
 #include <variant>
 
 // Set of all observation types.
+// ObservationVariant and ObservationEnum need not be listed in the same order.
 using ObservationVariant = std::variant<double, int, bool, std::string>;
 enum class ObservationEnum { double_type, int_type, bool_type, string_type };
 
