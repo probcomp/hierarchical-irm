@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -26,14 +25,15 @@ class T_noisy_relation {
   // is a distribution over.
   std::vector<std::string> domains;
 
-  // Name of the relation for the "true" values that the NoisyRelation observes.
-  std::string base_relation;
-
   // Indicates if the NoisyRelation's values are observed or latent.
-  bool is_observed;
+  // TODO(emilyaf): Enable unobserved relations.
+  // bool is_observed;
 
   // Describes the Emission that models the noise.
   EmissionSpec emission_spec;
+
+  // Name of the relation for the "true" values that the NoisyRelation observes.
+  std::string base_relation;
 };
 
 template <typename T>
@@ -47,9 +47,9 @@ class NoisyRelation : public Relation<T> {
   const std::vector<Domain*> domains;
   // map from item to observed data
   std::unordered_map<const T_items, ValueType, H_items> data;
-  // Base relation for "" values.
-  const Relation<ValueType>* base_relation;
-  // A Relation for the Emission that models noisy values given  values.
+  // Base relation for "true" values.
+  Relation<ValueType>* base_relation;
+  // A Relation for the Emission that models noisy values given true values.
   CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
   NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
@@ -61,8 +61,8 @@ class NoisyRelation : public Relation<T> {
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
     data[items] = value;
-    const ValueType _val = get_base_value(items);
-    emission_relation.incorporate(prng, items, std::make_pair(_val, value));
+    const ValueType base_val = get_base_value(items);
+    emission_relation.incorporate(prng, items, std::make_pair(base_val, value));
   }
 
   void unincorporate(const T_items& items) {
@@ -81,8 +81,8 @@ class NoisyRelation : public Relation<T> {
   }
 
   double logp(const T_items& items, ValueType value, std::mt19937* prng) {
-    const ValueType _val = get_base_value(items);
-    return emission_relation.logp(items, std::make_pair(_val, value), prng);
+    const ValueType base_val = get_base_value(items);
+    return emission_relation.logp(items, std::make_pair(base_val, value), prng);
   }
 
   double logp_score() const { return emission_relation.logp_score(); }
@@ -123,14 +123,15 @@ class NoisyRelation : public Relation<T> {
 
   double cluster_or_prior_logp(std::mt19937* prng, const T_items& z,
                                const ValueType& value) const {
-    const ValueType base_value = get_base_value(z);
     if (emission_relation.clusters.contains(z)) {
+      const ValueType base_value = get_base_value(z);
       return emission_relation.clusters.at(z)->logp(
           std::make_pair(base_value, value));
     }
     auto emission_prior = emission_relation.make_new_distribution(prng);
+    // TODO(emilyaf): Need to plumb through a base value or e.g. sample it.
     double emission_logp =
-        emission_prior->logp(std::make_pair(base_value, value));
+        emission_prior->logp(std::make_pair(value, value));
     delete emission_prior;
     return emission_logp;
   }

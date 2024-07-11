@@ -34,12 +34,9 @@ int main(int argc, char** argv) {
 
   printf("===== IRM ====\n");
   std::map<std::string, T_relation> schema1{
-      {"R1",
-       T_relation{{"D1", "D1"}, DistributionSpec{DistributionEnum::bernoulli}}},
-      {"R2",
-       T_relation{{"D1", "D2"}, DistributionSpec{DistributionEnum::normal}}},
-      {"R3",
-       T_relation{{"D3", "D1"}, DistributionSpec{DistributionEnum::bigram}}}};
+      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}}};
   IRM irm(schema1);
 
   for (auto const& kv : irm.domains) {
@@ -63,7 +60,8 @@ int main(int argc, char** argv) {
   for (auto const& i : schema) {
     printf("relation: %s\n", i.first.c_str());
     printf("domains: ");
-    for (auto const& j : i.second.domains) {
+    for (auto const& j :
+         std::visit([](const auto& r) { return r.domains; }, i.second)) {
       printf("%s ", j.c_str());
     }
     printf("\n");
@@ -81,8 +79,10 @@ int main(int argc, char** argv) {
     printf("%d ", std::get<bool>(value));
     int counter = 0;
     T_items items_code;
+    auto rel_domains =
+        std::visit([](const auto& r) { return r.domains; }, schema.at(relation));
     for (auto const& item : std::get<1>(i)) {
-      auto domain = schema.at(relation).domains[counter];
+      auto domain = rel_domains[counter];
       counter += 1;
       auto code = item_to_code.at(domain).at(item);
       printf("%s(%d) ", item.c_str(), code);

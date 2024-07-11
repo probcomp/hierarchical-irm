@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   for (auto const& [relation_name, relation] : schema) {
     printf("relation: %s, ", relation_name.c_str());
     printf("domains: ");
-    for (auto const& domain : relation.domains) {
+    for (auto const& domain : std::visit([](auto r) {return r.domains;}, relation)) {
       printf("%s ", domain.c_str());
     }
     printf("\n");

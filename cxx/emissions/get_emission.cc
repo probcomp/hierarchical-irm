@@ -4,21 +4,42 @@
 #include "emissions/get_emission.hh"
 
 #include <cassert>
+#include <random>
+#include <string>
 
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
 
-EmissionVariant get_emission(const std::string& emission_name) {
-  if (emission_name == "gaussian") {
-    return new GaussianEmission();
-  } else if (emission_name == "simple_string") {
-    return new SimpleStringEmission();
-  } else if (emission_name == "sometimes_gaussian") {
-    return new SometimesGaussian();
-  } else if (emission_name == "sometimes_bitflip") {
-    return new SometimesBitFlip();
+EmissionSpec::EmissionSpec(const std::string& emission_str) {
+  if (emission_str == "gaussian") {
+    emission = EmissionEnum::gaussian;
+    observation_type = ObservationEnum::double_type;
+  } else if (emission_str == "simple_string") {
+    emission = EmissionEnum::simple_string;
+    observation_type = ObservationEnum::string_type;
+  } else if (emission_str == "sometimes_gaussian") {
+    emission = EmissionEnum::sometimes_gaussian;
+    observation_type = ObservationEnum::double_type;
+  } else if (emission_str == "sometimes_bitflip") {
+    emission = EmissionEnum::sometimes_bitflip;
+    observation_type = ObservationEnum::bool_type;
+  } else {
+    assert(false && "Unsupported emission name.");
   }
-  printf("Unknown emission name %s\n", emission_name.c_str());
-  assert(false);
+}
+
+EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
+  switch (spec.emission) {
+    case EmissionEnum::gaussian:
+      return new GaussianEmission();
+    case EmissionEnum::simple_string:
+      return new SimpleStringEmission();
+    case EmissionEnum::sometimes_bitflip:
+      return new SometimesBitFlip();
+    case EmissionEnum::sometimes_gaussian:
+      return new SometimesGaussian();
+    default:
+      assert(false && "Unsupported emission enum value.");
+  }
 }

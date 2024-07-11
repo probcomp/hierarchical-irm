@@ -11,12 +11,12 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_irm) {
   std::map<std::string, T_relation> schema1{
-      {"R1",
-       T_relation{{"D1", "D1"}, DistributionSpec{DistributionEnum::bernoulli}}},
-      {"R2",
-       T_relation{{"D1", "D2"}, DistributionSpec{DistributionEnum::normal}}},
-      {"R3",
-       T_relation{{"D3", "D1"}, DistributionSpec{DistributionEnum::bigram}}}};
+      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}},
+      {"R4",
+       T_noisy_relation{
+           {"D1", "D2", "D3"}, EmissionSpec("sometimes_gaussian"), "R2"}}};
   IRM irm(schema1);
 
   BOOST_TEST(irm.logp_score() == 0.0);
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(test_irm) {
 
   irm.remove_relation("R3");
 
-  auto obs0 = observation_string_to_value("0", DistributionEnum::bernoulli);
+  auto obs0 = observation_string_to_value("0", ObservationEnum::bool_type);
 
   double logp_x = irm.logp({{"R1", {1, 2}, obs0}}, &prng);
   BOOST_TEST(logp_x < 0.0);
@@ -48,4 +48,15 @@ BOOST_AUTO_TEST_CASE(test_irm) {
   // implemented.
   // irm.unincorporate("R1", {1, 2});
   // BOOST_TEST(irm.logp_score() == 0.0);
+
+  irm.incorporate(&prng, "R2", {0, 3}, 1.);
+  irm.incorporate(&prng, "R4", {0, 3, 1}, 1.2);
+  irm.incorporate(&prng, "R4", {0, 3, 0}, 0.9);
+  BOOST_TEST(irm.logp_score() < 0.0);
+
+  // Transitioning clusters should preserve the number of observations.
+  irm.transition_cluster_assignments_all(&prng);
+  int r4_obs = std::visit([](auto r) { return r->get_data().size(); },
+                          irm.relations.at("R4"));
+  BOOST_TEST(r4_obs == 2);
 }

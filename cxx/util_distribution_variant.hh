@@ -18,10 +18,7 @@
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
 #include "distributions/stringcat.hh"
-#include "emissions/bitflip.hh"
-#include "emissions/gaussian.hh"
-#include "emissions/simple_string.hh"
-#include "emissions/sometimes.hh"
+#include "util_observation.hh"
 
 enum class DistributionEnum {
   bernoulli,
@@ -32,34 +29,23 @@ enum class DistributionEnum {
   stringcat
 };
 
-enum class EmissionEnum { sometimes_bitflip, gaussian, simple_string };
-
 struct DistributionSpec {
   DistributionEnum distribution;
+  ObservationEnum observation_type;
   std::map<std::string, std::string> distribution_args = {};
-};
 
-struct EmissionSpec {
-  EmissionEnum emission;
+  DistributionSpec(const std::string& dist_str);
+  DistributionSpec() = default;
 };
-
-// Set of all distribution sample types.
-using ObservationVariant = std::variant<double, int, bool, std::string>;
 
 using DistributionVariant =
     std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*,
                  Skellam*, StringCat*>;
 
-using EmissionVariant =
-    std::variant<Sometimes<BitFlip>*, GaussianEmission*, SimpleStringEmission*>;
-
 ObservationVariant observation_string_to_value(
-    const std::string& value_str, const DistributionEnum& distribution);
+    const std::string& value_str, const ObservationEnum& observation_type);
 
-DistributionSpec parse_distribution_spec(const std::string& dist_str);
-
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng);
-
-EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
-                                        std::mt19937* prng);
+// `get_prior` is an overloaded function with one version that returns
+// DistributionVariant and one that returns EmissionVariant, for ease of use in
+// CleanRelation.
+DistributionVariant get_prior(const DistributionSpec& spec, std::mt19937* prng);

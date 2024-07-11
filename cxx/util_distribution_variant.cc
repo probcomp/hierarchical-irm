@@ -13,63 +13,50 @@
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
 #include "distributions/stringcat.hh"
-#include "emissions/bitflip.hh"
-#include "emissions/gaussian.hh"
-#include "emissions/simple_string.hh"
-#include "emissions/sometimes.hh"
+#include "util_observation.hh"
 
-ObservationVariant observation_string_to_value(
-    const std::string& value_str, const DistributionEnum& distribution) {
-  switch (distribution) {
-    case DistributionEnum::normal:
-      return std::stod(value_str);
-    case DistributionEnum::bernoulli:
-      return static_cast<bool>(std::stoi(value_str));
-    case DistributionEnum::categorical:
-    case DistributionEnum::skellam:
-      return std::stoi(value_str);
-    case DistributionEnum::bigram:
-    case DistributionEnum::stringcat:
-      return value_str;
-    default:
-      assert(false && "Unsupported distribution enum value.");
-  }
-}
-
-DistributionSpec parse_distribution_spec(const std::string& dist_str) {
-  std::map<std::string, DistributionEnum> dist_name_to_enum = {
-      {"bernoulli", DistributionEnum::bernoulli},
-      {"bigram", DistributionEnum::bigram},
-      {"categorical", DistributionEnum::categorical},
-      {"normal", DistributionEnum::normal},
-      {"skellam", DistributionEnum::skellam},
-      {"stringcat", DistributionEnum::stringcat}};
+DistributionSpec::DistributionSpec(const std::string& dist_str) {
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
-  DistributionEnum dist = dist_name_to_enum.at(dist_name);
-
   std::string args_str = dist_str.substr(dist_name.length());
-  if (args_str.empty()) {
-    return DistributionSpec{dist};
-  } else {
+  if (!args_str.empty()) {
     assert(args_str[0] == '(');
     assert(args_str.back() == ')');
     args_str = args_str.substr(1, args_str.size() - 2);
 
     std::string part;
     std::istringstream iss{args_str};
-    std::map<std::string, std::string> dist_args;
     while (std::getline(iss, part, ',')) {
       assert(part.find('=') != std::string::npos);
       std::string arg_name = part.substr(0, part.find('='));
       std::string arg_val = part.substr(part.find('=') + 1);
-      dist_args[arg_name] = arg_val;
+      distribution_args[arg_name] = arg_val;
     }
-    return DistributionSpec{dist, dist_args};
+  }
+  if (dist_name == "bernoulli") {
+    distribution = DistributionEnum::bernoulli;
+    observation_type = ObservationEnum::bool_type;
+  } else if (dist_name == "bigram") {
+    distribution = DistributionEnum::bigram;
+    observation_type = ObservationEnum::string_type;
+  } else if (dist_name == "categorical") {
+    distribution = DistributionEnum::categorical;
+    observation_type = ObservationEnum::int_type;
+  } else if (dist_name == "normal") {
+    distribution = DistributionEnum::normal;
+    observation_type = ObservationEnum::double_type;
+  } else if (dist_name == "skellam") {
+    distribution = DistributionEnum::skellam;
+    observation_type = ObservationEnum::int_type;
+  } else if (dist_name == "stringcat") {
+    distribution = DistributionEnum::stringcat;
+    observation_type = ObservationEnum::string_type;
+  } else {
+    assert(false && "Unsupported distribution name.");
   }
 }
 
-DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
-                                            std::mt19937* prng) {
+DistributionVariant get_prior(const DistributionSpec& spec,
+                              std::mt19937* prng) {
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;
@@ -101,20 +88,5 @@ DistributionVariant cluster_prior_from_spec(const DistributionSpec& spec,
     }
     default:
       assert(false && "Unsupported distribution enum value.");
-  }
-}
-
-EmissionVariant cluster_prior_from_spec(const EmissionSpec& spec,
-                                        std::mt19937* prng) {
-  switch (spec.emission) {
-    case EmissionEnum::sometimes_bitflip:
-      return new Sometimes<BitFlip>;
-    case EmissionEnum::gaussian:
-      return new GaussianEmission;
-    case EmissionEnum::simple_string: {
-      return new SimpleStringEmission;
-    }
-    default:
-      assert(false && "Unsupported emission enum value.");
   }
 }

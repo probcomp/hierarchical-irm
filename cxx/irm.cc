@@ -6,13 +6,31 @@
 #include <cstdio>
 #include <ctime>
 #include <functional>
-#include <iostream>
 #include <variant>
 
-IRM::IRM(const T_schema& schema) {
-  for (const auto& [name, relation] : schema) {
-    this->add_relation(name, relation);
+RelationVariant clean_relation_from_spec(const std::string& name,
+                                         const DistributionSpec& spec,
+                                         const std::vector<Domain*>& doms) {
+  switch (spec.observation_type) {
+    case ObservationEnum::bool_type:
+      return new CleanRelation<bool>(name, spec, doms);
+    case ObservationEnum::double_type:
+      return new CleanRelation<double>(name, spec, doms);
+    case ObservationEnum::int_type:
+      return new CleanRelation<int>(name, spec, doms);
+    case ObservationEnum::string_type:
+      return new CleanRelation<std::string>(name, spec, doms);
+    default:
+      assert(false && "Unsupported observation type.");
   }
+}
+
+IRM::IRM(const T_schema& init_schema) {
+  assert(schema.empty());
+  for (const auto& [name, relation] : init_schema) {
+    std::visit([&](auto trel) { this->add_relation(name, trel); }, relation);
+  }
+  assert(schema.size() == relations.size());
 }
 
 IRM::~IRM() {
@@ -223,11 +241,10 @@ double IRM::logp_score() const {
   return logp_score_crp + logp_score_relation;
 }
 
-void IRM::add_relation(const std::string& name, const T_relation& relation) {
-  assert(!schema.contains(name));
-  assert(!relations.contains(name));
+std::vector<Domain*> IRM::add_domains(const std::string& name,
+                                      const std::vector<std::string>& rel_domains) {
   std::vector<Domain*> doms;
-  for (const auto& d : relation.domains) {
+  for (const auto& d : rel_domains) {
     if (domains.count(d) == 0) {
       assert(domain_to_relations.count(d) == 0);
       domains[d] = new Domain(d);
@@ -236,7 +253,62 @@ void IRM::add_relation(const std::string& name, const T_relation& relation) {
     domain_to_relations.at(d).insert(name);
     doms.push_back(domains.at(d));
   }
-  relations[name] = relation_from_spec(name, relation.distribution_spec, doms);
+  return doms;
+}
+
+void IRM::add_relation(const std::string& name,
+                       const T_clean_relation& relation) {
+  assert(!schema.contains(name));
+  assert(!relations.contains(name));
+  std::vector<Domain*> doms = add_domains(name, relation.domains);
+
+  relations[name] = clean_relation_from_spec(name, relation.distribution_spec, doms);
+  schema[name] = relation;
+}
+
+void IRM::add_relation(const std::string& name,
+                       const T_noisy_relation& relation) {
+  assert(!schema.contains(name));
+  assert(!relations.contains(name));
+  std::vector<Domain*> doms = add_domains(name, relation.domains);
+  std::string base_name = relation.base_relation;
+  // Recursively add base relations.
+  RelationVariant base_relation;
+  if (!relations.contains(relation.base_relation)) {
+    std::visit([&](auto& s) { add_relation(base_name, s); },
+               schema.at(base_name));
+  }
+  base_relation = relations.at(base_name);
+
+  RelationVariant rv;
+  std::visit(
+      [&](const auto& br) {
+        using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
+        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
+      },
+      base_relation);
+  relations[name] = rv;
+  schema[name] = relation;
+}
+
+void IRM::add_relation_with_base(const std::string& name,
+                                 const T_noisy_relation& relation,
+                                 RelationVariant base_relation) {
+  // Adds a noisy relation from a spec and a base relation pointer.
+  // This is meant to be called from HIRM, where the base relation may be in a
+  // different IRM.
+  assert(!schema.contains(name));
+  assert(!relations.contains(name));
+  std::vector<Domain*> doms = add_domains(name, relation.domains);
+
+  RelationVariant rv;
+  std::visit(
+      [&](const auto& br) {
+        using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
+        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
+      },
+      base_relation);
+  relations[name] = rv;
   schema[name] = relation;
 }
 
