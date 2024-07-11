@@ -103,9 +103,9 @@ class CleanRelation : public Relation<T> {
   }
 
   void unincorporate(const T_items& items) {
-    assert(data.count(items) == 1);
-    auto value = data.at(items);
-    auto z = get_cluster_assignment(items);
+    assert(data.contains(items));
+    ValueType value = data.at(items);
+    std::vector<int> z = get_cluster_assignment(items);
     clusters.at(z)->unincorporate(value);
     if (clusters.at(z)->N == 0) {
       delete clusters.at(z);
