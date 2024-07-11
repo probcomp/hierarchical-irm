@@ -1,7 +1,6 @@
-
 #include "clean_relation.hh"
 #include "domain.hh"
-#include "util_distribution_variant.hh"
+#include "distributions/get_distribution.hh"
 
 #ifndef _MSC_VER
 #include <cxxabi.h>
@@ -39,8 +38,7 @@ std::string type_name() {
 
 int main() {
   std::mt19937 prng;
-  DistributionSpec dist_spec = DistributionSpec("bernoulli");
-  DistributionVariant dv = get_prior(dist_spec, &prng);
+  DistributionVariant dv = get_distribution("bernoulli", &prng);
 
   std::visit(
       [&](const auto& v) {

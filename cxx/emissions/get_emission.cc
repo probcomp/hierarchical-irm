@@ -7,39 +7,33 @@
 #include <random>
 #include <string>
 
+#include "util_parse.hh"
+
 #include "emissions/bitflip.hh"
+#include "emissions/categorical.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
+#include "emissions/sometimes.hh"
 
-EmissionSpec::EmissionSpec(const std::string& emission_str) {
-  if (emission_str == "gaussian") {
-    emission = EmissionEnum::gaussian;
-    observation_type = ObservationEnum::double_type;
-  } else if (emission_str == "simple_string") {
-    emission = EmissionEnum::simple_string;
-    observation_type = ObservationEnum::string_type;
-  } else if (emission_str == "sometimes_gaussian") {
-    emission = EmissionEnum::sometimes_gaussian;
-    observation_type = ObservationEnum::double_type;
-  } else if (emission_str == "sometimes_bitflip") {
-    emission = EmissionEnum::sometimes_bitflip;
-    observation_type = ObservationEnum::bool_type;
-  } else {
-    assert(false && "Unsupported emission name.");
-  }
-}
+EmissionVariant get_emission(
+    const std::string& emission_string, std::mt19937* prng) {
+  std::string emission_name;
+  std::map<std::string, std::string> emission_args;
+  parse_name_and_parameters(emission_string, &emission_name, &emission_args);
 
-EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
-  switch (spec.emission) {
-    case EmissionEnum::gaussian:
-      return new GaussianEmission();
-    case EmissionEnum::simple_string:
-      return new SimpleStringEmission();
-    case EmissionEnum::sometimes_bitflip:
-      return new SometimesBitFlip();
-    case EmissionEnum::sometimes_gaussian:
-      return new SometimesGaussian();
-    default:
-      assert(false && "Unsupported emission enum value.");
+  if (emission_name == "gaussian") {
+    return new GaussianEmission();
+  } else if (emission_name == "simple_string") {
+    return new SimpleStringEmission();
+  } else if (emission_name == "sometimes_bitflip") {
+    return new Sometimes<bool>(new BitFlip());
+  } else if (emission_name == "sometimes_categorical") {
+    int num_states = std::stoi(emission_args.at("k"));
+    // return new Sometimes<int>(new CategoricalEmission(num_states), true);
+    return new Sometimes<int>(new CategoricalEmission(num_states));
+  } else if (emission_name == "sometimes_gaussian") {
+    return new Sometimes<double>(new GaussianEmission());
   }
+  printf("Unknown emission name %s\n", emission_name.c_str());
+  assert(false);
 }

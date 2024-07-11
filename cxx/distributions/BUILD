@@ -1,21 +1,6 @@
 licenses(["notice"])
 
 cc_library(
-    name = "distributions",
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":base",
-        ":beta_bernoulli",
-        ":bigram",
-        ":crp",
-        ":dirichlet_categorical",
-        ":normal",
-        ":skellam",
-        ":stringcat",
-    ],
-)
-
-cc_library(
     name = "base",
     hdrs = ["base.hh"],
     visibility = ["//:__subpackages__"],
@@ -62,6 +47,25 @@ cc_library(
     deps = [
         ":base",
         "//:util_math",
+    ],
+)
+
+cc_library(
+    name = "get_distribution",
+    srcs = ["get_distribution.cc"],
+    hdrs = ["get_distribution.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        ":beta_bernoulli",
+        ":bigram",
+        ":crp",
+        ":dirichlet_categorical",
+        ":normal",
+        ":skellam",
+        ":stringcat",
+        "//:util_parse",
+        "@boost//:algorithm",
     ],
 )
 
@@ -153,6 +157,16 @@ cc_test(
     deps = [
         ":beta_bernoulli",
         ":dirichlet_categorical",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "get_distribution_test",
+    srcs = ["get_distribution_test.cc"],
+    deps = [
+        ":get_distribution",
         "@boost//:algorithm",
         "@boost//:test",
     ],

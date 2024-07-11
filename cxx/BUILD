@@ -14,7 +14,6 @@ cc_library(
     deps = [
         ":domain",
         ":relation",
-        ":util_distribution_variant",
         ":util_hash",
         ":util_math",
         "//distributions:base",
@@ -26,7 +25,7 @@ cc_library(
     name = "domain",
     hdrs = ["domain.hh"],
     deps = [
-        "//distributions",
+        "//distributions:get_distribution",
     ],
 )
 
@@ -38,7 +37,6 @@ cc_library(
     deps = [
         ":clean_relation",
         ":noisy_relation",
-        ":util_distribution_variant",
         "//emissions:get_emission"
     ],
 )
@@ -59,11 +57,10 @@ cc_binary(
     deps = [
         ":cxxopts",
         ":hirm_lib",
-        ":util_distribution_variant",
         ":util_hash",
         ":util_io",
         ":util_math",
-        "//distributions",
+        "//distributions:get_distribution",
     ],
 )
 
@@ -73,7 +70,7 @@ cc_binary(
     deps = [
         ":clean_relation",
         ":domain",
-        ":util_distribution_variant",
+        "//distributions:get_distribution",
     ],
 )
 
@@ -85,7 +82,6 @@ cc_library(
         ":domain",
         ":clean_relation",
         ":relation",
-        ":util_distribution_variant",
         ":util_hash",
         ":util_math",
         "//distributions:base",
@@ -99,23 +95,9 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         ":domain",
-        ":util_distribution_variant",
         ":util_hash",
         ":util_math",
         "//distributions:base"
-    ],
-)
-
-cc_library(
-    name = "util_distribution_variant",
-    srcs = ["util_distribution_variant.cc"],
-    visibility = [":__subpackages__"],
-    hdrs = ["util_distribution_variant.hh"],
-    deps = [
-        ":domain",
-        ":util_observation",
-        "//distributions",
-        "@boost//:algorithm",
     ],
 )
 
@@ -134,7 +116,7 @@ cc_library(
     ],
     deps = [
         ":hirm_lib",
-        "//distributions",
+        "//distributions:get_distribution",
     ],
 )
 
@@ -147,13 +129,11 @@ cc_library(
 )
 
 cc_library(
-    name = "util_observation",
-    srcs = ["util_observation.cc"],
+    name = "util_parse",
+    srcs = ["util_parse.cc"],
+    hdrs = ["util_parse.hh"],
     visibility = [":__subpackages__"],
-    hdrs = ["util_observation.hh"],
-    deps = [
-        "@boost//:algorithm",
-    ],
+    deps = [],
 )
 
 cc_test(
@@ -162,7 +142,7 @@ cc_test(
     deps = [
         ":domain",
         ":clean_relation",
-        "//distributions",
+        "//distributions:get_distribution",
         "@boost//:test",
     ],
 )
@@ -201,17 +181,7 @@ cc_test(
         ":domain",
         ":clean_relation",
         ":noisy_relation",
-        "//distributions",
-        "@boost//:test",
-    ],
-)
-
-cc_test(
-    name = "util_distribution_variant_test",
-    srcs = ["util_distribution_variant_test.cc"],
-    deps = [
-        ":util_distribution_variant",
-        "@boost//:algorithm",
+        "//distributions:get_distribution",
         "@boost//:test",
     ],
 )
@@ -222,6 +192,15 @@ cc_test(
     deps = [
         ":util_math",
         "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "util_parse_test",
+    srcs = ["util_parse_test.cc"],
+    deps = [
+        ":util_parse",
         "@boost//:test",
     ],
 )

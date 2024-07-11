@@ -3,9 +3,7 @@ cc_binary(
     srcs = ["test_hirm_animals.cc"],
     deps = [
         "//:hirm_lib",
-        "//:util_distribution_variant",
         "//:util_io",
-        "//distributions",
     ],
 )
 
@@ -14,9 +12,7 @@ cc_binary(
     srcs = ["test_irm_two_relations.cc"],
     deps = [
         "//:irm",
-        "//:util_distribution_variant",
         "//:util_io",
-        "//distributions",
     ],
 )
 
@@ -26,8 +22,6 @@ cc_binary(
     deps = [
         "//:hirm_lib",
         "//:irm",
-        "//:util_distribution_variant",
         "//:util_io",
-        "//distributions",
     ],
 )

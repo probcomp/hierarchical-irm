@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "domain.hh"
-#include "util_distribution_variant.hh"
 #include "util_hash.hh"
 
 typedef std::vector<T_item> T_items;
