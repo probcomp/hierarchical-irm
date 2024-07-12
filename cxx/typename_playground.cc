@@ -55,7 +55,7 @@ int main() {
 
   std::vector<Domain*> domains;
   domains.push_back(new Domain("D1"));
-  RelationVariant rv = new CleanRelation<bool>("r1", dist_spec, domains);
+  RelationVariant rv = new CleanRelation<bool>("r1", "bernoulli", domains);
 
   std::visit(
       [&](const auto& relv) {

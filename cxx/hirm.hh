@@ -10,6 +10,7 @@
 
 #include "irm.hh"
 #include "relation.hh"
+#include "observation_variant.hh"
 
 class HIRM {
  public:

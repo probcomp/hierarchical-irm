@@ -8,6 +8,7 @@
 
 #include "clean_relation.hh"
 #include "noisy_relation.hh"
+#include "observation_variant.hh"
 
 using T_relation = std::variant<T_clean_relation, T_noisy_relation>;
 using RelationVariant = std::variant<Relation<std::string>*, Relation<double>*,

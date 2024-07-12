@@ -17,6 +17,7 @@ cc_library(
         ":util_hash",
         ":util_math",
         "//distributions:base",
+        "//distributions:get_distribution",
         "//emissions:get_emission"
     ],
 )
@@ -37,6 +38,7 @@ cc_library(
     deps = [
         ":clean_relation",
         ":noisy_relation",
+        ":observation_variant",
         "//emissions:get_emission"
     ],
 )
@@ -48,6 +50,7 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         ":irm",
+        ":observation_variant",
     ],
 )
 
@@ -60,16 +63,6 @@ cc_binary(
         ":util_hash",
         ":util_io",
         ":util_math",
-        "//distributions:get_distribution",
-    ],
-)
-
-cc_binary(
-    name = "typename_playground",
-    srcs = ["typename_playground.cc"],
-    deps = [
-        ":clean_relation",
-        ":domain",
         "//distributions:get_distribution",
     ],
 )
@@ -87,6 +80,13 @@ cc_library(
         "//distributions:base",
         "//emissions:get_emission",
     ],
+)
+
+cc_library(
+    name = "observation_variant",
+    hdrs = ["observation_variant.hh"],
+    visibility = [":__subpackages__"],
+    deps = [],
 )
 
 cc_library(
@@ -134,6 +134,16 @@ cc_library(
     hdrs = ["util_parse.hh"],
     visibility = [":__subpackages__"],
     deps = [],
+)
+
+cc_binary(
+    name = "typename_playground",
+    srcs = ["typename_playground.cc"],
+    deps = [
+        ":clean_relation",
+        ":domain",
+        "//distributions:get_distribution",
+    ],
 )
 
 cc_test(
