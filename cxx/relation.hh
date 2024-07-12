@@ -4,6 +4,7 @@
 #pragma once
 
 #include <random>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -48,6 +49,14 @@ class Relation {
   virtual std::vector<int> get_cluster_assignment(const T_items& items) const = 0;
 
   virtual bool has_observation(const Domain& domain, const T_item& item) const = 0;
+
+  // Convert a string to type T.
+  T from_string(const std::string& s) {
+    T t;
+    stringstream ss(s);
+    ss >> t;
+    return t;
+  };
 
   virtual ~Relation() = default;
 
