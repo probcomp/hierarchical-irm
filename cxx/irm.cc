@@ -8,21 +8,22 @@
 #include <functional>
 #include <variant>
 
+template <typename T>
+CleanRelation<T>* make_clean_relation(
+    Distribution<T>* unused_distribution,
+    const std::string& name,
+    const DistributionSpec& spec,
+    const std::vector<Domain*>& doms) {
+  return new CleanRelation<T>(name, spec, doms);
+}
+
 RelationVariant clean_relation_from_spec(const std::string& name,
-                                         const DistributionSpec& spec,
+                                         const std::string& distribution_spec,
                                          const std::vector<Domain*>& doms) {
-  switch (spec.observation_type) {
-    case ObservationEnum::bool_type:
-      return new CleanRelation<bool>(name, spec, doms);
-    case ObservationEnum::double_type:
-      return new CleanRelation<double>(name, spec, doms);
-    case ObservationEnum::int_type:
-      return new CleanRelation<int>(name, spec, doms);
-    case ObservationEnum::string_type:
-      return new CleanRelation<std::string>(name, spec, doms);
-    default:
-      assert(false && "Unsupported observation type.");
-  }
+  DistributionVariant dv = get_distribution(distribution_spec);
+  return std::visit([](const auto& d) {
+    return make_clean_relation(d, name, distribution_spec, doms);
+  }, dv);
 }
 
 IRM::IRM(const T_schema& init_schema) {
