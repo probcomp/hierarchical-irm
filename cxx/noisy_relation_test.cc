@@ -23,16 +23,14 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  DistributionSpec spec = DistributionSpec("bernoulli");
-  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
+  CleanRelation<bool> R1("R1", "bernoulli", {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, 1);
   R1.incorporate(&prng, {1, 1}, 1);
   R1.incorporate(&prng, {3, 1}, 1);
   R1.incorporate(&prng, {4, 1}, 1);
   R1.incorporate(&prng, {5, 1}, 1);
 
-  EmissionSpec em_spec = EmissionSpec("sometimes_bitflip");
-  NoisyRelation<bool> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
+  NoisyRelation<bool> NR1("NR1", "sometimes_bitflip", {&D1, &D2, &D3}, &R1);
   NR1.incorporate(&prng, {0, 1, 3}, 0);
   NR1.incorporate(&prng, {1, 1, 3}, 1);
   NR1.incorporate(&prng, {3, 1, 3}, 0);
@@ -52,10 +50,8 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   lpg = NR1.logp_gibbs_approx(D1, 0, 10, &prng);
   NR1.set_cluster_assignment_gibbs(D1, 0, 1, &prng);
 
-  DistributionSpec bigram_spec = DistributionSpec("bigram");
-  CleanRelation<std::string> R2("R2", bigram_spec, {&D2, &D3});
-  EmissionSpec str_emspec = EmissionSpec("simple_string");
-  NoisyRelation<std::string> NR2("NR2", str_emspec, {&D2, &D3}, &R2);
+  CleanRelation<std::string> R2("R2", "bigram", {&D2, &D3});
+  NoisyRelation<std::string> NR2("NR2", "simple_string", {&D2, &D3}, &R2);
 
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {2, 3}, "cat");

@@ -29,7 +29,7 @@ class T_noisy_relation {
   // bool is_observed;
 
   // Describes the Emission that models the noise.
-  EmissionSpec emission_spec;
+  std::string emission_spec;
 
   // Name of the relation for the "true" values that the NoisyRelation observes.
   std::string base_relation;
@@ -51,7 +51,7 @@ class NoisyRelation : public Relation<T> {
   // A Relation for the Emission that models noisy values given true values.
   CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
-  NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
+  NoisyRelation(const std::string& name, const std::string& emission_spec,
                 const std::vector<Domain*>& domains, Relation<T>* base_relation)
       : name(name),
         domains(domains),

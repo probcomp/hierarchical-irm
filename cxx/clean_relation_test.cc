@@ -53,8 +53,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   db->incorporate(false);
   BOOST_TEST(db->N == 1);
 
-  DistributionSpec bigram_spec = DistributionSpec("bigram");
-  CleanRelation<std::string> R2("R1", bigram_spec, {&D2, &D3});
+  CleanRelation<std::string> R2("R1", "bigram", {&D2, &D3});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");

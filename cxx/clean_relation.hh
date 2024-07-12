@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "distributions/base.hh"
+#include "distributions/get_distribution.hh"
 #include "domain.hh"
 #include "emissions/get_emission.hh"
 #include "relation.hh"
@@ -40,6 +41,8 @@ class CleanRelation : public Relation<T> {
   const std::vector<Domain*> domains;
   // Distribution or Emission spec over the relation's codomain.
   const std::string prior_spec;
+  // Is the codomain an emission?
+  const bool codomain_is_emission;
   // map from cluster multi-index to Distribution pointer
   std::unordered_map<const std::vector<int>, Distribution<ValueType>*,
                      VectorIntHash>
@@ -55,8 +58,10 @@ class CleanRelation : public Relation<T> {
 
   CleanRelation(const std::string& name,
                 const std::string& prior_spec,
-                const std::vector<Domain*>& domains)
-      : name(name), domains(domains), prior_spec(prior_spec) {
+                const std::vector<Domain*>& domains,
+                bool codomain_is_emission = false)
+      : name(name), domains(domains), prior_spec(prior_spec),
+        codomain_is_emission(codomain_is_emission) {
     assert(!domains.empty());
     assert(!name.empty());
     for (const Domain* const d : domains) {
@@ -77,10 +82,17 @@ class CleanRelation : public Relation<T> {
           [&](auto v) { return reinterpret_cast<Distribution<ValueType>*>(v); },
           dist_variant);
     };
+    /*
     auto spec_to_dist = [&](auto spec) {
       return var_to_dist(get_prior(spec, prng));
     };
     return std::visit(spec_to_dist, prior_spec);
+    */
+    if (codomain_is_emission) {
+      return std::visit(var_to_dist, get_emission(prior_spec, prng));
+    } else {
+      return std::visit(var_to_dist, get_distribution(prior_spec, prng));
+    }
   }
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
