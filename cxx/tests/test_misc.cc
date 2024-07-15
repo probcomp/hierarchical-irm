@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     auto value = std::get<2>(i);
     auto item = std::get<1>(i);
     printf("incorporating %s ", relation.c_str());
-    printf("%s ", value);
+    printf("%s ", value.c_str());
     int counter = 0;
     T_items items_code;
     auto rel_domains =

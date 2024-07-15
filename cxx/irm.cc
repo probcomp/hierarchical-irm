@@ -22,9 +22,11 @@ RelationVariant clean_relation_from_spec(const std::string& name,
                                          const std::vector<Domain*>& doms) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution(distribution_spec, &prng);
-  return std::visit([](const auto& d) {
-    return make_clean_relation(d, name, distribution_spec, doms);
+  RelationVariant rv;
+  return std::visit([&](const auto& d) {
+    rv = make_clean_relation(d, name, distribution_spec, doms);
   }, dv);
+  return rv;
 }
 
 IRM::IRM(const T_schema& init_schema) {

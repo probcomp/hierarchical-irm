@@ -122,8 +122,8 @@ void incorporate_observations(std::mt19937* prng, IRM& irm,
       items_e.push_back(code);
     }
     RelationVariant rv = irm.relations[relation];
-    ObservationVariant ov = std::visit(
-        [&](const auto &r) { return r->from_string(value); }, rv);
+    ObservationVariant ov;
+    std::visit([&](const auto &r) {ov = r->from_string(value);}, rv);
     irm.incorporate(prng, relation, items_e, ov);
   }
 }
@@ -143,9 +143,12 @@ void incorporate_observations(std::mt19937* prng, HIRM& hirm,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
+    RelationVariant rv = hirm.irms.begin()->second->relations[relation];
+    ObservationVariant ov;
+    std::visit([&](const auto &r) {ov = r->from_string(value);}, rv);
     std::visit(
         [&](const auto& v) { hirm.incorporate(prng, relation, items_e, v); },
-        value);
+        ov);
   }
 }
 
