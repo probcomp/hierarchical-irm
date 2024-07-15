@@ -80,8 +80,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
-  DistributionSpec spec = DistributionSpec("bernoulli");
-  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
+  CleanRelation<bool> R1("R1", "bernoulli", {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, 1);
   R1.incorporate(&prng, {0, 2}, 1);
   R1.incorporate(&prng, {3, 0}, 1);
@@ -110,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_emission) {
   Domain D1("D1");
   Domain D2("D2");
   CleanRelation<std::pair<bool, bool>> R1(
-      "R1", "sometimes_bitflip", {&D1, &D2}, codomain_is_emission=true);
+      "R1", "sometimes_bitflip", {&D1, &D2}, true);
   R1.incorporate(&prng, {0, 1}, {1, 1});
   BOOST_TEST(R1.data.size() == 1);
 
