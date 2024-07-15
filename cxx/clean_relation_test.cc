@@ -105,3 +105,16 @@ BOOST_AUTO_TEST_CASE(test_unincorporate) {
   BOOST_TEST(!D1.items.contains(0));
   BOOST_TEST(!D2.items.contains(1));
 }
+
+BOOST_AUTO_TEST_CASE(test_emission) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  EmissionSpec spec = EmissionSpec("sometimes_bitflip");
+  CleanRelation<std::pair<bool, bool>> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, {1, 1});
+  BOOST_TEST(R1.data.size() == 1);
+
+  double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, {1, 1});
+  BOOST_TEST(lp < 0.0);
+}
