@@ -46,6 +46,34 @@ void get_distribution_from_emission_variant(
   *dist_out = nullptr;
 }
 
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<bool>** dist_out) {
+  *dist_out = std::get<Distribution<bool>*>(dv);
+}
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<double>** dist_out) {
+  *dist_out = std::get<Distribution<double>*>(dv);
+}
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<int>** dist_out) {
+  *dist_out = std::get<Distribution<int>*>(dv);
+}
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<std::string>** dist_out) {
+  *dist_out = std::get<Distribution<std::string>*>(dv);
+}
+
+template <typename T>
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<T>** dist_out) {
+  printf("Error!  get_distribution_from_distribution_variant called with non-DistributionVariant type!\n");
+  assert(false);
+  *dist_out = nullptr;
+}
+
 template <typename T>
 class CleanRelation : public Relation<T> {
  public:
@@ -100,7 +128,9 @@ class CleanRelation : public Relation<T> {
       return d;
     } else {
       DistributionVariant dv = get_distribution(prior_spec, prng);
-      Distribution<ValueType>* d = std::get<Distribution<ValueType>*>(dv);
+      Distribution<ValueType> *d;
+      get_distribution_from_distribution_variant(dv, &d);
+      // Distribution<ValueType>* d = std::get<Distribution<ValueType>*>(dv);
       return d;
     }
   }
