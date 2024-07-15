@@ -123,7 +123,7 @@ void incorporate_observations(std::mt19937* prng, IRM& irm,
     }
     RelationVariant rv = irm.relations[relation];
     ObservationVariant ov = std::visit(
-        [&](const auto &r) { return r.from_string(value); }, rv);
+        [&](const auto &r) { return r->from_string(value); }, rv);
     irm.incorporate(prng, relation, items_e, ov);
   }
 }

@@ -13,6 +13,7 @@ cc_binary(
     deps = [
         "//:irm",
         "//:util_io",
+        "//distributions:beta_bernoulli",
     ],
 )
 

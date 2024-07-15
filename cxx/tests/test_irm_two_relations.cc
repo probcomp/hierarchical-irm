@@ -14,6 +14,7 @@
 #include "irm.hh"
 #include "util_io.hh"
 #include "util_math.hh"
+#include "distributions/beta_bernoulli.hh"
 
 using T_r = CleanRelation<bool>*;
 

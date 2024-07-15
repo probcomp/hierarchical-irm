@@ -53,7 +53,7 @@ class Relation {
   // Convert a string to type T.
   T from_string(const std::string& s) {
     T t;
-    stringstream ss(s);
+    std::stringstream ss(s);
     ss >> t;
     return t;
   };

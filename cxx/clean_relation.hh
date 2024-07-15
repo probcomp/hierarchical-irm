@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -29,6 +30,21 @@ class T_clean_relation {
 
   std::string distribution_spec;
 };
+
+
+template <typename T>
+void get_distribution_from_emission_variant(
+    const EmissionVariant &ev, Distribution<std::pair<T, T>>** dist_out) {
+  *dist_out = std::get<Emission<T>*>(ev);
+}
+
+template <typename T>
+void get_distribution_from_emission_variant(
+    const EmissionVariant &ev, Distribution<T>** dist_out) {
+  printf("Error!  CleanRelation<T> used with an emission and non-pair type T\n");
+  assert(false);
+  *dist_out = nullptr;
+}
 
 template <typename T>
 class CleanRelation : public Relation<T> {
@@ -77,21 +93,15 @@ class CleanRelation : public Relation<T> {
   }
 
   Distribution<ValueType>* make_new_distribution(std::mt19937* prng) const {
-    auto var_to_dist = [&](auto dist_variant) {
-      return std::visit(
-          [&](auto v) { return reinterpret_cast<Distribution<ValueType>*>(v); },
-          dist_variant);
-    };
-    /*
-    auto spec_to_dist = [&](auto spec) {
-      return var_to_dist(get_prior(spec, prng));
-    };
-    return std::visit(spec_to_dist, prior_spec);
-    */
     if (codomain_is_emission) {
-      return std::visit(var_to_dist, get_emission(prior_spec, prng));
+      EmissionVariant ev = get_emission(prior_spec, prng);
+      Distribution<ValueType> *d;
+      get_distribution_from_emission_variant(ev, &d);
+      return d;
     } else {
-      return std::visit(var_to_dist, get_distribution(prior_spec, prng));
+      DistributionVariant dv = get_distribution(prior_spec, prng);
+      Distribution<ValueType>* d = std::get<Distribution<ValueType>*>(dv);
+      return d;
     }
   }
 

@@ -12,15 +12,16 @@ template <typename T>
 CleanRelation<T>* make_clean_relation(
     Distribution<T>* unused_distribution,
     const std::string& name,
-    const DistributionSpec& spec,
+    const std::string& distribution_spec,
     const std::vector<Domain*>& doms) {
-  return new CleanRelation<T>(name, spec, doms);
+  return new CleanRelation<T>(name, distribution_spec, doms);
 }
 
 RelationVariant clean_relation_from_spec(const std::string& name,
                                          const std::string& distribution_spec,
                                          const std::vector<Domain*>& doms) {
-  DistributionVariant dv = get_distribution(distribution_spec);
+  std::mt19937 prng;
+  DistributionVariant dv = get_distribution(distribution_spec, &prng);
   return std::visit([](const auto& d) {
     return make_clean_relation(d, name, distribution_spec, doms);
   }, dv);
