@@ -17,7 +17,7 @@ typedef std::vector<T_item> T_items;
 
 // Updates the estimate of a latent value conditioned on noisy observations.
 template <typename ValueType>
-void transition_true_value(
+void transition_latent_value(
     std::mt19937* prng, T_items base_items, Relation<ValueType>* base_relation,
     std::unordered_map<std::string, NoisyRelation<ValueType>*>
         noisy_relations) {
@@ -53,18 +53,18 @@ void transition_true_value(
 
   // Candidates for the next "true" value are the clean proposals from each
   // cluster in each noisy relation.
-  std::vector<ValueType> true_value_candidates;
+  std::vector<ValueType> latent_value_candidates;
   for (auto [name, rel] : noisy_relations) {
     for (const auto& [i, em] : rel->emission_relation.clusters) {
-      true_value_candidates.push_back(
+      latent_value_candidates.push_back(
           reinterpret_cast<Emission<ValueType>*>(em)->propose_clean(
               all_noisy_observations, prng));
     }
   }
 
   std::vector<double> logpx;
-  for (const ValueType& v : true_value_candidates) {
-    // Incorporate the true/noisy values for this candidate.
+  for (const ValueType& v : latent_value_candidates) {
+    // Incorporate the latent/noisy values for this candidate.
     base_relation->incorporate_to_cluster(base_items, v);
     for (auto& [name, rel] : noisy_relations) {
       for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
@@ -80,7 +80,7 @@ void transition_true_value(
     }
     logpx.push_back(candidate_logp_score - baseline_logp_score);
 
-    // Unincorporate the true/noisy values for this candidate.
+    // Unincorporate the latent/noisy values for this candidate.
     for (auto& [name, rel] : noisy_relations) {
       for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
         rel->unincorporate_from_cluster(items);
@@ -90,13 +90,13 @@ void transition_true_value(
   }
 
   // Sample a new latent value.
-  ValueType new_true_value = true_value_candidates[log_choice(logpx, prng)];
+  ValueType new_latent_value = latent_value_candidates[log_choice(logpx, prng)];
 
-  // Incorporate the new estimate for the true value.
-  base_relation->incorporate_to_cluster(base_items, new_true_value);
+  // Incorporate the new estimate for the latent value.
+  base_relation->incorporate_to_cluster(base_items, new_latent_value);
   // Base relation needs to be updated manually since incorporate_to_cluster
   // operates only on the underlying clusters.
-  base_relation->update_value(base_items, new_true_value);
+  base_relation->update_value(base_items, new_latent_value);
   for (auto& [name, rel] : noisy_relations) {
     for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
       rel->incorporate_to_cluster(items, noisy_observations.at(name).at(items));

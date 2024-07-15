@@ -1,8 +1,8 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#define BOOST_TEST_MODULE test TransitionTrueValue
+#define BOOST_TEST_MODULE test TransitionLatentValue
 
-#include "transition_true_value.hh"
+#include "transition_latent_value.hh"
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
@@ -14,7 +14,7 @@
 
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_CASE(test_transition_true_value) {
+BOOST_AUTO_TEST_CASE(test_transition_latent_value) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(test_transition_true_value) {
   NR2.incorporate(&prng, {1, 2}, 0.7);
   NR2.incorporate(&prng, {1, 3}, 1.3);
 
-  transition_true_value(&prng, base_items, &base_relation,
-                        {{"NR1", &NR1}, {"NR2", &NR2}});
+  transition_latent_value(&prng, base_items, &base_relation,
+                          {{"NR1", &NR1}, {"NR2", &NR2}});
 
-  // The true value in the base relation has changed and is within the range of
-  // the noisy observations.
+  // The latent value in the base relation has changed and is within the range
+  // of the noisy observations.
   BOOST_TEST(base_relation.get_value(base_items) != 1.2);
   BOOST_TEST(base_relation.get_value(base_items) >= 0.6);
   BOOST_TEST(base_relation.get_value(base_items) <= 1.1);
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(test_transition_true_value) {
   BOOST_TEST(NR2.get_data().size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_transition_true_value_noisy_base) {
+BOOST_AUTO_TEST_CASE(test_transition_latent_value_noisy_base) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(test_transition_true_value_noisy_base) {
   NR2.incorporate(&prng, {1, 2, 0}, "aaple");
   NR2.incorporate(&prng, {1, 2, 2}, "apl");
   NR2.incorporate(&prng, {1, 3, 2}, "peaarr");
-  transition_true_value(&prng, base_items, &NR1, {{"NR2", &NR2}});
+  transition_latent_value(&prng, base_items, &NR1, {{"NR2", &NR2}});
 
-  // The true value in the base relation has changed.
+  // The latent value in the base relation has changed.
   BOOST_TEST(NR1.get_value(base_items) != "aple");
 
   // Other values in the base relation have not changed.

@@ -157,8 +157,8 @@ cc_library(
 )
 
 cc_library(
-    name = "transition_true_value",
-    hdrs = ["transition_true_value.hh"],
+    name = "transition_latent_value",
+    hdrs = ["transition_latent_value.hh"],
     visibility = [":__subpackages__"],
     deps = [
         "//emissions:base",
@@ -238,10 +238,10 @@ cc_test(
 )
 
 cc_test(
-    name = "transition_true_value_test",
-    srcs = ["transition_true_value_test.cc"],
+    name = "transition_latent_value_test",
+    srcs = ["transition_latent_value_test.cc"],
     deps = [
-        ":transition_true_value",
+        ":transition_latent_value",
         ":clean_relation",
         ":domain",
         ":util_distribution_variant",
