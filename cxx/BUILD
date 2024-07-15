@@ -1,17 +1,6 @@
 licenses(["notice"])
 
 cc_library(
-    name = "attribute",
-    hdrs = ["attribute.hh"],
-    visibility = [":__subpackages__"],
-    deps = [
-        "//emissions:base",
-        ":relation",
-        ":noisy_relation",
-    ],
-)
-
-cc_library(
     name = "cxxopts",
     srcs = ["cxxopts.hpp"],
     visibility = [":__subpackages__"],
@@ -167,16 +156,14 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "attribute_test",
-    srcs = ["attribute_test.cc"],
+cc_library(
+    name = "transition_true_value",
+    hdrs = ["transition_true_value.hh"],
+    visibility = [":__subpackages__"],
     deps = [
-        ":attribute",
-        ":clean_relation",
-        ":domain",
-        ":util_distribution_variant",
-        "@boost//:algorithm",
-        "@boost//:test",
+        "//emissions:base",
+        ":relation",
+        ":noisy_relation",
     ],
 )
 
@@ -245,6 +232,19 @@ cc_test(
     srcs = ["util_math_test.cc"],
     deps = [
         ":util_math",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "transition_true_value_test",
+    srcs = ["transition_true_value_test.cc"],
+    deps = [
+        ":transition_true_value",
+        ":clean_relation",
+        ":domain",
+        ":util_distribution_variant",
         "@boost//:algorithm",
         "@boost//:test",
     ],
