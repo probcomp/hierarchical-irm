@@ -31,49 +31,6 @@ class T_clean_relation {
   std::string distribution_spec;
 };
 
-
-template <typename T>
-void get_distribution_from_emission_variant(
-    const EmissionVariant &ev, Distribution<std::pair<T, T>>** dist_out) {
-  *dist_out = std::get<Emission<T>*>(ev);
-}
-
-template <typename T>
-void get_distribution_from_emission_variant(
-    const EmissionVariant &ev, Distribution<T>** dist_out) {
-  printf("Error!  CleanRelation<T> used with an emission and non-pair type T\n");
-  assert(false);
-  *dist_out = nullptr;
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<bool>** dist_out) {
-  *dist_out = std::get<Distribution<bool>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<double>** dist_out) {
-  *dist_out = std::get<Distribution<double>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<int>** dist_out) {
-  *dist_out = std::get<Distribution<int>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<std::string>** dist_out) {
-  *dist_out = std::get<Distribution<std::string>*>(dv);
-}
-
-template <typename T>
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<T>** dist_out) {
-  printf("Error!  get_distribution_from_distribution_variant called with non-DistributionVariant type!\n");
-  assert(false);
-  *dist_out = nullptr;
-}
-
 template <typename T>
 class CleanRelation : public Relation<T> {
  public:

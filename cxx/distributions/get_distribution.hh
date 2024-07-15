@@ -20,3 +20,24 @@ using DistributionVariant =
 // "categorical(k=5)" or "stringcat(strings=a b c d)".
 DistributionVariant get_distribution(
     const std::string& dist_string, std::mt19937* prng);
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<bool>** dist_out);
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<double>** dist_out);
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<int>** dist_out);
+
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<std::string>** dist_out);
+
+template <typename T>
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<T>** dist_out) {
+  printf("Error!  get_distribution_from_distribution_variant called with non-DistributionVariant type!\n");
+  assert(false);
+  *dist_out = nullptr;
+}
+

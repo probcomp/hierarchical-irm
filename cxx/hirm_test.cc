@@ -13,18 +13,18 @@ BOOST_AUTO_TEST_CASE(test_hirm) {
   std::map<std::string, T_relation> schema1{
       {"R5",
        T_noisy_relation{
-           {"D1", "D1", "D2"}, EmissionSpec("sometimes_bitflip"), "R1"}},
-      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
+           {"D1", "D1", "D2"}, "sometimes_bitflip", "R1"}},
+      {"R1", T_clean_relation{{"D1", "D1"}, "bernoulli"}},
       {"R6",
-       T_noisy_relation{{"D1", "D1"}, EmissionSpec("sometimes_bitflip"), "R1"}},
+       T_noisy_relation{{"D1", "D1"}, "sometimes_bitflip", "R1"}},
       {"R7",
        T_noisy_relation{
-           {"D1", "D1", "D3"}, EmissionSpec("sometimes_bitflip"), "R6"}},
-      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}},
+           {"D1", "D1", "D3"}, "sometimes_bitflip", "R6"}},
+      {"R2", T_clean_relation{{"D1", "D2"}, "normal"}},
+      {"R3", T_clean_relation{{"D3", "D1"}, "bigram"}},
       {"R4",
        T_noisy_relation{
-           {"D1", "D2", "D3"}, EmissionSpec("sometimes_gaussian"), "R2"}}};
+           {"D1", "D2", "D3"}, "sometimes_gaussian", "R2"}}};
 
   std::mt19937 prng;
   HIRM hirm(schema1, &prng);

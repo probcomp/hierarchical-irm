@@ -23,7 +23,7 @@ RelationVariant clean_relation_from_spec(const std::string& name,
   std::mt19937 prng;
   DistributionVariant dv = get_distribution(distribution_spec, &prng);
   RelationVariant rv;
-  return std::visit([&](const auto& d) {
+  std::visit([&](const auto& d) {
     rv = make_clean_relation(d, name, distribution_spec, doms);
   }, dv);
   return rv;

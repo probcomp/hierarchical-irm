@@ -10,12 +10,12 @@ namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_irm) {
   std::map<std::string, T_relation> schema1{
-      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}},
+      {"R1", T_clean_relation{{"D1", "D1"}, "bernoulli"}},
+      {"R2", T_clean_relation{{"D1", "D2"}, "normal"}},
+      {"R3", T_clean_relation{{"D3", "D1"}, "bigram"}},
       {"R4",
        T_noisy_relation{
-           {"D1", "D2", "D3"}, EmissionSpec("sometimes_gaussian"), "R2"}}};
+           {"D1", "D2", "D3"}, "sometimes_gaussian", "R2"}}};
   IRM irm(schema1);
 
   BOOST_TEST(irm.logp_score() == 0.0);
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test_irm) {
   double logp_x = irm.logp({{"R1", {1, 2}, false}}, &prng);
   BOOST_TEST(logp_x < 0.0);
 
-  irm.incorporate(&prng, "R1", {1, 2}, obs0);
+  irm.incorporate(&prng, "R1", {1, 2}, false);
   double one_obs_score = irm.logp_score();
   BOOST_TEST(one_obs_score < 0.0);
 
@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(test_irm_one_data_point) {
   // cluster, and thus no marginalizing over different cluster assignments, so
   // logp_score = logp(x).
   std::map<std::string, T_relation> schema1{
-      {"R1", T_clean_relation{{"D1"}, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}}};
+      {"R1", T_clean_relation{{"D1"}, "bernoulli"}},
+      {"R2", T_clean_relation{{"D2"}, "normal"}},
+      {"R3", T_clean_relation{{"D1", "D2"}, "normal"}}};
   IRM irm(schema1);
 
   BOOST_TEST(irm.logp_score() == 0.0);
