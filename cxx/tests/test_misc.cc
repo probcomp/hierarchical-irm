@@ -89,9 +89,13 @@ int main(int argc, char** argv) {
       items_code.push_back(code);
     }
     printf("\n");
-    irm3.incorporate(&prng, relation, items_code, value);
+    RelationVariant rv = irm3.relations[relation];
+    ObservationVariant ov;
+    std::visit([&](const auto &r) {ov = r->from_string(value);}, rv);
+    irm3.incorporate(&prng, relation, items_code, ov);
   }
 
+  printf("About to transition cluster assignments and alphas\n");
   for (int i = 0; i < 4; i++) {
     irm3.transition_cluster_assignments(&prng, {"animal", "feature"});
     irm3.transition_cluster_assignments_all(&prng);
