@@ -8,6 +8,7 @@
 
 #include "clean_relation.hh"
 #include "noisy_relation.hh"
+#include "transition_latent_value.hh"
 #include "util_distribution_variant.hh"
 
 using T_relation = std::variant<T_clean_relation, T_noisy_relation>;
@@ -25,6 +26,10 @@ class IRM {
       relations;  // map from name to Relation
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
+  std::unordered_map<std::string, std::vector<std::string>> base_to_noisy_relations;
+  std::unordered_map<std::string,
+                     std::unordered_map<T_items, AttributeVariant, H_items>>
+      attributes;  // map from unobserved relation names to Attributes containing noisy observations of that relation
 
   IRM(const T_schema& init_schema);
 
@@ -43,6 +48,11 @@ class IRM {
   void transition_cluster_assignment_item(std::mt19937* prng,
                                           const std::string& d,
                                           const T_item& item);
+
+  void transition_unobserved_value(std::mt19937* prng, const std::string& r, const T_items& items);
+
+  void transition_unobserved_values_all(std::mt19937* prng);
+
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
           observations,
@@ -63,6 +73,8 @@ class IRM {
                               RelationVariant base_relation);
 
   void remove_relation(const std::string& name);
+
+  void add_attribute(const std::string& r, const T_items& items);
 
   // Disable copying.
   IRM& operator=(const IRM&) = delete;

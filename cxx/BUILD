@@ -47,6 +47,7 @@ cc_library(
     srcs = ["irm.cc"],
     visibility = [":__subpackages__"],
     deps = [
+        ":attribute",
         ":clean_relation",
         ":noisy_relation",
         ":util_distribution_variant",
@@ -60,6 +61,7 @@ cc_library(
     srcs = ["hirm.cc"],
     visibility = [":__subpackages__"],
     deps = [
+        ":attribute",
         ":irm",
     ],
 )

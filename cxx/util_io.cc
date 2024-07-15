@@ -27,6 +27,9 @@ T_schema load_schema(const std::string& path) {
     std::string relname;
     std::string distribution_spec_str;
 
+    // TODO(emilyaf): Read this in from schema.
+    bool is_observed = true;
+
     stream >> distribution_spec_str;
     stream >> relname;
     for (std::string w; stream >> w;) {
@@ -34,6 +37,7 @@ T_schema load_schema(const std::string& path) {
     }
     assert(relation.domains.size() > 0);
     relation.distribution_spec = DistributionSpec(distribution_spec_str);
+    relation.is_observed = is_observed;
     schema[relname] = relation;
   }
   fp.close();
