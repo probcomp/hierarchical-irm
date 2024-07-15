@@ -143,7 +143,7 @@ void incorporate_observations(std::mt19937* prng, HIRM& hirm,
       int code = item_to_code.at(domain).at(item);
       items_e.push_back(code);
     }
-    RelationVariant rv = hirm.irms.begin()->second->relations[relation];
+    RelationVariant rv = hirm.get_relation(relation);
     ObservationVariant ov;
     std::visit([&](const auto &r) {ov = r->from_string(value);}, rv);
     std::visit(
