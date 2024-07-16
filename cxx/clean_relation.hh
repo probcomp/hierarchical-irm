@@ -87,7 +87,6 @@ class CleanRelation : public Relation<T> {
       DistributionVariant dv = get_distribution(prior_spec, prng);
       Distribution<ValueType> *d;
       get_distribution_from_distribution_variant(dv, &d);
-      // Distribution<ValueType>* d = std::get<Distribution<ValueType>*>(dv);
       return d;
     }
   }
