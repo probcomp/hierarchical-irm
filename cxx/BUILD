@@ -86,7 +86,9 @@ cc_library(
     name = "observation_variant",
     hdrs = ["observation_variant.hh"],
     visibility = [":__subpackages__"],
-    deps = [],
+    deps = [
+        "@boost//:mp11",
+    ],
 )
 
 cc_library(

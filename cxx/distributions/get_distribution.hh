@@ -16,8 +16,8 @@
 // want to add a distribution with a new sample type, you will need to update
 // that list.
 template<class T> using apply_distribution = Distribution<T>*;
-using distribution_of_sample_types = boost::mp11::mp_apply<apply_distribution, sample_types>;
-using DistributionVariant = decltype(as_variant(distribution_of_sample_types));
+using distribution_of_sample_types = boost::mp11::mp_transform<apply_distribution, sample_types>;
+using DistributionVariant = boost::mp11::mp_rename<distribution_of_sample_types, std::variant>;
 
 // TODO(thomaswc): Define all of these get_distribution's using
 // metaprogramming on sample_types.

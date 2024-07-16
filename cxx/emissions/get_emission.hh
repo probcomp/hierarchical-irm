@@ -15,8 +15,8 @@
 // want to add an emission with a new sample type, you will need to update
 // that list.
 template<class T> using apply_emission = Emission<T>*;
-using emission_of_sample_types = boost::mp11::mp_apply<apply_emission, sample_types>;
-using EmissionVariant = decltype(as_variant(emission_of_sample_types));
+using emission_of_sample_types = boost::mp11::mp_transform<apply_emission, sample_types>;
+using EmissionVariant = boost::mp11::mp_rename<emission_of_sample_types, std::variant>;
 
 // Return an EmissionVariant based on emission_string, which can either be
 // an emission name like "gaussian" or a name with parameters like

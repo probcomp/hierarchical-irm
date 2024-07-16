@@ -20,6 +20,7 @@ cc_library(
         ":gaussian",
         ":simple_string",
         ":sometimes",
+        "//:observation_variant",
         "//:util_parse",
         "@boost//:mp11",
     ],
