@@ -25,6 +25,7 @@ RelationVariant clean_relation_from_spec(const std::string& name,
   RelationVariant rv;
   std::visit([&](const auto& d) {
     rv = make_clean_relation(d, name, distribution_spec, doms);
+    delete d;
   }, dv);
   return rv;
 }
