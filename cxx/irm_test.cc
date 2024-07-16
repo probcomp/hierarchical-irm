@@ -4,6 +4,7 @@
 
 #include "irm.hh"
 
+#include <iostream>
 #include <boost/test/included/unit_test.hpp>
 
 #include "util_distribution_variant.hh"
@@ -104,4 +105,66 @@ BOOST_AUTO_TEST_CASE(test_irm_one_data_point) {
   double three_obs_score = irm.logp_score();
   BOOST_TEST(three_obs_score < 0.0);
   BOOST_TEST(three_obs_score == (logp_x + logp_y + logp_z));
+}
+
+void construct_test_irm(std::mt19937* prng, IRM* irm) {
+  irm->domains["D1"]->incorporate(prng, 1, 0);
+  irm->domains["D1"]->incorporate(prng, 2, 0);
+  irm->domains["D1"]->incorporate(prng, 3, 1);
+
+  irm->domains["D2"]->incorporate(prng, 1, 0);
+  irm->domains["D2"]->incorporate(prng, 2, 1);
+  irm->domains["D2"]->incorporate(prng, 3, 2);
+
+  irm->incorporate(prng, "R1", {1,}, false);
+  irm->incorporate(prng, "R1", {2,}, true);
+  irm->incorporate(prng, "R1", {3,}, true);
+
+  irm->incorporate(prng, "R2", {1,}, 0.);
+  irm->incorporate(prng, "R2", {2,}, 1.);
+  irm->incorporate(prng, "R2", {3,}, 1.1);
+
+  irm->incorporate(prng, "R3", {1, 1}, 0.);
+  irm->incorporate(prng, "R3", {2, 2}, 1.);
+  irm->incorporate(prng, "R3", {1, 3}, 1.1);
+}
+
+BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
+  std::map<std::string, T_relation> schema{
+      {"R1", T_clean_relation{{"D1"}, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D2"}, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}}};
+
+
+  std::mt19937 prng;
+  IRM irm(schema);
+  construct_test_irm(&prng, &irm);
+
+  std::cerr << "TESTING\n";
+
+  // Now we would like to add the observation for {4, 4}.
+  double logp_x = irm.logp({{"R3", {4, 4}, 0.5}}, &prng);
+
+  // If we want to compare against logp_score, we need to compute logp_score for each 
+  // way we incorporate this observation.
+  double average_logp_score = 0;
+  std::vector<double> logps;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      IRM test_irm(schema);
+      construct_test_irm(&prng, &test_irm);
+      test_irm.domains["D1"]->incorporate(&prng, 4, i);
+      test_irm.domains["D2"]->incorporate(&prng, 4, j);
+      test_irm.incorporate(&prng, "R3", {4, 4}, 0.5);
+      double d1_weight = 0.25;
+      if (i == 0) {
+        d1_weight = 0.5;
+      }
+      std::cerr << "logp_score" << test_irm.logp_score() << "\n";
+      logps.push_back(d1_weight * 0.25 * test_irm.logp_score() / 12.);
+      average_logp_score += d1_weight * 0.25 * test_irm.logp_score() / 12.;
+    }
+  }
+  BOOST_TEST(logsumexp(logps) == logp_x);
+  BOOST_TEST(average_logp_score == logp_x);
 }

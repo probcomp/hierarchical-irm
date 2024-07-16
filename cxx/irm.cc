@@ -3,6 +3,7 @@
 
 #include "irm.hh"
 
+#include <iostream>
 #include <cstdio>
 #include <ctime>
 #include <functional>
@@ -222,6 +223,7 @@ double IRM::logp(
       double logp_obs = std::visit(g, relations.at(r));
       logp_indexes += logp_obs;
     };
+    std::cerr << "Computed logp: " << logp_indexes << "\n";
     logps.push_back(logp_indexes);
   }
   return logsumexp(logps);
