@@ -1,0 +1,6 @@
+bernoulli R1 D1
+bigram R2 D1
+categorical(k=6) R3 D1
+normal R4 D1
+skellam R5 D1
+stringcat(strings=yes:no,delim=:) R6 D1
