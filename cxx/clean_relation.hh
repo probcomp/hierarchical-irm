@@ -259,7 +259,7 @@ class CleanRelation : public Relation<T> {
       cluster->incorporate(x);
     }
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) < std::numeric_limits<double>::epsilon() * fabs(logp0));
+    assert(abs(cluster->logp_score() - logp0) < std::numeric_limits<double>::epsilon() * abs(logp0));
     return logp0 - logp1;
   }
 
@@ -287,7 +287,7 @@ class CleanRelation : public Relation<T> {
     }
 
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) < std::numeric_limits<double>::epsilon() * fabs(logp0));
+    assert(abs(cluster->logp_score() - logp0) < std::numeric_limits<double>::epsilon() * abs(logp0));
     delete prior;
     return logp1 - logp0;
   }
