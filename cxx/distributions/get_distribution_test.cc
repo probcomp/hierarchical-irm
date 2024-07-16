@@ -2,6 +2,9 @@
 
 #define BOOST_TEST_MODULE test get_distribution
 
+#include <string.h>
+#include <typeinfo>
+
 #include <boost/test/included/unit_test.hpp>
 
 #include "distributions/get_distribution.hh"
@@ -9,48 +12,64 @@
 BOOST_AUTO_TEST_CASE(test_get_bernoulli) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("bernoulli", &prng);
-  BOOST_TEST(dv.index() == 0);
+  Distribution<bool> *d = std::get<Distribution<bool>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("BetaBernoulli") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_bernoulli2) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("bernoulli()", &prng);
-  BOOST_TEST(dv.index() == 0);
+  Distribution<bool> *d = std::get<Distribution<bool>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("BetaBernoulli") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_bigram) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("bigram", &prng);
-  BOOST_TEST(dv.index() == 3);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Bigram") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_categorical) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("categorical(k=5)", &prng);
-  BOOST_TEST(dv.index() == 2);
+  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("DirichletCategorical") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_normal) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("normal", &prng);
-  BOOST_TEST(dv.index() == 1);
+  Distribution<double> *d = std::get<Distribution<double>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Normal") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_skellam) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("skellam", &prng);
-  BOOST_TEST(dv.index() == 2);
+  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Skellam") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_stringcat) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution("stringcat(strings=a b c)", &prng);
-  BOOST_TEST(dv.index() == 3);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("StringCat") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_stringcat2) {
   std::mt19937 prng;
   DistributionVariant dv = get_distribution(
       "stringcat(delim=:, strings=hello:world)", &prng);
-  BOOST_TEST(dv.index() == 3);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("StringCat") != std::string::npos);
 }
