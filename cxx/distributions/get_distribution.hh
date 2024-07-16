@@ -28,23 +28,27 @@ using DistributionVariant = boost::mp11::mp_rename<distribution_of_sample_types,
 DistributionVariant get_distribution(
     const std::string& dist_string, std::mt19937* prng);
 
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<bool>** dist_out);
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<double>** dist_out);
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<int>** dist_out);
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<std::string>** dist_out);
-
-template <typename T>
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<T>** dist_out) {
+// Define get_distribution_from_distribution_variant, but only for types
+// in the sample_types list.
+template<typename T>
+void get_distribution_from_distribution_variant_impl(
+    const DistributionVariant &dv, Distribution<T>** dist_out,
+    std::false_type) {
   printf("Error!  get_distribution_from_distribution_variant called with non-DistributionVariant type!\n");
   assert(false);
   *dist_out = nullptr;
 }
 
+template<typename T>
+void get_distribution_from_distribution_variant_impl(
+    const DistributionVariant &dv, Distribution<T>** dist_out,
+    std::true_type) {
+  *dist_out = std::get<Distribution<T>&>(dv);
+}
+
+template<typename T>
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<T>** dist_out) {
+  get_distribution_from_distribution_variant_impl(
+      dv, dist_out, boost::mp11::mp_contains<sample_types, T>::value);
+}

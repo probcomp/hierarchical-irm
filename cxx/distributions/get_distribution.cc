@@ -52,23 +52,3 @@ DistributionVariant get_distribution(
   }
   assert(false && "Unsupported distribution name.");
 }
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<bool>** dist_out) {
-  *dist_out = std::get<Distribution<bool>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<double>** dist_out) {
-  *dist_out = std::get<Distribution<double>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<int>** dist_out) {
-  *dist_out = std::get<Distribution<int>*>(dv);
-}
-
-void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<std::string>** dist_out) {
-  *dist_out = std::get<Distribution<std::string>*>(dv);
-}
