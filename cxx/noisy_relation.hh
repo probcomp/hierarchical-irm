@@ -72,7 +72,7 @@ class NoisyRelation : public Relation<T> {
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
   // care, since they mutate the clusters only and not the relation. In
-  // particular, for every call to unincorporate_from_cluster, there must be a 
+  // particular, for every call to unincorporate_from_cluster, there must be a
   // corresponding call to incorporate_to_cluster with the same items, or the
   // Relation will be in an invalid state. See the Attribute class for usage/
   // justification of this choice.
@@ -147,6 +147,18 @@ class NoisyRelation : public Relation<T> {
   const ValueType get_base_value(const T_items& items) const {
     T_items base_items = get_base_items(items);
     return base_relation->get_value(base_items);
+  }
+
+  const std::unordered_map<const std::vector<int>, Emission<ValueType>*,
+                           VectorIntHash>
+  get_emission_clusters() const {
+    std::unordered_map<const std::vector<int>, Emission<ValueType>*,
+                       VectorIntHash>
+        emission_clusters;
+    for (const auto& [i, em] : emission_relation.clusters) {
+      emission_clusters[i] = reinterpret_cast<Emission<ValueType>*>(em);
+    }
+    return emission_clusters;
   }
 
   void transition_cluster_hparams(std::mt19937* prng, int num_theta_steps) {

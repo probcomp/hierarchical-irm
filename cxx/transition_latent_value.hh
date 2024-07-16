@@ -15,17 +15,18 @@
 typedef int T_item;
 typedef std::vector<T_item> T_items;
 
-// Updates the estimate of a latent value conditioned on noisy observations.
+// This method updates the estimate of a latent value conditioned on noisy
+// observations. Cluster assignments are not transitioned. (Temporarily) empty
+// clusters are not deleted, and the number of observations in each cluster is
+// the same before/after the call to this method.
 template <typename ValueType>
 void transition_latent_value(
     std::mt19937* prng, T_items base_items, Relation<ValueType>* base_relation,
     std::unordered_map<std::string, NoisyRelation<ValueType>*>
         noisy_relations) {
-  // Since this method does not transition cluster assignments, we incorporate
-  // to/unincorporate from clusters themselves rather than relations. Empty
-  // clusters are not deleted, because observations will be re-incorporated to
-  // them. The number of observations in each cluster is the same before/after
-  // the call to this method.
+  // We incorporate to/unincorporate from clusters themselves rather than
+  // relations. Empty clusters are not deleted, because observations will be
+  // re-incorporated to them.
   base_relation->unincorporate_from_cluster(base_items);
 
   // Unincorporate all noisy observations from clusters and store the noisy
@@ -51,14 +52,15 @@ void transition_latent_value(
     baseline_logp_score += rel->logp_score();
   }
 
-  // Candidates for the next "true" value are the clean proposals from each
+  // Candidates for the next latent value are the clean proposals from each 
   // cluster in each noisy relation.
+  // TODO(emilyaf): Discuss/consider alternatives to generating proposals for
+  // the latent values. 
   std::vector<ValueType> latent_value_candidates;
   for (auto [name, rel] : noisy_relations) {
-    for (const auto& [i, em] : rel->emission_relation.clusters) {
+    for (const auto& [i, em] : rel->get_emission_clusters()) {
       latent_value_candidates.push_back(
-          reinterpret_cast<Emission<ValueType>*>(em)->propose_clean(
-              all_noisy_observations, prng));
+          em->propose_clean(all_noisy_observations, prng));
     }
   }
 
@@ -92,7 +94,7 @@ void transition_latent_value(
   // Sample a new latent value.
   ValueType new_latent_value = latent_value_candidates[log_choice(logpx, prng)];
 
-  // Incorporate the new estimate for the latent value.
+  // Incorporate the new estimate of the latent value.
   base_relation->incorporate_to_cluster(base_items, new_latent_value);
   // Base relation needs to be updated manually since incorporate_to_cluster
   // operates only on the underlying clusters.
