@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
+  DistributionSpec spec = DistributionSpec("bernoulli");
   CleanRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
@@ -52,20 +52,56 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   BOOST_TEST(db->N == 0);
   db->incorporate(false);
   BOOST_TEST(db->N == 1);
+}
 
-  DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
-  CleanRelation<std::string> R2("R1", bigram_spec, {&D2, &D3});
+BOOST_AUTO_TEST_CASE(test_string_relation) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+
+  DistributionSpec bigram_spec = DistributionSpec("bigram");
+  CleanRelation<std::string> R2("R2", bigram_spec, {&D1, &D2});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");
   R2.incorporate(&prng, {2, 6}, "fish");
 
+  double lpg __attribute__((unused));
   lpg = R2.logp_gibbs_approx(D2, 2, 0, &prng);
-  R2.set_cluster_assignment_gibbs(D3, 3, 1, &prng);
-  D1.set_cluster_assignment_gibbs(0, 1);
+  R2.set_cluster_assignment_gibbs(D2, 3, 1, &prng);
+  D1.set_cluster_assignment_gibbs(1, 1);
 
   Distribution<std::string>* db2 = R2.make_new_distribution(&prng);
   BOOST_TEST(db2->N == 0);
   db2->incorporate("hello");
   BOOST_TEST(db2->N == 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_unincorporate) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec = DistributionSpec("bernoulli");
+  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, 1);
+  R1.incorporate(&prng, {0, 2}, 1);
+  R1.incorporate(&prng, {3, 0}, 1);
+  R1.incorporate(&prng, {3, 1}, 1);
+
+  R1.unincorporate({3, 1});
+  BOOST_TEST(R1.data.size() == 3);
+  // Expect that these are still in the domain since the data points {3, 0} and
+  // {0, 1} refer to them.
+  BOOST_TEST(D1.items.contains(3));
+  BOOST_TEST(D2.items.contains(1));
+
+  R1.unincorporate({0, 2});
+  BOOST_TEST(R1.data.size() == 2);
+  BOOST_TEST(D1.items.contains(0));
+  BOOST_TEST(!D2.items.contains(2));
+
+  R1.unincorporate({0, 1});
+  BOOST_TEST(R1.data.size() == 1);
+  BOOST_TEST(!D1.items.contains(0));
+  BOOST_TEST(!D2.items.contains(1));
 }

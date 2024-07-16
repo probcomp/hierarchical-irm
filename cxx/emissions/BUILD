@@ -32,6 +32,7 @@ cc_library(
         ":gaussian",
         ":simple_string",
         ":sometimes",
+        "//:util_observation",
     ],
 )
 

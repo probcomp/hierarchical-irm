@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  DistributionSpec spec = DistributionSpec{DistributionEnum::bernoulli};
+  DistributionSpec spec = DistributionSpec("bernoulli");
   CleanRelation<bool> R1("R1", spec, {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, 1);
   R1.incorporate(&prng, {1, 1}, 1);
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   R1.incorporate(&prng, {4, 1}, 1);
   R1.incorporate(&prng, {5, 1}, 1);
 
-  EmissionSpec em_spec = EmissionSpec(EmissionEnum::sometimes_bitflip);
+  EmissionSpec em_spec = EmissionSpec("sometimes_bitflip");
   NoisyRelation<bool> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
   NR1.incorporate(&prng, {0, 1, 3}, 0);
   NR1.incorporate(&prng, {1, 1, 3}, 1);
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   lpg = NR1.logp_gibbs_approx(D1, 0, 10, &prng);
   NR1.set_cluster_assignment_gibbs(D1, 0, 1, &prng);
 
-  DistributionSpec bigram_spec = DistributionSpec{DistributionEnum::bigram};
+  DistributionSpec bigram_spec = DistributionSpec("bigram");
   CleanRelation<std::string> R2("R2", bigram_spec, {&D2, &D3});
-  EmissionSpec str_emspec = EmissionSpec(EmissionEnum::simple_string);
+  EmissionSpec str_emspec = EmissionSpec("simple_string");
   NoisyRelation<std::string> NR2("NR2", str_emspec, {&D2, &D3}, &R2);
 
   R2.incorporate(&prng, {1, 3}, "cat");
@@ -71,4 +71,42 @@ BOOST_AUTO_TEST_CASE(test_noisy_relation) {
   lpg = NR2.logp_gibbs_approx(D2, 2, 0, &prng);
   NR2.set_cluster_assignment_gibbs(D3, 3, 1, &prng);
   D1.set_cluster_assignment_gibbs(0, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_unincorporate) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec = DistributionSpec("bernoulli");
+  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, 1);
+  R1.incorporate(&prng, {0, 2}, 1);
+  R1.incorporate(&prng, {3, 0}, 1);
+  R1.incorporate(&prng, {3, 1}, 1);
+
+  EmissionSpec em_spec = EmissionSpec("sometimes_bitflip");
+  NoisyRelation<bool> NR1("NR1", em_spec, {&D1, &D2}, &R1);
+
+  NR1.incorporate(&prng, {0, 1}, 0);
+  NR1.incorporate(&prng, {0, 2}, 1);
+  NR1.incorporate(&prng, {3, 0}, 0);
+  NR1.incorporate(&prng, {3, 1}, 1);
+
+  NR1.unincorporate({3, 1});
+  BOOST_TEST(NR1.data.size() == 3);
+  BOOST_TEST(NR1.data.size() == 3);
+  // Expect that these are still in the domain since the data points {3, 0} and
+  // {0, 1} refer to them.
+  BOOST_TEST(D1.items.contains(3));
+  BOOST_TEST(D2.items.contains(1));
+
+  NR1.unincorporate({0, 2});
+  BOOST_TEST(NR1.data.size() == 2);
+  BOOST_TEST(D1.items.contains(0));
+  BOOST_TEST(!D2.items.contains(2));
+
+  NR1.unincorporate({0, 1});
+  BOOST_TEST(NR1.data.size() == 1);
+  BOOST_TEST(!D1.items.contains(0));
+  BOOST_TEST(!D2.items.contains(1));
 }

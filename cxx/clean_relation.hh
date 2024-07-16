@@ -10,6 +10,7 @@
 
 #include "distributions/base.hh"
 #include "domain.hh"
+#include "emissions/get_emission.hh"
 #include "relation.hh"
 #include "util_distribution_variant.hh"
 #include "util_hash.hh"
@@ -78,7 +79,7 @@ class CleanRelation : public Relation<T> {
           dist_variant);
     };
     auto spec_to_dist = [&](auto spec) {
-      return var_to_dist(cluster_prior_from_spec(spec, prng));
+      return var_to_dist(get_prior(spec, prng));
     };
     return std::visit(spec_to_dist, prior_spec);
   }
@@ -102,26 +103,27 @@ class CleanRelation : public Relation<T> {
   }
 
   void unincorporate(const T_items& items) {
-    printf("Not implemented\n");
-    exit(EXIT_FAILURE);
-    // auto x = data.at(items);
-    // auto z = get_cluster_assignment(items);
-    // clusters.at(z)->unincorporate(x);
-    // if (clusters.at(z)->N == 0) {
-    //     delete clusters.at(z);
-    //     clusters.erase(z);
-    // }
-    // for (int i = 0; i < domains.size(); i++) {
-    //     const std::string &n = domains[i]->name;
-    //     if (data_r.at(n).count(items[i]) > 0) {
-    //         data_r.at(n).at(items[i]).erase(items);
-    //         if (data_r.at(n).at(items[i]).size() == 0) {
-    //             data_r.at(n).erase(items[i]);
-    //             domains[i]->unincorporate(name, items[i]);
-    //         }
-    //     }
-    // }
-    // data.erase(items);
+    assert(data.contains(items));
+    ValueType value = data.at(items);
+    std::vector<int> z = get_cluster_assignment(items);
+    clusters.at(z)->unincorporate(value);
+    if (clusters.at(z)->N == 0) {
+      delete clusters.at(z);
+      clusters.erase(z);
+    }
+    for (int i = 0; i < std::ssize(domains); ++i) {
+      const std::string& name = domains[i]->name;
+      if (data_r.at(name).contains(items[i])) {
+        data_r.at(name).at(items[i]).erase(items);
+        if (data_r.at(name).at(items[i]).size() == 0) {
+          // It's safe to unincorporate this element since no other data point
+          // refers to it.
+          data_r.at(name).erase(items[i]);
+          domains[i]->unincorporate(items[i]);
+        }
+      }
+    }
+    data.erase(items);
   }
 
   std::vector<int> get_cluster_assignment(const T_items& items) const {

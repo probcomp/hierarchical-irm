@@ -17,7 +17,8 @@ cc_library(
         ":util_distribution_variant",
         ":util_hash",
         ":util_math",
-        "//distributions:base"
+        "//distributions:base",
+        "//emissions:get_emission"
     ],
 )
 
@@ -36,8 +37,9 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         ":clean_relation",
-        ":relation_variant",
+        ":noisy_relation",
         ":util_distribution_variant",
+        "//emissions:get_emission"
     ],
 )
 
@@ -69,7 +71,8 @@ cc_binary(
     name = "typename_playground",
     srcs = ["typename_playground.cc"],
     deps = [
-        ":relation_variant",
+        ":clean_relation",
+        ":domain",
         ":util_distribution_variant",
     ],
 )
@@ -85,7 +88,8 @@ cc_library(
         ":util_distribution_variant",
         ":util_hash",
         ":util_math",
-        "//distributions:base"
+        "//distributions:base",
+        "//emissions:get_emission",
     ],
 )
 
@@ -103,31 +107,17 @@ cc_library(
 )
 
 cc_library(
-    name = "relation_variant",
-    hdrs = ["relation_variant.hh"],
-    srcs = ["relation_variant.cc"],
-    visibility = [":__subpackages__"],
-    deps = [
-        ":domain",
-        ":clean_relation",
-        ":relation",
-        ":util_distribution_variant",
-    ],
-)
-
-cc_library(
     name = "util_distribution_variant",
     srcs = ["util_distribution_variant.cc"],
     visibility = [":__subpackages__"],
     hdrs = ["util_distribution_variant.hh"],
     deps = [
         ":domain",
+        ":util_observation",
         "//distributions",
         "@boost//:algorithm",
-        "//emissions",
     ],
 )
-
 
 cc_library(
     name = "util_hash",
@@ -156,6 +146,16 @@ cc_library(
     deps = [],
 )
 
+cc_library(
+    name = "util_observation",
+    srcs = ["util_observation.cc"],
+    visibility = [":__subpackages__"],
+    hdrs = ["util_observation.hh"],
+    deps = [
+        "@boost//:algorithm",
+    ],
+)
+
 cc_test(
     name = "clean_relation_test",
     srcs = ["clean_relation_test.cc"],
@@ -177,6 +177,15 @@ cc_test(
 )
 
 cc_test(
+    name = "hirm_test",
+    srcs = ["hirm_test.cc"],
+    deps = [
+        ":hirm_lib",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
     name = "irm_test",
     srcs = ["irm_test.cc"],
     deps = [
@@ -193,16 +202,6 @@ cc_test(
         ":clean_relation",
         ":noisy_relation",
         "//distributions",
-        "@boost//:test",
-    ],
-)
-
-cc_test(
-    name = "relation_variant_test",
-    srcs = ["relation_variant_test.cc"],
-    deps = [
-        ":clean_relation",
-        ":relation_variant",
         "@boost//:test",
     ],
 )
