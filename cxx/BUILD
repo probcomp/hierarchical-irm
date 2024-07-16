@@ -156,6 +156,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "transition_latent_value",
+    hdrs = ["transition_latent_value.hh"],
+    visibility = [":__subpackages__"],
+    deps = [
+        "//emissions:base",
+        ":relation",
+        ":noisy_relation",
+    ],
+)
+
 cc_test(
     name = "clean_relation_test",
     srcs = ["clean_relation_test.cc"],
@@ -221,6 +232,19 @@ cc_test(
     srcs = ["util_math_test.cc"],
     deps = [
         ":util_math",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "transition_latent_value_test",
+    srcs = ["transition_latent_value_test.cc"],
+    deps = [
+        ":transition_latent_value",
+        ":clean_relation",
+        ":domain",
+        ":util_distribution_variant",
         "@boost//:algorithm",
         "@boost//:test",
     ],

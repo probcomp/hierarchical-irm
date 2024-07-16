@@ -118,3 +118,47 @@ BOOST_AUTO_TEST_CASE(test_emission) {
   double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, {1, 1});
   BOOST_TEST(lp < 0.0);
 }
+
+BOOST_AUTO_TEST_CASE(test_get_update_value) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("bigram");
+  CleanRelation<std::string> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, "chair");
+  R1.incorporate(&prng, {0, 2}, "table");
+  R1.incorporate(&prng, {5, 2}, "lamp");
+  R1.incorporate(&prng, {1, 1}, "desk");
+
+  BOOST_TEST(R1.get_value({5, 2}) == "lamp");
+
+  double init_logp_score = R1.logp_score();
+  R1.update_value({5, 2}, "carpet");
+
+  BOOST_TEST(R1.get_value({5, 2}) == "carpet");
+  BOOST_TEST(R1.logp_score() != init_logp_score);
+}
+
+BOOST_AUTO_TEST_CASE(test_incorporate_cluster) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, 3.);
+  R1.incorporate(&prng, {0, 2}, 2.8);
+  R1.incorporate(&prng, {5, 2}, 2.3);
+
+  int init_data_size = R1.get_data().size();
+  int init_cluster_size = R1.clusters.at(R1.get_cluster_assignment({5, 2}))->N;
+  double init_logp_score = R1.logp_score();
+  R1.unincorporate_from_cluster({5, 2});
+  R1.incorporate_to_cluster({5, 2}, 1.);
+
+  // logp_score should change, but the number of points in the cluster should
+  // stay the same.
+  BOOST_TEST(init_logp_score != R1.logp_score());
+  BOOST_TEST(init_cluster_size ==
+             R1.clusters.at(R1.get_cluster_assignment({5, 2}))->N);
+  BOOST_TEST(init_data_size = R1.get_data().size());
+}

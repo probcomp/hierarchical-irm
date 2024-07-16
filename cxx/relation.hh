@@ -30,6 +30,10 @@ class Relation {
 
   virtual double cluster_or_prior_logp(std::mt19937* prng, const T_items& items, const ValueType& value) const = 0;
 
+  virtual void incorporate_to_cluster(const T_items& items, const ValueType& value) = 0;
+
+  virtual void unincorporate_from_cluster(const T_items& items) = 0;
+
   virtual std::vector<double> logp_gibbs_exact(
       const Domain& domain, const T_item& item, std::vector<int> tables,
       std::mt19937* prng) = 0;
@@ -45,6 +49,8 @@ class Relation {
   virtual const ValueType& get_value(const T_items& items) const = 0;
 
   virtual const std::unordered_map<const T_items, ValueType, H_items>& get_data() const = 0;
+
+  virtual void update_value(const T_items& items, const ValueType& value) = 0;
 
   virtual std::vector<int> get_cluster_assignment(const T_items& items) const = 0;
 

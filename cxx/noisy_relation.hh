@@ -49,6 +49,9 @@ class NoisyRelation : public Relation<T> {
   std::unordered_map<const T_items, ValueType, H_items> data;
   // Base relation for "true" values.
   Relation<ValueType>* base_relation;
+  // map from items in the base relation to items in the NoisyRelation
+  std::unordered_map<T_items, std::unordered_set<T_items, H_items>, H_items>
+      base_to_noisy_items;
   // A Relation for the Emission that models noisy values given true values.
   CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
@@ -60,9 +63,27 @@ class NoisyRelation : public Relation<T> {
         emission_relation(name + "_emission", emission_spec, domains) {}
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
-    data[items] = value;
-    const ValueType base_val = get_base_value(items);
+    T_items base_items = get_base_items(items);
+    const ValueType base_val = base_relation->get_value(base_items);
     emission_relation.incorporate(prng, items, std::make_pair(base_val, value));
+    data[items] = value;
+    base_to_noisy_items[base_items].insert(items);
+  }
+
+  // incorporate_to_cluster and unincorporate_from_cluster should be used with
+  // care, since they mutate the clusters only and not the relation. In
+  // particular, for every call to unincorporate_from_cluster, there must be a
+  // corresponding call to incorporate_to_cluster with the same items, or the
+  // Relation will be in an invalid state. See the Attribute class for usage/
+  // justification of this choice.
+  void incorporate_to_cluster(const T_items& items, const ValueType& value) {
+    const ValueType& base_val = get_base_value(items);
+    emission_relation.incorporate_to_cluster(items,
+                                             std::make_pair(base_val, value));
+  }
+
+  void unincorporate_from_cluster(const T_items& items) {
+    emission_relation.unincorporate_from_cluster(items);
   }
 
   void unincorporate(const T_items& items) {
@@ -99,7 +120,8 @@ class NoisyRelation : public Relation<T> {
   }
 
   const ValueType& get_value(const T_items& items) const {
-    return std::get<0>(emission_relation.get_value(items));
+    assert(data.contains(items));
+    return data.at(items);
   }
 
   const std::unordered_map<const T_items, ValueType, H_items>& get_data()
@@ -107,12 +129,36 @@ class NoisyRelation : public Relation<T> {
     return data;
   }
 
+  void update_value(const T_items& items, const ValueType& value) {
+    assert(data.contains(items));
+    data.at(items) = value;
+    const ValueType& base_value = get_base_value(items);
+    emission_relation.update_value(items, std::make_pair(value, base_value));
+  }
+
   const std::vector<Domain*>& get_domains() const { return domains; }
 
-  const ValueType get_base_value(const T_items& items) const {
+  const T_items get_base_items(const T_items& items) const {
     size_t base_arity = base_relation->get_domains().size();
     T_items base_items(items.cbegin(), items.cbegin() + base_arity);
+    return base_items;
+  }
+
+  const ValueType get_base_value(const T_items& items) const {
+    T_items base_items = get_base_items(items);
     return base_relation->get_value(base_items);
+  }
+
+  const std::unordered_map<const std::vector<int>, Emission<ValueType>*,
+                           VectorIntHash>
+  get_emission_clusters() const {
+    std::unordered_map<const std::vector<int>, Emission<ValueType>*,
+                       VectorIntHash>
+        emission_clusters;
+    for (const auto& [i, em] : emission_relation.clusters) {
+      emission_clusters[i] = reinterpret_cast<Emission<ValueType>*>(em);
+    }
+    return emission_clusters;
   }
 
   void transition_cluster_hparams(std::mt19937* prng, int num_theta_steps) {
@@ -132,8 +178,7 @@ class NoisyRelation : public Relation<T> {
     }
     auto emission_prior = emission_relation.make_new_distribution(prng);
     // TODO(emilyaf): Need to plumb through a base value or e.g. sample it.
-    double emission_logp =
-        emission_prior->logp(std::make_pair(value, value));
+    double emission_logp = emission_prior->logp(std::make_pair(value, value));
     delete emission_prior;
     return emission_logp;
   }

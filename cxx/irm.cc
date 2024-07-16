@@ -241,8 +241,8 @@ double IRM::logp_score() const {
   return logp_score_crp + logp_score_relation;
 }
 
-std::vector<Domain*> IRM::add_domains(const std::string& name,
-                                      const std::vector<std::string>& rel_domains) {
+std::vector<Domain*> IRM::add_domains(
+    const std::string& name, const std::vector<std::string>& rel_domains) {
   std::vector<Domain*> doms;
   for (const auto& d : rel_domains) {
     if (domains.count(d) == 0) {
@@ -262,7 +262,8 @@ void IRM::add_relation(const std::string& name,
   assert(!relations.contains(name));
   std::vector<Domain*> doms = add_domains(name, relation.domains);
 
-  relations[name] = clean_relation_from_spec(name, relation.distribution_spec, doms);
+  relations[name] =
+      clean_relation_from_spec(name, relation.distribution_spec, doms);
   schema[name] = relation;
 }
 
@@ -283,7 +284,8 @@ void IRM::add_relation(const std::string& name,
   RelationVariant rv;
   std::visit(
       [&](const auto& br) {
-        using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
+        using T = typename std::remove_pointer_t<
+            std::decay_t<decltype(br)>>::ValueType;
         rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
       },
       base_relation);
@@ -304,7 +306,8 @@ void IRM::add_relation_with_base(const std::string& name,
   RelationVariant rv;
   std::visit(
       [&](const auto& br) {
-        using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
+        using T = typename std::remove_pointer_t<
+            std::decay_t<decltype(br)>>::ValueType;
         rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
       },
       base_relation);
