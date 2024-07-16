@@ -216,6 +216,26 @@ cc_test(
     ],
 )
 
+filegroup(
+    name = "testdata",
+    srcs = [
+        "test_schema/nary.schema",
+        "test_schema/all_types.schema",
+    ],
+)
+
+cc_test(
+    name = "util_io_test",
+    srcs = ["util_io_test.cc"],
+    data = [
+        ":testdata",
+    ],
+    deps = [
+        ":util_io",
+        "@boost//:test",
+    ],
+)
+
 cc_test(
     name = "util_math_test",
     srcs = ["util_math_test.cc"],
