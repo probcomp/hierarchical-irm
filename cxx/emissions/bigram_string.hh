@@ -15,9 +15,10 @@ class BigramStringEmission : public Emission<std::string> {
  public:
   char lowest_char = ' ';
   char highest_char = '~';
-  std::vector<DirichletCategorical> substitutions;
+  // insertions.sample() == 0 means no insertion.
   std::vector<DirichletCategorical> insertions;
-  std::vector<BetaBernoulli> deletions;
+  // substitutions.sample() == 0 means deletion.
+  std::vector<DirichletCategorical> substitions;
 
   BigramStringEmission() {};
 
@@ -34,4 +35,8 @@ class BigramStringEmission : public Emission<std::string> {
 
   std::string propose_clean(const std::vector<std::string>& corrupted,
                             std::mt19937* unused_prng);
+
+ private:
+  size_t get_index(std::string current_char);
+  std::string category_to_char(int category);
 };
