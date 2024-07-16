@@ -64,8 +64,10 @@ cc_library(
         ":normal",
         ":skellam",
         ":stringcat",
+        "//:observation_variant",
         "//:util_parse",
         "@boost//:algorithm",
+        "@boost//:mp11",
     ],
 )
 

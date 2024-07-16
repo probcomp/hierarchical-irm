@@ -6,14 +6,21 @@
 #include <random>
 #include <string>
 #include <variant>
+#include <boost/mp11.hpp>
 
+#include "observation_variant.hh"
 #include "distributions/base.hh"
 
-using DistributionVariant =
-    std::variant<Distribution<bool>*,
-                 Distribution<double>*,
-                 Distribution<int>*,
-                 Distribution<std::string>*>;
+// DistributionVariant is a std::variant of Distribution<T>* for every
+// T in the list of sample_types defined in observation_variant.hh.  If you
+// want to add a distribution with a new sample type, you will need to update
+// that list.
+template<class T> using apply_distribution = Distribution<T>*;
+using distribution_of_sample_types = boost::mp11::mp_apply<apply_distribution, sample_types>;
+using DistributionVariant = decltype(as_variant(distribution_of_sample_types));
+
+// TODO(thomaswc): Define all of these get_distribution's using
+// metaprogramming on sample_types.
 
 // Return a distribution based on dist_string, which can either be a
 // distribution name like "normal" or a name with parameters like

@@ -21,6 +21,7 @@ cc_library(
         ":simple_string",
         ":sometimes",
         "//:util_parse",
+        "@boost//:mp11",
     ],
 )
 

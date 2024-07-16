@@ -5,13 +5,18 @@
 
 #include <string>
 #include <variant>
+#include <boost/mp11.hpp>
 
+#include "observation_variant.hh"
 #include "emissions/base.hh"
 
-using EmissionVariant = std::variant<Emission<bool>*,
-                                     Emission<double>*,
-                                     Emission<int>*,
-                                     Emission<std::string>*>;
+// EmissionVariant is a std::variant of Emission<T>* for every
+// T in the list of sample_types defined in observation_variant.hh.  If you
+// want to add an emission with a new sample type, you will need to update
+// that list.
+template<class T> using apply_emission = Emission<T>*;
+using emission_of_sample_types = boost::mp11::mp_apply<apply_emission, sample_types>;
+using EmissionVariant = decltype(as_variant(emission_of_sample_types));
 
 // Return an EmissionVariant based on emission_string, which can either be
 // an emission name like "gaussian" or a name with parameters like
