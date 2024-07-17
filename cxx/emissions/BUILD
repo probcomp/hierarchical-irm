@@ -114,6 +114,17 @@ cc_test(
 )
 
 cc_test(
+    name = "bigram_string_test",
+    srcs = ["bigram_string_test.cc"],
+    deps = [
+        ":bitflip",
+        ":bigram_string",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
     name = "bitflip_test",
     srcs = ["bitflip_test.cc"],
     deps = [
