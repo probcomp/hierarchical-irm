@@ -1,0 +1,6 @@
+bigram src record
+bigram flight record
+bigram sched_dep_time record
+bigram act_dep_time record
+bigram sched_arr_time record
+bigram act_arr_time record
