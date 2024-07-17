@@ -41,9 +41,7 @@ class CleanRelation : public Relation<T> {
   // list of domain pointers
   const std::vector<Domain*> domains;
   // Distribution or Emission spec over the relation's codomain.
-  const std::string prior_spec;
-  // Is the codomain an emission?
-  const bool codomain_is_emission;
+  const std::variant<DistributionSpec, EmissionSpec> prior_spec;
   // map from cluster multi-index to Distribution pointer
   std::unordered_map<const std::vector<int>, Distribution<ValueType>*,
                      VectorIntHash>
@@ -58,11 +56,9 @@ class CleanRelation : public Relation<T> {
       data_r;
 
   CleanRelation(const std::string& name,
-                const std::string& prior_spec,
-                const std::vector<Domain*>& domains,
-                bool codomain_is_emission = false)
-      : name(name), domains(domains), prior_spec(prior_spec),
-        codomain_is_emission(codomain_is_emission) {
+                const std::variant<DistributionSpec, EmissionSpec>& prior_spec,
+                const std::vector<Domain*>& domains)
+      : name(name), domains(domains), prior_spec(prior_spec) {
     assert(!domains.empty());
     assert(!name.empty());
     for (const Domain* const d : domains) {
@@ -77,18 +73,27 @@ class CleanRelation : public Relation<T> {
     }
   }
 
+  Distribution<ValueType>* make_new_distribution(
+      const DistributionSpec spec, std::mt19937* prng) const {
+    DistributionVariant dv = get_distribution(spec.str, prng);
+    Distribution<ValueType> *d;
+    get_distribution_from_distribution_variant(dv, &d);
+    return d;
+  }
+
+  Distribution<ValueType>* make_new_distribution(
+      const EmissionSpec spec, std::mt19937* prng) const {
+    EmissionVariant ev = get_emission(spec.str, prng);
+    Distribution<ValueType> *d;
+    get_distribution_from_emission_variant(ev, &d);
+    return d;
+  }
+
   Distribution<ValueType>* make_new_distribution(std::mt19937* prng) const {
-    if (codomain_is_emission) {
-      EmissionVariant ev = get_emission(prior_spec, prng);
-      Distribution<ValueType> *d;
-      get_distribution_from_emission_variant(ev, &d);
-      return d;
-    } else {
-      DistributionVariant dv = get_distribution(prior_spec, prng);
-      Distribution<ValueType> *d;
-      get_distribution_from_distribution_variant(dv, &d);
-      return d;
-    }
+    return std::visit(
+        [&](const auto& spec) {
+          return make_new_distribution(spec, prng);
+        }, prior_spec);
   }
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {

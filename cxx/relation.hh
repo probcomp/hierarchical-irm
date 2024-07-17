@@ -15,6 +15,14 @@
 typedef std::vector<T_item> T_items;
 typedef VectorIntHash H_items;
 
+struct DistributionSpec {
+  std::string str;
+};
+
+struct EmissionSpec {
+  std::string str;
+};
+
 template <typename T>
 class Relation {
  public:

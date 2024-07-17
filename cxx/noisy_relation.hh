@@ -51,12 +51,12 @@ class NoisyRelation : public Relation<T> {
   // A Relation for the Emission that models noisy values given true values.
   CleanRelation<std::pair<ValueType, ValueType>> emission_relation;
 
-  NoisyRelation(const std::string& name, const std::string& emission_spec,
+  NoisyRelation(const std::string& name, const EmissionSpec& emission_spec,
                 const std::vector<Domain*>& domains, Relation<T>* base_relation)
       : name(name),
         domains(domains),
         base_relation(base_relation),
-        emission_relation(name + "_emission", emission_spec, domains, true) {}
+        emission_relation(name + "_emission", emission_spec, domains) {}
 
   void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
     data[items] = value;

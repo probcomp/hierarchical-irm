@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   D1.incorporate(&prng, 0);
   D2.incorporate(&prng, 1);
   D3.incorporate(&prng, 3);
-  std::string spec = "bernoulli";
+  DistributionSpec spec("bernoulli");
   CleanRelation<bool> R1("R1", spec, {&D1, &D2, &D3});
   R1.incorporate(&prng, {0, 1, 3}, 1);
   R1.incorporate(&prng, {1, 1, 3}, 1);
@@ -59,7 +59,8 @@ BOOST_AUTO_TEST_CASE(test_string_relation) {
   Domain D1("D1");
   Domain D2("D2");
 
-  CleanRelation<std::string> R2("R2", "bigram", {&D1, &D2});
+  DistributionSpec spec("bigram");
+  CleanRelation<std::string> R2("R2", spec, {&D1, &D2});
   R2.incorporate(&prng, {1, 3}, "cat");
   R2.incorporate(&prng, {1, 2}, "dog");
   R2.incorporate(&prng, {1, 4}, "catt");
@@ -80,7 +81,8 @@ BOOST_AUTO_TEST_CASE(test_unincorporate) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
-  CleanRelation<bool> R1("R1", "bernoulli", {&D1, &D2});
+  DistributionSpec spec("bernoulli");
+  CleanRelation<bool> R1("R1", spec, {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, 1);
   R1.incorporate(&prng, {0, 2}, 1);
   R1.incorporate(&prng, {3, 0}, 1);
@@ -108,8 +110,8 @@ BOOST_AUTO_TEST_CASE(test_emission) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
-  CleanRelation<std::pair<bool, bool>> R1(
-      "R1", "sometimes_bitflip", {&D1, &D2}, true);
+  EmissionSpec spec("sometimes_bitflip");
+  CleanRelation<std::pair<bool, bool>> R1("R1", spec, {&D1, &D2});
   R1.incorporate(&prng, {0, 1}, {1, 1});
   BOOST_TEST(R1.data.size() == 1);
 

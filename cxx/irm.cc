@@ -12,19 +12,19 @@ template <typename T>
 CleanRelation<T>* make_clean_relation(
     Distribution<T>* unused_distribution,
     const std::string& name,
-    const std::string& distribution_spec,
+    const DistributionSpec& distribution_spec,
     const std::vector<Domain*>& doms) {
   return new CleanRelation<T>(name, distribution_spec, doms);
 }
 
 RelationVariant clean_relation_from_spec(const std::string& name,
-                                         const std::string& distribution_spec,
+                                         const DistributionSpec& spec,
                                          const std::vector<Domain*>& doms) {
   std::mt19937 prng;
-  DistributionVariant dv = get_distribution(distribution_spec, &prng);
+  DistributionVariant dv = get_distribution(spec.str, &prng);
   RelationVariant rv;
   std::visit([&](const auto& d) {
-    rv = make_clean_relation(d, name, distribution_spec, doms);
+    rv = make_clean_relation(d, name, spec, doms);
     delete d;
   }, dv);
   return rv;
@@ -267,7 +267,7 @@ void IRM::add_relation(const std::string& name,
   assert(!relations.contains(name));
   std::vector<Domain*> doms = add_domains(name, relation.domains);
 
-  relations[name] = clean_relation_from_spec(name, relation.distribution_spec, doms);
+  relations[name] = clean_relation_from_spec(name, DistributionSpec(relation.distribution_spec), doms);
   schema[name] = relation;
 }
 
@@ -289,7 +289,7 @@ void IRM::add_relation(const std::string& name,
   std::visit(
       [&](const auto& br) {
         using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
-        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
+        rv = new NoisyRelation<T>(name, EmissionSpec(relation.emission_spec), doms, br);
       },
       base_relation);
   relations[name] = rv;
@@ -310,7 +310,7 @@ void IRM::add_relation_with_base(const std::string& name,
   std::visit(
       [&](const auto& br) {
         using T = typename std::remove_pointer_t<std::decay_t<decltype(br)>>::ValueType;
-        rv = new NoisyRelation<T>(name, relation.emission_spec, doms, br);
+        rv = new NoisyRelation<T>(name, EmissionSpec(relation.emission_spec), doms, br);
       },
       base_relation);
   relations[name] = rv;
