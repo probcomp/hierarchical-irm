@@ -147,7 +147,6 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
 
   // If we want to compare against logp_score, we need to compute logp_score for each 
   // way we incorporate this observation.
-  double average_logp_score = 0;
   std::vector<double> logps;
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 4; ++j) {
@@ -160,11 +159,10 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
       if (i == 0) {
         d1_weight = 0.5;
       }
-      std::cerr << "logp_score" << test_irm.logp_score() << "\n";
-      logps.push_back(d1_weight * 0.25 * test_irm.logp_score() / 12.);
-      average_logp_score += d1_weight * 0.25 * test_irm.logp_score() / 12.;
+      double total_log_weight = log(d1_weight * 0.25);
+      std::cerr << "logp_score" << total_log_weight + test_irm.logp_score() << "\n";
+      logps.push_back(total_log_weight + test_irm.logp_score());
     }
   }
   BOOST_TEST(logsumexp(logps) == logp_x);
-  BOOST_TEST(average_logp_score == logp_x);
 }
