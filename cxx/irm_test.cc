@@ -4,7 +4,6 @@
 
 #include "irm.hh"
 
-#include <iostream>
 #include <boost/test/included/unit_test.hpp>
 
 #include "util_distribution_variant.hh"
@@ -140,8 +139,6 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
   IRM irm(schema);
   construct_test_irm(&prng, &irm);
 
-  std::cerr << "TESTING\n";
-
   // Now we would like to add the observation for {4, 4}.
   double logp_x = irm.logp({{"R3", {4, 4}, 0.5}}, &prng);
 
@@ -152,17 +149,12 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
     for (int j = 0; j < 4; ++j) {
       IRM test_irm(schema);
       construct_test_irm(&prng, &test_irm);
+      double logp0 = test_irm.logp_score();
       test_irm.domains["D1"]->incorporate(&prng, 4, i);
       test_irm.domains["D2"]->incorporate(&prng, 4, j);
       test_irm.incorporate(&prng, "R3", {4, 4}, 0.5);
-      double d1_weight = 0.25;
-      if (i == 0) {
-        d1_weight = 0.5;
-      }
-      double total_log_weight = log(d1_weight * 0.25);
-      std::cerr << "logp_score" << total_log_weight + test_irm.logp_score() << "\n";
-      logps.push_back(total_log_weight + test_irm.logp_score());
+      logps.push_back(test_irm.logp_score() - logp0);
     }
   }
-  BOOST_TEST(logsumexp(logps) == logp_x);
+  BOOST_TEST(logsumexp(logps) == logp_x, tt::tolerance(1e-6));
 }
