@@ -37,7 +37,7 @@ def main():
     county = row['County'].replace(' ', '-')
     f.write(f"{row['Monthly Rent']} has_rent {row['ID']} {county} {row['State']}\n")
     f.write(f"{row['Room Type']} has_type {row['ID']} {county} {row['State']}\n")
-    f.write(f"{county} has_name {county}\n")
+    f.write(f"{county} has_name {county} {row['State']}\n")
   f.close()
 
   f = open('pclean-rents-clean-county-names.obs', 'w')

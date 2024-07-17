@@ -1,0 +1,33 @@
+Overview of datasets in this directory:
+
+The HIRM datasets are:
+  * animals.binary
+  * animals.unary
+  * nations.binary
+  * nations.unary
+  * two_relations
+
+
+The PClean related datasets are:
+  Sourced from the PClean Flights dataset (the clean version).
+  * pclean-flights-clean-flight-name
+    - Contains only flight names.
+  * pclean-flights-clean-source-flight-name
+    - Whether a source reports on a specific flight.
+  * pclean-flights-clean-unary
+    - Full dataset. All columns are encoded as unary relations of the rows.
+
+  Sourced from the PClean Rents dataset (the clean version).
+  * pclean-rents-clean-county-names
+    - Contains on the county names.
+  * pclean-rents-clean-ternary
+    - Monthly Rent and Room Type are ternary relations of the row, County and State.
+  * pclean-rents-clean-unary
+    - Full dataset. All columns are encoded as unary relations of the rows.
+
+
+Test datasets
+
+* test-mixture-2-normals
+ - Contains only real valued entries sourced from a mixture of 2 normals (Normal(-1., 0.5) and Normal(2., 0.5)).
+
