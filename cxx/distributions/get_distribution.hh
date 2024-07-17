@@ -30,25 +30,29 @@ DistributionVariant get_distribution(
 
 // Define get_distribution_from_distribution_variant, but only for types
 // in the sample_types list.
-template<typename T>
-void get_distribution_from_distribution_variant_impl(
-    const DistributionVariant &dv, Distribution<T>** dist_out,
-    std::false_type) {
+template<typename T,
+         typename std::enable_if<!boost::mp11::mp_contains<sample_types, T>::value, bool>::type = 0>
+void get_distribution_from_distribution_variant(
+    const DistributionVariant &dv, Distribution<T>** dist_out) {
   printf("Error!  get_distribution_from_distribution_variant called with non-DistributionVariant type!\n");
   assert(false);
   *dist_out = nullptr;
 }
 
-template<typename T>
-void get_distribution_from_distribution_variant_impl(
+template<typename T,
+         typename std::enable_if<boost::mp11::mp_contains<sample_types, T>::value, bool>::type = 0>
+void get_distribution_from_distribution_variant(
     const DistributionVariant &dv, Distribution<T>** dist_out,
     std::true_type) {
   *dist_out = std::get<Distribution<T>&>(dv);
 }
 
+
+/*
 template<typename T>
 void get_distribution_from_distribution_variant(
     const DistributionVariant &dv, Distribution<T>** dist_out) {
   get_distribution_from_distribution_variant_impl(
-      dv, dist_out, boost::mp11::mp_contains<sample_types, T>::value);
+      dv, dist_out, IsSampleType<T>::value);
 }
+*/

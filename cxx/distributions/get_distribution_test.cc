@@ -73,3 +73,12 @@ BOOST_AUTO_TEST_CASE(test_get_stringcat2) {
   std::string name = typeid(*d).name();
   BOOST_TEST(name.find("StringCat") != std::string::npos);
 }
+
+BOOST_AUTO_TEST_CASE(test_get_distribution_from_distribution_variant) {
+  std::mt19937 prng;
+  DistributionVariant dv = get_distribution("normal", &prng);
+  Distribution<double> *d;
+  get_distribution_from_distribution_variant(dv, &d);
+  d->incorporate(5.0);
+  BOOST_TEST(d->N == 1);
+}
