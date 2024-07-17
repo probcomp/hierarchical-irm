@@ -152,4 +152,19 @@ std::string BigramStringEmission::sample_corrupted(
 
 std::string BigramStringEmission::propose_clean(
     const std::vector<std::string>& corrupted, std::mt19937* unused_prng) {
+  if (corrupted.empty() {
+    printf('Warning!  propose_clean called with empty corrupted list\n');
+    return "";
+  }
+  if (corrupted.length() == 1) {
+    return corrupted[0];
+  }
+  std::vector<std::string>& winners;
+  for (int i = 0; i < corrupted.length() - 1; i += 2) {
+    winners.push_back(two_string_vote(corrupted[i], corrupted[i+1]));
+  }
+  if (corrupted.length() % 2 == 1) {
+    winners.push_back(corrupted.back());
+  }
+  return propose_clean(winners, unused_prng);
 }
