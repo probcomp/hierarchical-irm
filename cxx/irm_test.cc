@@ -107,22 +107,27 @@ BOOST_AUTO_TEST_CASE(test_irm_one_data_point) {
 }
 
 void construct_test_irm(std::mt19937* prng, IRM* irm) {
+  irm->domains["D1"]->incorporate(prng, 0, 0);
   irm->domains["D1"]->incorporate(prng, 1, 0);
   irm->domains["D1"]->incorporate(prng, 2, 0);
   irm->domains["D1"]->incorporate(prng, 3, 1);
 
+  irm->domains["D2"]->incorporate(prng, 0, 0);
   irm->domains["D2"]->incorporate(prng, 1, 0);
   irm->domains["D2"]->incorporate(prng, 2, 1);
   irm->domains["D2"]->incorporate(prng, 3, 2);
 
+  irm->incorporate(prng, "R1", {0,}, false);
   irm->incorporate(prng, "R1", {1,}, false);
   irm->incorporate(prng, "R1", {2,}, true);
   irm->incorporate(prng, "R1", {3,}, true);
 
+  irm->incorporate(prng, "R2", {0,}, 0.);
   irm->incorporate(prng, "R2", {1,}, 0.);
   irm->incorporate(prng, "R2", {2,}, 1.);
   irm->incorporate(prng, "R2", {3,}, 1.1);
 
+  irm->incorporate(prng, "R3", {0, 2}, 0.);
   irm->incorporate(prng, "R3", {1, 1}, 0.);
   irm->incorporate(prng, "R3", {2, 2}, 1.);
   irm->incorporate(prng, "R3", {1, 3}, 1.1);
