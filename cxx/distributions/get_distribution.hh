@@ -42,17 +42,6 @@ void get_distribution_from_distribution_variant(
 template<typename T,
          typename std::enable_if<boost::mp11::mp_contains<sample_types, T>::value, bool>::type = 0>
 void get_distribution_from_distribution_variant(
-    const DistributionVariant &dv, Distribution<T>** dist_out,
-    std::true_type) {
-  *dist_out = std::get<Distribution<T>&>(dv);
-}
-
-
-/*
-template<typename T>
-void get_distribution_from_distribution_variant(
     const DistributionVariant &dv, Distribution<T>** dist_out) {
-  get_distribution_from_distribution_variant_impl(
-      dv, dist_out, IsSampleType<T>::value);
+  *dist_out = std::get<Distribution<T>*>(dv);
 }
-*/
