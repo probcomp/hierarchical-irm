@@ -27,9 +27,6 @@ T_schema load_schema(const std::string& path) {
     std::string relname;
     std::string distribution_spec_str;
 
-    // TODO(emilyaf): Read this in from schema.
-    bool is_observed = true;
-
     stream >> distribution_spec_str;
     stream >> relname;
     for (std::string w; stream >> w;) {
@@ -37,15 +34,17 @@ T_schema load_schema(const std::string& path) {
     }
     assert(relation.domains.size() > 0);
     relation.distribution_spec = DistributionSpec(distribution_spec_str);
-    relation.is_observed = is_observed;
+
+    // If the data contains observations of this relation, this bool will be
+    // overwritten to true.
+    relation.is_observed = false;
     schema[relname] = relation;
   }
   fp.close();
   return schema;
 }
 
-T_observations load_observations(const std::string& path,
-                                 const T_schema& schema) {
+T_observations load_observations(const std::string& path, T_schema& schema) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
@@ -62,24 +61,32 @@ T_observations load_observations(const std::string& path,
     stream >> relname;
     ObservationVariant value = observation_string_to_value(
         value_str,
-        std::visit([](const auto& trel) { 
-          using T = std::decay_t<decltype(trel)>;
-          if constexpr (std::is_same_v<T, T_clean_relation>) {
-            return trel.distribution_spec.observation_type; 
-          } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
-            return trel.emission_spec.observation_type;
-          } else {
-            assert(false && "Unrecognized relation type.");
-          }
-        }, schema.at(relname)));
+        std::visit(
+            [](const auto& trel) {
+              using T = std::decay_t<decltype(trel)>;
+              if constexpr (std::is_same_v<T, T_clean_relation>) {
+                return trel.distribution_spec.observation_type;
+              } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
+                return trel.emission_spec.observation_type;
+              } else {
+                assert(false && "Unrecognized relation type.");
+              }
+            },
+            schema.at(relname)));
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }
     assert(items.size() > 0);
-    auto entry = std::make_tuple(relname, items, value);
-    observations.push_back(entry);
+    auto entry = std::make_tuple(items, value);
+    observations[relname].push_back(entry);
   }
   fp.close();
+
+  // Update the schema to indicate which relations have observations. For now,
+  // we assume that each relation is fully observed or fully unobserved.
+  for (const auto& [relname, obs] : observations) {
+    std::visit([](auto& trel) { trel.is_observed = true; }, schema.at(relname));
+  }
   return observations;
 }
 
@@ -100,65 +107,145 @@ T_encoding encode_observations(const T_schema& schema,
     }
   }
   // Create the codes for each item.
-  for (const T_observation& i : observations) {
-    std::string relation = std::get<0>(i);
-    std::vector<std::string> items = std::get<1>(i);
-    int counter = 0;
-    std::vector<std::string> domains =
-        std::visit([](const auto& r) { return r.domains; }, schema.at(relation));
-    for (const std::string& item : items) {
-      // Obtain domain that item belongs to.
-      std::string domain = domains.at(counter);
-      // Compute its code, if necessary.
-      if (!item_to_code.at(domain).contains(item)) {
-        int code = domain_item_counter[domain];
-        item_to_code[domain][item] = code;
-        code_to_item[domain][code] = item;
-        ++domain_item_counter[domain];
+  for (const auto& [relation, obs] : observations) {
+    for (const auto& i : obs) {
+      std::vector<std::string> items = std::get<0>(i);
+      int counter = 0;
+      std::vector<std::string> domains = std::visit(
+          [](const auto& r) { return r.domains; }, schema.at(relation));
+      for (const std::string& item : items) {
+        // Obtain domain that item belongs to.
+        std::string domain = domains.at(counter);
+        // Compute its code, if necessary.
+        if (!item_to_code.at(domain).contains(item)) {
+          int code = domain_item_counter[domain];
+          item_to_code[domain][item] = code;
+          code_to_item[domain][code] = item;
+          ++domain_item_counter[domain];
+        }
+        ++counter;
       }
-      ++counter;
     }
   }
   return std::make_pair(item_to_code, code_to_item);
 }
 
-void incorporate_observations(std::mt19937* prng, IRM& irm,
-                              const T_encoding& encoding,
-                              const T_observations& observations) {
-  T_encoding_f item_to_code = std::get<0>(encoding);
-  for (const auto& [relation, items, value] : observations) {
-    int counter = 0;
-    T_items items_e;
-    std::vector<std::string> domains = std::visit(
-        [&](const auto& trel) { return trel.domains; }, irm.schema.at(relation));
-    for (const std::string& item : items) {
-      std::string domain = domains[counter];
-      counter += 1;
-      int code = item_to_code.at(domain).at(item);
-      items_e.push_back(code);
+void incorporate_observations_relation(
+    std::mt19937* prng, const std::string& relation,
+    std::variant<IRM*, HIRM*> h_irm, const T_encoded_observations& observations,
+    std::unordered_map<std::string, std::string>& noisy_to_base,
+    std::unordered_map<std::string, std::unordered_set<T_items, H_items>>&
+        relation_items,
+    std::unordered_set<std::string>& completed_relations) {
+  RelationVariant rel_var =
+      std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
+  // base relations must be incorporated before noisy relations, so recursively
+  // incporate all base relations.
+  if (noisy_to_base.contains(relation)) {
+    const std::string& base_name = noisy_to_base.at(relation);
+    if (!observations.contains(base_name)) {
+      // Deduce the base relation items from the noisy relation items, and store
+      // them. We will later sample corresponding base relation values.
+      std::visit(
+          [&](auto rel) {
+            using T = typename std::remove_pointer_t<
+                std::decay_t<decltype(rel)>>::ValueType;
+            NoisyRelation<T>* nrel = reinterpret_cast<NoisyRelation<T>*>(rel);
+            for (T_items items : relation_items.at(relation)) {
+              T_items base_items = nrel->get_base_items(items);
+              relation_items[base_name].insert(base_items);
+            }
+          },
+          rel_var);
     }
-    irm.incorporate(prng, relation, items_e, value);
+    incorporate_observations_relation(prng, base_name, h_irm, observations,
+                                      noisy_to_base, relation_items,
+                                      completed_relations);
   }
+
+  if (observations.contains(relation)) {
+    // If this relation is observed, incorporate its observations.
+    for (const auto& [items, value] : observations.at(relation)) {
+      std::visit([&](auto& m) { m->incorporate(prng, relation, items, value); },
+                 h_irm);
+    }
+  } else {
+    // If this relation is not observed, incorporate samples from the prior.
+    // This currently assumes a base relation's items are always a prefix of the
+    // noisy relation's items.
+    for (const auto& items : relation_items.at(relation)) {
+      std::visit(
+          [&](auto rel) {
+            using T = typename std::remove_pointer_t<
+                std::decay_t<decltype(rel)>>::ValueType;
+            const auto& rel_data = rel->get_data();
+            T value = rel->cluster_or_prior_sample(prng, items);
+            if (!rel_data.contains(items)) {
+              std::visit(
+                  [&](auto& m) {
+                    m->incorporate(prng, relation, items, value);
+                  },
+                  h_irm);
+            }
+          },
+          rel_var);
+    }
+  }
+  completed_relations.insert(relation);
 }
 
-void incorporate_observations(std::mt19937* prng, HIRM& hirm,
+void incorporate_observations(std::mt19937* prng,
+                              std::variant<IRM*, HIRM*> h_irm,
                               const T_encoding& encoding,
                               const T_observations& observations) {
   T_encoding_f item_to_code = std::get<0>(encoding);
-  for (const auto& [relation, items, value] : observations) {
-    int counter = 0;
-    T_items items_e;
-    std::vector<std::string> domains = std::visit(
-        [&](const auto& trel) { return trel.domains; }, hirm.schema.at(relation));
-    for (const std::string& item : items) {
-      std::string domain = domains[counter];
-      counter += 1;
-      int code = item_to_code.at(domain).at(item);
-      items_e.push_back(code);
+  std::vector<std::string> observed_relations;
+  T_encoded_observations encoded_observations;
+  std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
+      relation_items;
+  for (const auto& [relation, obs] : observations) {
+    observed_relations.push_back(relation);
+
+    T_relation trel = std::visit(
+        [&](const auto& m) { return m->schema.at(relation); }, h_irm);
+    std::vector<std::string> domains =
+        std::visit([&](const auto& tr) { return tr.domains; }, trel);
+    for (const auto& [items, value] : obs) {
+      int counter = 0;
+      T_items items_e;
+      for (const std::string& item : items) {
+        std::string domain = domains[counter];
+        counter += 1;
+        int code = item_to_code.at(domain).at(item);
+        items_e.push_back(code);
+      }
+      relation_items[relation].insert(items_e);
+      encoded_observations[relation].push_back(std::make_pair(items_e, value));
     }
-    std::visit(
-        [&](const auto& v) { hirm.incorporate(prng, relation, items_e, v); },
-        value);
+  }
+
+  std::unordered_map<std::string, std::string> noisy_to_base;
+  std::unordered_map<std::string, std::vector<std::string>> base_to_noisy =
+      std::visit([](const auto& m) { return m->base_to_noisy_relations; },
+                 h_irm);
+  for (const auto& [base_name, noisy_names] : base_to_noisy) {
+    for (const std::string& noisy_name : noisy_names) {
+      if (!base_to_noisy.contains(noisy_name)) {
+        assert(observations.contains(noisy_name) &&
+               "A relation that is not the base of a noisy relation must be "
+               "observed.");
+      }
+      noisy_to_base[noisy_name] = base_name;
+    }
+  }
+
+  std::unordered_set<std::string> completed_relations;
+  for (const std::string& relation : observed_relations) {
+    if (!completed_relations.contains(relation)) {
+      incorporate_observations_relation(prng, relation, h_irm,
+                                        encoded_observations, noisy_to_base,
+                                        relation_items, completed_relations);
+    }
   }
 }
 
@@ -382,7 +469,7 @@ void from_txt(std::mt19937* prng, IRM* const irm,
     }
   }
   // Add the observations.
-  incorporate_observations(prng, *irm, encoding, observations);
+  incorporate_observations(prng, irm, encoding, observations);
 }
 
 void from_txt(std::mt19937* prng, HIRM* const hirm,
@@ -433,5 +520,5 @@ void from_txt(std::mt19937* prng, HIRM* const hirm,
   }
   assert(hirm->irms.count(-1) == 0);
   // Add the observations.
-  incorporate_observations(prng, *hirm, encoding, observations);
+  incorporate_observations(prng, hirm, encoding, observations);
 }

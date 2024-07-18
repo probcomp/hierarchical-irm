@@ -71,10 +71,10 @@ class NoisyRelation : public Relation<T> {
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
   // care, since they mutate the clusters only and not the relation. In
-  // particular, for every call to unincorporate_from_cluster, there must be a 
+  // particular, for every call to unincorporate_from_cluster, there must be a
   // corresponding call to incorporate_to_cluster with the same items, or the
-  // Relation will be in an invalid state. See the Attribute class for usage/
-  // justification of this choice.
+  // Relation will be in an invalid state. See `transition_latent_value` for
+  // usage/justification of this choice.
   void incorporate_to_cluster(const T_items& items, const ValueType& value) {
     const ValueType& base_val = get_base_value(items);
     emission_relation.incorporate_to_cluster(items,
@@ -168,18 +168,39 @@ class NoisyRelation : public Relation<T> {
     return emission_relation.get_cluster_assignment(items);
   }
 
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z,
+  double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
                                const ValueType& value) const {
-    if (emission_relation.clusters.contains(z)) {
-      const ValueType base_value = get_base_value(z);
-      return emission_relation.clusters.at(z)->logp(
-          std::make_pair(base_value, value));
+    const T_items base_items = get_base_items(items);
+    const auto& base_data = base_relation->get_data();
+    if (!base_data.contains(base_items)) {
+      return -std::numeric_limits<double>::infinity();
+    }
+
+    auto values = std::make_pair(base_data.at(base_items), value);
+    if (emission_relation.clusters.contains(items)) {
+      return emission_relation.clusters.at(items)->logp(values);
     }
     auto emission_prior = emission_relation.make_new_distribution(prng);
-    // TODO(emilyaf): Need to plumb through a base value or e.g. sample it.
-    double emission_logp = emission_prior->logp(std::make_pair(value, value));
+    double emission_logp = emission_prior->logp(values);
     delete emission_prior;
     return emission_logp;
+  }
+
+  ValueType cluster_or_prior_sample(std::mt19937* prng,
+                                    const T_items& items) const {
+    // TODO(emilyaf): Maybe take a sample if there is no base value.
+    const ValueType& base_value = get_base_value(items);
+    if (emission_relation.clusters.contains(items)) {
+      return reinterpret_cast<Emission<ValueType>*>(
+                 emission_relation.clusters.at(items))
+          ->sample_corrupted(base_value, prng);
+    }
+    auto emission_prior = reinterpret_cast<Emission<ValueType>*>(
+        emission_relation.make_new_distribution(prng));
+    ValueType emission_sample =
+        emission_prior->sample_corrupted(base_value, prng);
+    delete emission_prior;
+    return emission_sample;
   }
 
   // Disable copying.

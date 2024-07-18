@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   T_encoding encoding = encode_observations(schema, observations);
 
   IRM irm(schema);
-  incorporate_observations(&prng, irm, encoding, observations);
+  incorporate_observations(&prng, &irm, encoding, observations);
   printf("running for %d iterations\n", iters);
   double t_total = 0.0;
   for (int i = 0; i < iters; i++) {

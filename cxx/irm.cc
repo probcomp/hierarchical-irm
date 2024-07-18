@@ -51,14 +51,10 @@ void IRM::incorporate(std::mt19937* prng, const std::string& r,
         rel->incorporate(prng, items, v);
       },
       relations.at(r));
-
 }
 
 void IRM::unincorporate(const std::string& r, const T_items& items) {
   std::visit([&](auto rel) { rel->unincorporate(items); }, relations.at(r));
-  if (base_to_noisy_relations.contains(r)) {
-    attributes.at(r).erase(items);
-  }
 }
 
 void IRM::transition_cluster_assignments_all(std::mt19937* prng) {
@@ -124,23 +120,23 @@ void IRM::transition_cluster_assignment_item(std::mt19937* prng,
   }
 }
 
-void IRM::transition_latent_values_relation(std::mt19937* prng, std::string r) {
-  std::vector<std::string>> nrels = base_to_noisy_relations.at(r)
+void IRM::transition_latent_values_relation(std::mt19937* prng,
+                                            const std::string& r) {
   auto transition_values = [&](auto base_rel) {
     using T = typename std::remove_pointer_t<
         std::decay_t<decltype(base_rel)>>::ValueType;
     std::unordered_map<std::string, NoisyRelation<T>*> noisy_rels;
-    for (const std::string& name : nrels) {
-      noisy_rels[name] = std::get<NoisyRelation<T>*>(get_relation(name));
+    for (const std::string& name : base_to_noisy_relations.at(r)) {
+      noisy_rels[name] = reinterpret_cast<NoisyRelation<T>*>(
+          std::get<Relation<T>*>(relations.at(name)));
     }
     for (const auto& [items, value] : base_rel->get_data()) {
       transition_latent_value(prng, items, base_rel, noisy_rels);
     }
-  }
-  std::visit(transition_values, get_relation(r));
+  };
+  std::visit(transition_values, relations.at(r));
 }
 
-// does this need modifying? i don't think so?
 double IRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
         observations,
@@ -211,7 +207,7 @@ double IRM::logp(
   assert(item_universe.size() == weight_universe.size());
   // Compute data probability given cluster combinations.
   std::vector<T_items> items_product = product(index_universe);
-  std::vector<double> logps;  // reserve size
+  std::vector<double> logps;
   logps.reserve(index_universe.size());
   for (const T_items& indexes : items_product) {
     double logp_indexes = 0;
@@ -302,7 +298,6 @@ void IRM::add_relation(const std::string& name,
   }
   base_relation = relations.at(base_name);
 
-  // ADD THIS ONLY IF BASE IS UNOBSERVED.
   base_to_noisy_relations[base_name].push_back(name);
 
   RelationVariant rv;
@@ -361,6 +356,10 @@ void IRM::remove_relation(const std::string& name) {
   schema.erase(name);
 }
 
+RelationVariant IRM::get_relation(const std::string& name) {
+  return relations.at(name);
+}
+
 #define GET_ELAPSED(t) double(clock() - t) / CLOCKS_PER_SEC
 
 // TODO(emilyaf): Refactor as a function for readibility/maintainability.
@@ -384,13 +383,21 @@ void IRM::remove_relation(const std::string& name) {
   }
 
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose, int num_theta_steps) {
-  // TRANSITION UNOBSERVED VALUES.
-  for (auto& [rel, nrels] : irm->base_to_noisy_relations) {
-    if (!std::visit([](const auto& s) {return s.is_observed ; }, irm->schema.at(rel))) {
-      clock_t t = clock();
-      irm->transition_latent_values_relation(prng, rel);
-      REPORT_SCORE(verbose, t, t_total, irm);
+                               bool verbose, int num_theta_steps,
+                               bool transition_latents) {
+  // If this function is called during HIRM inference, we do not want
+  // the IRM to transition the latents. Some latent relations may have noisy
+  // relations in other IRMs, so HIRM needs to handle the transitioning of
+  // latent values.
+  if (transition_latents) {
+    // TRANSITION LATENT VALUES.
+    for (auto& [rel, nrels] : irm->base_to_noisy_relations) {
+      if (std::visit([](const auto& s) { return !s.is_observed; },
+                      irm->schema.at(rel))) {
+        clock_t t = clock();
+        irm->transition_latent_values_relation(prng, rel);
+        REPORT_SCORE(verbose, t, t_total, irm);
+      }
     }
   }
   // TRANSITION ASSIGNMENTS.

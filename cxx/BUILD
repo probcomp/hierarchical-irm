@@ -1,17 +1,6 @@
 licenses(["notice"])
 
 cc_library(
-    name = "attribute",
-    hdrs = ["attribute.hh"],
-    visibility = [":__subpackages__"],
-    deps = [
-        "//emissions:base",
-        ":relation",
-        ":noisy_relation",
-    ],
-)
-
-cc_library(
     name = "cxxopts",
     srcs = ["cxxopts.hpp"],
     visibility = [":__subpackages__"],
@@ -47,9 +36,9 @@ cc_library(
     srcs = ["irm.cc"],
     visibility = [":__subpackages__"],
     deps = [
-        ":attribute",
         ":clean_relation",
         ":noisy_relation",
+        ":transition_latent_value",
         ":util_distribution_variant",
         "//emissions:get_emission"
     ],
@@ -61,7 +50,6 @@ cc_library(
     srcs = ["hirm.cc"],
     visibility = [":__subpackages__"],
     deps = [
-        ":attribute",
         ":irm",
     ],
 )
@@ -177,19 +165,6 @@ cc_library(
         "//emissions:base",
         ":relation",
         ":noisy_relation",
-    ],
-)
-
-cc_test(
-    name = "attribute_test",
-    srcs = ["attribute_test.cc"],
-    deps = [
-        ":attribute",
-        ":clean_relation",
-        ":domain",
-        ":util_distribution_variant",
-        "@boost//:algorithm",
-        "@boost//:test",
     ],
 )
 

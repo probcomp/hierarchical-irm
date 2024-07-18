@@ -12,7 +12,7 @@ namespace tt = boost::test_tools;
 BOOST_AUTO_TEST_CASE(test_irm) {
   std::map<std::string, T_relation> schema1{
       {"R1", T_clean_relation{{"D1", "D1"}, true, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D1", "D2"}, true, DistributionSpec("normal")}},
+      {"R2", T_clean_relation{{"D1", "D2"}, false, DistributionSpec("normal")}},
       {"R3", T_clean_relation{{"D3", "D1"}, true, DistributionSpec("bigram")}},
       {"R4",
        T_noisy_relation{
@@ -54,6 +54,11 @@ BOOST_AUTO_TEST_CASE(test_irm) {
   int r4_obs = std::visit([](auto r) { return r->get_data().size(); },
                           irm.relations.at("R4"));
   BOOST_TEST(r4_obs == 2);
+
+  // Transitioning the latent value in R2 should change it.
+  irm.transition_latent_values_relation(&prng, "R2");
+  Relation<double>* R2 = std::get<Relation<double>*>(irm.get_relation("R2"));
+  BOOST_TEST(R2->get_data().at({0, 3}) != 1.);
 }
 
 BOOST_AUTO_TEST_CASE(test_irm_one_data_point) {
@@ -135,9 +140,9 @@ void construct_test_irm(std::mt19937* prng, IRM* irm) {
 
 BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
   std::map<std::string, T_relation> schema{
-      {"R1", T_clean_relation{{"D1"}, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}}};
+      {"R1", T_clean_relation{{"D1"}, true, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D2"}, true, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D1", "D2"}, true, DistributionSpec("normal")}}};
 
 
   std::mt19937 prng;

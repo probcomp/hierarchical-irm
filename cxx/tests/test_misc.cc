@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
 
   printf("===== IRM ====\n");
   std::map<std::string, T_relation> schema1{
-      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}}};
+      {"R1", T_clean_relation{{"D1", "D1"}, true, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D1", "D2"}, true, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D3", "D1"}, true, DistributionSpec("bigram")}}};
   IRM irm(schema1);
 
   for (auto const& kv : irm.domains) {
@@ -71,25 +71,24 @@ int main(int argc, char** argv) {
   auto observations = load_observations("assets/animals.binary.obs", schema);
   auto encoding = encode_observations(schema, observations);
   auto item_to_code = std::get<0>(encoding);
-  for (auto const& i : observations) {
-    auto relation = std::get<0>(i);
-    auto value = std::get<2>(i);
-    auto item = std::get<1>(i);
-    printf("incorporating %s ", relation.c_str());
-    printf("%d ", std::get<bool>(value));
-    int counter = 0;
-    T_items items_code;
-    auto rel_domains =
-        std::visit([](const auto& r) { return r.domains; }, schema.at(relation));
-    for (auto const& item : std::get<1>(i)) {
-      auto domain = rel_domains[counter];
-      counter += 1;
-      auto code = item_to_code.at(domain).at(item);
-      printf("%s(%d) ", item.c_str(), code);
-      items_code.push_back(code);
+  for (const auto& [relation, obs] : observations) {
+    for (const auto& [items, value] : obs) {
+      printf("incorporating %s ", relation.c_str());
+      printf("%d ", std::get<bool>(value));
+      int counter = 0;
+      T_items items_code;
+      auto rel_domains =
+          std::visit([](const auto& r) { return r.domains; }, schema.at(relation));
+      for (auto const& item : items) {
+        auto domain = rel_domains[counter];
+        counter += 1;
+        auto code = item_to_code.at(domain).at(item);
+        printf("%s(%d) ", item.c_str(), code);
+        items_code.push_back(code);
+      }
+      printf("\n");
+      irm3.incorporate(&prng, relation, items_code, value);
     }
-    printf("\n");
-    irm3.incorporate(&prng, relation, items_code, value);
   }
 
   for (int i = 0; i < 4; i++) {

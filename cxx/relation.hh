@@ -30,6 +30,8 @@ class Relation {
 
   virtual double cluster_or_prior_logp(std::mt19937* prng, const T_items& items, const ValueType& value) const = 0;
 
+  virtual ValueType cluster_or_prior_sample(std::mt19937* prng, const T_items& items) const = 0;
+
   virtual void incorporate_to_cluster(const T_items& items, const ValueType& value) = 0;
 
   virtual void unincorporate_from_cluster(const T_items& items) = 0;

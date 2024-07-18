@@ -27,9 +27,6 @@ class IRM {
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
   std::unordered_map<std::string, std::vector<std::string>> base_to_noisy_relations;
-  std::unordered_map<std::string,
-                     std::unordered_map<T_items, AttributeVariant, H_items>>
-      attributes;  // map from unobserved relation names to Attributes containing noisy observations of that relation
 
   IRM(const T_schema& init_schema);
 
@@ -49,9 +46,7 @@ class IRM {
                                           const std::string& d,
                                           const T_item& item);
 
-  void transition_unobserved_value(std::mt19937* prng, const std::string& r, const T_items& items);
-
-  void transition_unobserved_values_all(std::mt19937* prng);
+  void transition_latent_values_relation(std::mt19937* prng, const std::string& r);
 
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
@@ -74,7 +69,7 @@ class IRM {
 
   void remove_relation(const std::string& name);
 
-  void add_attribute(const std::string& r, const T_items& items);
+  RelationVariant get_relation(const std::string& name);
 
   // Disable copying.
   IRM& operator=(const IRM&) = delete;
@@ -83,4 +78,4 @@ class IRM {
 
 // Run a single step of inference on an IRM model.
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose, int num_theta_steps = 10);
+                               bool verbose, int num_theta_steps = 10, bool transition_latents = true);

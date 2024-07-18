@@ -162,3 +162,18 @@ BOOST_AUTO_TEST_CASE(test_incorporate_cluster) {
              R1.clusters.at(R1.get_cluster_assignment({5, 2}))->N);
   BOOST_TEST(init_data_size = R1.get_data().size());
 }
+
+BOOST_AUTO_TEST_CASE(test_cluster_logp_sample) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, 3.);
+  R1.incorporate(&prng, {0, 2}, 2.8);
+  R1.incorporate(&prng, {5, 2}, 2.3);
+
+  double sample = R1.cluster_or_prior_sample(&prng, {0, 2});
+  double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, sample);
+  BOOST_TEST(lp < 0.0);
+}
