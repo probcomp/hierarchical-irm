@@ -1,7 +1,31 @@
+#include <algorithm>
 #include <cassert>
+#include <iterator>
 
 #include "emissions/bigram_string.hh"
 #include "emissions/string_alignment.hh"
+
+BigramStringEmission::BigramStringEmission() {
+  // We need a context for [lowest_char, highest_char] inclusive, plus one
+  // for the empty context at the start of a string.
+  int num_contexts = 2 + highest_char - lowest_char;
+  insertions.reserve(num_contexts);
+  substitutions.reserve(num_contexts);
+  for (int i = 0; i < num_contexts; ++i) {
+    insertions.emplace_back(num_contexts);
+    substitutions.emplace_back(num_contexts);
+  }
+
+  // We also need to provide some initial bias to the insertions and
+  // substitutions models, because by default they insert too much (i.e.,
+  // no evidence of insertions being rare) and treat substitutions as just
+  // as likely as matches.
+  double initial_bias = (double) num_contexts * num_contexts;
+  for (int i = 0; i < num_contexts; ++i) {
+    insertions[i].incorporate(0, initial_bias);
+    substitutions[i].incorporate(i, initial_bias);
+  }
+}
 
 size_t BigramStringEmission::get_index(std::string current_char) {
   if (current_char == "") {
@@ -24,6 +48,7 @@ std::string BigramStringEmission::category_to_char(int category) {
 }
 
 double BigramStringEmission::log_prob_distance(const StrAlignment& alignment, double old_cost) {
+  assert(!alignment.align_pieces.empty());
   std::string insertion_context = "";
   for (auto it = alignment.align_pieces.rbegin();
        it != alignment.align_pieces.rend();
@@ -84,6 +109,7 @@ double BigramStringEmission::log_prob_distance(const StrAlignment& alignment, do
 
 void BigramStringEmission::incorporate(
     const std::pair<std::string, std::string>& x, double weight) {
+  printf("in incorporate <%s, %s>\n", x.first.c_str(), x.second.c_str());
   N += weight;
 
   std::vector<StrAlignment> alignments;
@@ -93,6 +119,7 @@ void BigramStringEmission::incorporate(
                     return log_prob_distance(a, old_cost);
                   },
                   &alignments);
+  printf("done getting alignments\n");
 
   double total_prob = 0.0;
   for (auto& a : alignments) {
@@ -100,8 +127,11 @@ void BigramStringEmission::incorporate(
     total_prob += a.cost;
   }
 
+  printf("total_prob = %f\n", total_prob);
+
   for (const auto& a : alignments) {
     double w = weight * a.cost / total_prob;
+    // printf("alignment has weight %f\n", w);
     std::string insertion_context = "";
     for (auto it = a.align_pieces.begin();
          it != a.align_pieces.end();
@@ -111,8 +141,9 @@ void BigramStringEmission::incorporate(
         case 0:  // Deletion
           // which is actually no insertion, then a deletion.
           {
-            insertions[icontext].incorporate(0, w);
             char deleted_char = std::get<Deletion>(*it).deleted_char;
+            // printf("Deleted char = %c\n", deleted_char);
+            insertions[icontext].incorporate(0, w);
             substitutions[get_index(deleted_char)].incorporate(0, w);
             insertion_context = std::string() + deleted_char;
           }
@@ -120,15 +151,17 @@ void BigramStringEmission::incorporate(
         case 1:  // Insertion
           {
             char inserted_char = std::get<Insertion>(*it).inserted_char;
-            insertions[icontext].incorporate(inserted_char, w);
+            // printf("Inserted char = %c\n", inserted_char);
+            insertions[icontext].incorporate(get_index(inserted_char), w);
           }
           break;
         case 2:  // Substitution
           // which is actually no insertion, then a substitution.
           {
-            insertions[icontext].incorporate(0, w);
             char original_char = std::get<Substitution>(*it).original;
             char replacement_char = std::get<Substitution>(*it).replacement;
+            // printf("Substitution %c -> %c\n", original_char, replacement_char);
+            insertions[icontext].incorporate(0, w);
             substitutions[get_index(original_char)].incorporate(get_index(replacement_char), w);
             insertion_context = std::string() + original_char;
           }
@@ -136,8 +169,9 @@ void BigramStringEmission::incorporate(
         case 3:  // Match
           // which is actually no insertion, then a match.
           {
-            insertions[icontext].incorporate(0, w);
             char c = std::get<Match>(*it).c;
+            // printf("Match on %c\n", c);
+            insertions[icontext].incorporate(0, w);
             substitutions[get_index(c)].incorporate(get_index(c), w);
             insertion_context = std::string() + c;
           }
@@ -150,21 +184,24 @@ void BigramStringEmission::incorporate(
 double BigramStringEmission::logp(
     const std::pair<std::string, std::string>& x) const {
   // Store state.
+  double old_N = N;
   std::vector<DirichletCategorical> orig_insertions;
   std::vector<DirichletCategorical> orig_substitutions;
-  std::copy(insertions.begin(), insertions.end(), orig_insertions.begin());
-  std::copy(substitutions.begin(), insertions.end(), orig_insertions.begin());
+  std::copy(insertions.begin(), insertions.end(), std::back_inserter(orig_insertions));
+  std::copy(substitutions.begin(), substitutions.end(),
+            std::back_inserter(orig_substitutions));
   double orig_lp = logp_score();
   BigramStringEmission* unsafe_this = const_cast<BigramStringEmission*>(this);
   unsafe_this->incorporate(x);
   double new_lp = logp_score();
   // Restore state
+  unsafe_this->N = old_N;
   unsafe_this->insertions.clear();
   std::copy(orig_insertions.begin(), orig_insertions.end(),
-            unsafe_this->insertions.begin());
+            std::back_inserter(unsafe_this->insertions));
   unsafe_this->substitutions.clear();
   std::copy(orig_substitutions.begin(), orig_substitutions.end(),
-            unsafe_this->substitutions.begin());
+            std::back_inserter(unsafe_this->substitutions));
   return new_lp - orig_lp;
 }
 
@@ -196,13 +233,17 @@ std::string BigramStringEmission::sample_corrupted(
   for (size_t i = 0; i < clean.length(); ++i) {
     do {
       c = category_to_char(insertions[get_index(current_clean)].sample(prng));
+      printf("Inserting %s [current_clean=%s]\n", c.c_str(), current_clean.c_str());
       s += c;
     } while (c != "");
     current_clean = clean[i];
-    s += category_to_char(substitutions[get_index(current_clean)].sample(prng));
+    c = category_to_char(substitutions[get_index(current_clean)].sample(prng));
+    printf("Generating %s from %s\n", c.c_str(), current_clean.c_str());
+    s += c;
   }
   do {
     c = category_to_char(insertions[get_index(current_clean)].sample(prng));
+      printf("Inserting %s [current_clean=%s]\n", c.c_str(), current_clean.c_str());
     s += c;
   } while (c != "");
   return s;
@@ -262,6 +303,7 @@ std::string BigramStringEmission::two_string_vote(
       left_context = new_char;
     }
   }
+  printf("Winner of (%s) and (%s) is (%s)\n", s1.c_str(), s2.c_str(), clean.c_str());
   return clean;
 }
 

@@ -20,7 +20,7 @@ class BigramStringEmission : public Emission<std::string> {
   // substitutions.sample() == 0 means deletion.
   std::vector<DirichletCategorical> substitutions;
 
-  BigramStringEmission() {};
+  BigramStringEmission();
 
   void incorporate(const std::pair<std::string, std::string>& x,
                    double weight = 1.0);
