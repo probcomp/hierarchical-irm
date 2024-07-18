@@ -41,6 +41,10 @@ class BigramStringEmission : public Emission<std::string> {
   size_t get_index(char current_char);
   size_t get_index(std::string current_char);
   std::string category_to_char(int category);
-  std::string two_string_vote(const std::string &s1, const std::string &s2);
+  std::string two_string_vote(const std::string &s1, const std::string &s2,
+                              double weight1, double weight2);
   double log_prob_distance(const StrAlignment& alignment, double old_cost);
+  std::string propose_clean_with_weights(
+      const std::vector<std::string>& corrupted,
+      const std::vector<double>& weights);
 };
