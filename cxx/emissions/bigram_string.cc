@@ -174,25 +174,12 @@ void BigramStringEmission::incorporate(
 
 double BigramStringEmission::logp(
     const std::pair<std::string, std::string>& x) const {
-  // Store state.
-  double old_N = N;
-  std::vector<DirichletCategorical> orig_insertions;
-  std::vector<DirichletCategorical> orig_substitutions;
-  std::copy(insertions.begin(), insertions.end(), std::back_inserter(orig_insertions));
-  std::copy(substitutions.begin(), substitutions.end(),
-            std::back_inserter(orig_substitutions));
   double orig_lp = logp_score();
-  BigramStringEmission* unsafe_this = const_cast<BigramStringEmission*>(this);
-  unsafe_this->incorporate(x);
-  double new_lp = logp_score();
-  // Restore state
-  unsafe_this->N = old_N;
-  unsafe_this->insertions.clear();
-  std::copy(orig_insertions.begin(), orig_insertions.end(),
-            std::back_inserter(unsafe_this->insertions));
-  unsafe_this->substitutions.clear();
-  std::copy(orig_substitutions.begin(), orig_substitutions.end(),
-            std::back_inserter(unsafe_this->substitutions));
+
+  BigramStringEmission bse(*this);
+  bse.incorporate(x);
+  double new_lp = bse.logp_score();
+
   return new_lp - orig_lp;
 }
 

@@ -22,6 +22,7 @@ class BigramStringEmission : public Emission<std::string> {
 
   BigramStringEmission();
 
+
   void incorporate(const std::pair<std::string, std::string>& x,
                    double weight = 1.0);
 
@@ -47,4 +48,9 @@ class BigramStringEmission : public Emission<std::string> {
   std::string propose_clean_with_weights(
       const std::vector<std::string>& corrupted,
       const std::vector<double>& weights);
+
+ private:
+  // This copy constructor is actually factually private, because it is only
+  // intended to be used in the logp(x) method.
+  BigramStringEmission(const BigramStringEmission& bse) = default;
 };
