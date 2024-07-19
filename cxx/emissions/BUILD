@@ -1,6 +1,20 @@
 licenses(["notice"])
 
 cc_library(
+    name = "get_emission",
+    srcs = ["get_emission.cc"],
+    hdrs = ["get_emission.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":bitflip",
+        ":gaussian",
+        ":simple_string",
+        ":sometimes",
+        "//:util_observation",
+    ],
+)
+
+cc_library(
     name = "emissions",
     visibility = ["//:__subpackages__"],
     deps = [
@@ -23,24 +37,22 @@ cc_library(
 )
 
 cc_library(
-    name = "get_emission",
-    srcs = ["get_emission.cc"],
-    hdrs = ["get_emission.hh"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":bitflip",
-        ":gaussian",
-        ":simple_string",
-        ":sometimes",
-        "//:util_observation",
-    ],
-)
-
-cc_library(
     name = "bitflip",
     srcs = ["bitflip.hh"],
     visibility = ["//:__subpackages__"],
     deps = [":base"],
+)
+
+cc_library(
+    name = "bigram_string",
+    srcs = ["bigram_string.cc"],
+    hdrs = ["bigram_string.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+        ":string_alignment",
+        "//distributions:dirichlet_categorical",
+    ],
 )
 
 cc_library(
@@ -96,6 +108,17 @@ cc_test(
     srcs = ["get_emission_test.cc"],
     deps = [
         ":get_emission",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "bigram_string_test",
+    srcs = ["bigram_string_test.cc"],
+    deps = [
+        ":bitflip",
+        ":bigram_string",
         "@boost//:algorithm",
         "@boost//:test",
     ],

@@ -32,38 +32,45 @@ void topk_alignments(int k, const std::string& s1, const std::string& s2,
     }
 
     // Push all the single piece continuations of alignment onto the heap.
-    StrAlignment del(heap_top);
-    Deletion d;
-    d.deleted_char = s1[del.s1_position++];
-    del.align_pieces.push_back(d);
-    del.cost = -cost_function(del, old_cost);
-    heap.push_back(del);
-    std::push_heap(heap.begin(), heap.end());
-
-    StrAlignment ins(heap_top);
-    Insertion i;
-    i.inserted_char = s2[ins.s2_position++];
-    ins.align_pieces.push_back(i);
-    ins.cost = -cost_function(ins, old_cost);
-    heap.push_back(ins);
-    std::push_heap(heap.begin(), heap.end());
-
-    StrAlignment next(heap_top);
-    char c1 = s1[next.s1_position++];
-    char c2 = s2[next.s2_position++];
-    if (c1 == c2) {
-      Match m;
-      m.c = c1;
-      next.align_pieces.push_back(m);
-    } else {
-      Substitution s;
-      s.original = c1;
-      s.replacement = c2;
-      next.align_pieces.push_back(s);
+    if (heap_top.s1_position < s1.length()) {
+      StrAlignment del(heap_top);
+      Deletion d;
+      d.deleted_char = s1[del.s1_position++];
+      del.align_pieces.push_back(d);
+      del.cost = -cost_function(del, old_cost);
+      heap.push_back(del);
+      std::push_heap(heap.begin(), heap.end());
     }
-    next.cost = -cost_function(next, old_cost);
-    heap.push_back(next);
-    std::push_heap(heap.begin(), heap.end());
+
+    if (heap_top.s2_position < s2.length()) {
+      StrAlignment ins(heap_top);
+      Insertion i;
+      i.inserted_char = s2[ins.s2_position++];
+      ins.align_pieces.push_back(i);
+      ins.cost = -cost_function(ins, old_cost);
+      heap.push_back(ins);
+      std::push_heap(heap.begin(), heap.end());
+    }
+
+    if ((heap_top.s1_position < s1.length()) &&
+        (heap_top.s2_position < s2.length())) {
+      StrAlignment next(heap_top);
+      char c1 = s1[next.s1_position++];
+      char c2 = s2[next.s2_position++];
+      if (c1 == c2) {
+        Match m;
+        m.c = c1;
+        next.align_pieces.push_back(m);
+      } else {
+        Substitution s;
+        s.original = c1;
+        s.replacement = c2;
+        next.align_pieces.push_back(s);
+      }
+      next.cost = -cost_function(next, old_cost);
+      heap.push_back(next);
+      std::push_heap(heap.begin(), heap.end());
+    }
   }
 }
 

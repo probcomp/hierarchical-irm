@@ -54,6 +54,14 @@ BOOST_AUTO_TEST_CASE(test_topk) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(top10_long_string) {
+  std::vector<StrAlignment> alignments;
+  topk_alignments(
+      10, "abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz",
+      edit_distance, &alignments);
+  BOOST_TEST(alignments.size() == 10);
+}
+
 double bio_edit_distance(const StrAlignment& alignment, double old_cost) {
   const AlignPiece& p = alignment.align_pieces.back();
   switch(p.index()) {
