@@ -5,11 +5,56 @@
 
 #include <cstdio>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+void load_clean_relation(std::istringstream& stream, T_schema& schema) {
+  T_clean_relation relation;
+
+  std::string relname;
+  std::string distribution_spec_str;
+
+  stream >> distribution_spec_str;
+  stream >> relname;
+  for (std::string w; stream >> w;) {
+    relation.domains.push_back(w);
+  }
+  assert(relation.domains.size() > 0);
+  relation.distribution_spec = DistributionSpec(distribution_spec_str);
+
+  // If the data contains observations of this relation, this bool will be
+  // overwritten to true.
+  relation.is_observed = false;
+  schema[relname] = relation;
+}
+
+void load_noisy_relation(std::istringstream& stream, T_schema& schema) {
+  T_noisy_relation relation;
+
+  std::string relname;
+  std::string emission_spec_str;
+  std::string base_name;
+
+  stream >> emission_spec_str;
+  stream >> relname;
+  stream >> base_name;
+  for (std::string w; stream >> w;) {
+    relation.domains.push_back(w);
+  }
+  assert(relation.domains.size() > 0);
+  relation.emission_spec = EmissionSpec(emission_spec_str);
+  relation.base_relation = base_name;
+
+  // If the data contains observations of this relation, this bool will be
+  // overwritten to true.
+  relation.is_observed = false;
+
+  schema[relname] = relation;
+}
 
 T_schema load_schema(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
@@ -20,27 +65,35 @@ T_schema load_schema(const std::string& path) {
   while (std::getline(fp, line)) {
     std::istringstream stream(line);
 
-    // TODO(emilyaf): Handle noisy relations. Need to include an emission type
-    // and a base relation in the spec.
-    T_clean_relation relation;
+    std::string relation_type;
+    stream >> relation_type;
 
-    std::string relname;
-    std::string distribution_spec_str;
-
-    stream >> distribution_spec_str;
-    stream >> relname;
-    for (std::string w; stream >> w;) {
-      relation.domains.push_back(w);
+    if (relation_type == "clean") {
+      load_clean_relation(stream, schema);
+    } else if (relation_type == "noisy") {
+      load_noisy_relation(stream, schema);
+    } else {
+      assert(false && "Schema line must start with clean or noisy.");
     }
-    assert(relation.domains.size() > 0);
-    relation.distribution_spec = DistributionSpec(distribution_spec_str);
-
-    // If the data contains observations of this relation, this bool will be
-    // overwritten to true.
-    relation.is_observed = false;
-    schema[relname] = relation;
   }
   fp.close();
+
+  for (const auto& [relname, trelation] : schema)
+    std::visit(
+        [&](const auto& trel) {
+          using T = std::decay_t<decltype(trel)>;
+          if constexpr (std::is_same_v<T, T_noisy_relation>) {
+            std::vector<std::string> base_domains =
+                std::visit([&](const auto& brel) { return brel.domains; },
+                           schema.at(trel.base_relation));
+            for (size_t i = 0; i != base_domains.size(); ++i) {
+              assert(base_domains[i] == trel.domains[i] &&
+                     "The first domains of a noisy relation must be the same "
+                     "as the domains of the base relation.");
+            }
+          }
+        },
+        trelation);
   return schema;
 }
 

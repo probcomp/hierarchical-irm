@@ -96,6 +96,52 @@ BOOST_AUTO_TEST_CASE(test_input_types) {
   BOOST_TEST(R6.domains[0] == "D1");
 }
 
+BOOST_AUTO_TEST_CASE(test_with_noisy) {
+  T_schema schema = load_schema("test_schema/with_noisy.schema");
+
+  BOOST_TEST(schema.contains("R1"));
+  T_clean_relation R1 = std::get<T_clean_relation>(schema["R1"]);
+  BOOST_TEST(
+      (R1.distribution_spec.distribution == DistributionEnum::bernoulli));
+  BOOST_TEST(R1.domains.size() == 1);
+  BOOST_TEST(R1.domains[0] == "D1");
+
+  BOOST_TEST(schema.contains("R2"));
+  T_noisy_relation R2 = std::get<T_noisy_relation>(schema["R2"]);
+  BOOST_TEST((R2.emission_spec.emission == EmissionEnum::gaussian));
+  BOOST_TEST(R2.domains.size() == 2);
+  BOOST_TEST(R2.domains[0] == "D1");
+  BOOST_TEST(R2.domains[1] == "D2");
+
+  BOOST_TEST(schema.contains("R3"));
+  T_clean_relation R3 = std::get<T_clean_relation>(schema["R3"]);
+  BOOST_TEST(
+      (R3.distribution_spec.distribution == DistributionEnum::bigram));
+  BOOST_TEST(R3.domains.size() == 1);
+  BOOST_TEST(R3.domains[0] == "D2");
+
+  BOOST_TEST(schema.contains("R4"));
+  T_noisy_relation R4 = std::get<T_noisy_relation>(schema["R4"]);
+  BOOST_TEST((R4.emission_spec.emission == EmissionEnum::gaussian));
+  BOOST_TEST(R4.domains.size() == 3);
+  BOOST_TEST(R4.domains[0] == "D1");
+  BOOST_TEST(R4.domains[1] == "D2");
+  BOOST_TEST(R4.domains[2] == "D3");
+
+  BOOST_TEST(schema.contains("R5"));
+  T_noisy_relation R5 = std::get<T_noisy_relation>(schema["R5"]);
+  BOOST_TEST((R5.emission_spec.emission == EmissionEnum::sometimes_bitflip));
+  BOOST_TEST(R5.domains.size() == 1);
+  BOOST_TEST(R5.domains[0] == "D1");
+
+  BOOST_TEST(schema.contains("R6"));
+  T_clean_relation R6 = std::get<T_clean_relation>(schema["R6"]);
+  BOOST_TEST(
+      (R6.distribution_spec.distribution == DistributionEnum::normal));
+  BOOST_TEST(R6.domains.size() == 1);
+  BOOST_TEST(R6.domains[0] == "D1");
+}
+
 BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
   T_clean_relation TR1({"D1", "D2"}, false, DistributionSpec("normal"));
   T_noisy_relation TR2({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"),

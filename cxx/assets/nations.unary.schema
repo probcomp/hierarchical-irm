@@ -1,167 +1,167 @@
-bernoulli telephone country
-bernoulli agriculturalpop country
-bernoulli energyconsume country
-bernoulli illiterates country
-bernoulli GNP country
-bernoulli popxenergabs country
-bernoulli incomeabs country
-bernoulli popabs country
-bernoulli unassessment country
-bernoulli defenseexpabs country
-bernoulli englishtitles country
-bernoulli blocmembership0 country
-bernoulli usaidreceived country
-bernoulli freedomofopposition0 country
-bernoulli IFCandIBRD country
-bernoulli threats country
-bernoulli accusations country
-bernoulli killedforeignviolence country
-bernoulli militaryaction country
-bernoulli protests country
-bernoulli killeddomesticviolence country
-bernoulli riots country
-bernoulli purges country
-bernoulli demonstrations country
-bernoulli catholics country
-bernoulli airdistance country
-bernoulli medicinengo country
-bernoulli diplomatexpelled country
-bernoulli divorces country
-bernoulli popn/land country
-bernoulli arable country
-bernoulli area country
-bernoulli roadlength country
-bernoulli railroadlength country
-bernoulli religions country
-bernoulli immigrants/migrants country
-bernoulli rainfall country
-bernoulli largestrelgn country
-bernoulli runningwater country
-bernoulli foreigncollegestud country
-bernoulli neutralblock country
-bernoulli age country
-bernoulli religioustitles country
-bernoulli emigrants country
-bernoulli seabornegoods country
-bernoulli lawngos country
-bernoulli unemployed country
-bernoulli export country
-bernoulli languages country
-bernoulli largestlang country
-bernoulli ethnicgrps country
-bernoulli economicaidtaken country
-bernoulli techassistancetaken country
-bernoulli goveducationspend country
-bernoulli femaleworkers country
-bernoulli exports country
-bernoulli foreignmail country
-bernoulli imports country
-bernoulli caloriesconsumed country
-bernoulli protein country
-bernoulli russiantitles country
-bernoulli militarypersonnel country
-bernoulli investments country
-bernoulli politicalparties country
-bernoulli artsculturengo country
-bernoulli communistparty country
-bernoulli govspending country
-bernoulli monarchy country
-bernoulli primaryschool country
-bernoulli govchangelegal0 country
-bernoulli legitgov0 country
-bernoulli largestethnic country
-bernoulli assassinations country
-bernoulli majgovcrisis country
-bernoulli unpaymentdelinq country
-bernoulli balancepayments country
-bernoulli balanceinvestments country
-bernoulli systemstyle0 country
-bernoulli constitutional0 country
-bernoulli electoralsystem0 country
-bernoulli noncommunist country
-bernoulli politicalleadership0 country
-bernoulli horizontalpower0 country
-bernoulli military0 country
-bernoulli bureaucracy0 country
-bernoulli censorship0 country
-bernoulli geographyx country
-bernoulli geographyy country
-bernoulli geographyz country
-bernoulli blocmembership1 country
-bernoulli blocmembership2 country
-bernoulli freedomofopposition1 country
-bernoulli freedomofopposition2 country
-bernoulli govchangelegal1 country
-bernoulli govchangelegal2 country
-bernoulli legitgov1 country
-bernoulli systemstyle1 country
-bernoulli systemstyle2 country
-bernoulli constitutional1 country
-bernoulli constitutional2 country
-bernoulli electoralsystem1 country
-bernoulli electoralsystem2 country
-bernoulli politicalleadership1 country
-bernoulli politicalleadership2 country
-bernoulli horizontalpower2 country
-bernoulli military1 country
-bernoulli military2 country
-bernoulli bureaucracy1 country
-bernoulli bureaucracy2 country
-bernoulli censorship1 country
-bernoulli censorship2 country
-bernoulli economicaid country country
-bernoulli releconomicaid country country
-bernoulli treaties country country
-bernoulli reltreaties country country
-bernoulli officialvisits country country
-bernoulli conferences country country
-bernoulli exportbooks country country
-bernoulli relexportbooks country country
-bernoulli booktranslations country country
-bernoulli relbooktranslations country country
-bernoulli warning country country
-bernoulli violentactions country country
-bernoulli militaryactions country country
-bernoulli duration country country
-bernoulli negativebehavior country country
-bernoulli severdiplomatic country country
-bernoulli expeldiplomats country country
-bernoulli boycottembargo country country
-bernoulli aidenemy country country
-bernoulli negativecomm country country
-bernoulli accusation country country
-bernoulli protests_rel country country
-bernoulli unoffialacts country country
-bernoulli attackembassy country country
-bernoulli nonviolentbehavior country country
-bernoulli weightedunvote country country
-bernoulli unweightedunvote country country
-bernoulli tourism country country
-bernoulli reltourism country country
-bernoulli tourism3 country country
-bernoulli emigrants_rel country country
-bernoulli relemigrants country country
-bernoulli emigrants3 country country
-bernoulli students country country
-bernoulli relstudents country country
-bernoulli exports_rel country country
-bernoulli relexports country country
-bernoulli exports3 country country
-bernoulli intergovorgs country country
-bernoulli relintergovorgs country country
-bernoulli ngo country country
-bernoulli relngo country country
-bernoulli intergovorgs3 country country
-bernoulli ngoorgs3 country country
-bernoulli embassy country country
-bernoulli reldiplomacy country country
-bernoulli timesincewar country country
-bernoulli timesinceally country country
-bernoulli lostterritory country country
-bernoulli dependent country country
-bernoulli independence country country
-bernoulli commonbloc0 country country
-bernoulli blockpositionindex country country
-bernoulli militaryalliance country country
-bernoulli commonbloc1 country country
-bernoulli commonbloc2 country country
+clean bernoulli telephone country
+clean bernoulli agriculturalpop country
+clean bernoulli energyconsume country
+clean bernoulli illiterates country
+clean bernoulli GNP country
+clean bernoulli popxenergabs country
+clean bernoulli incomeabs country
+clean bernoulli popabs country
+clean bernoulli unassessment country
+clean bernoulli defenseexpabs country
+clean bernoulli englishtitles country
+clean bernoulli blocmembership0 country
+clean bernoulli usaidreceived country
+clean bernoulli freedomofopposition0 country
+clean bernoulli IFCandIBRD country
+clean bernoulli threats country
+clean bernoulli accusations country
+clean bernoulli killedforeignviolence country
+clean bernoulli militaryaction country
+clean bernoulli protests country
+clean bernoulli killeddomesticviolence country
+clean bernoulli riots country
+clean bernoulli purges country
+clean bernoulli demonstrations country
+clean bernoulli catholics country
+clean bernoulli airdistance country
+clean bernoulli medicinengo country
+clean bernoulli diplomatexpelled country
+clean bernoulli divorces country
+clean bernoulli popn/land country
+clean bernoulli arable country
+clean bernoulli area country
+clean bernoulli roadlength country
+clean bernoulli railroadlength country
+clean bernoulli religions country
+clean bernoulli immigrants/migrants country
+clean bernoulli rainfall country
+clean bernoulli largestrelgn country
+clean bernoulli runningwater country
+clean bernoulli foreigncollegestud country
+clean bernoulli neutralblock country
+clean bernoulli age country
+clean bernoulli religioustitles country
+clean bernoulli emigrants country
+clean bernoulli seabornegoods country
+clean bernoulli lawngos country
+clean bernoulli unemployed country
+clean bernoulli export country
+clean bernoulli languages country
+clean bernoulli largestlang country
+clean bernoulli ethnicgrps country
+clean bernoulli economicaidtaken country
+clean bernoulli techassistancetaken country
+clean bernoulli goveducationspend country
+clean bernoulli femaleworkers country
+clean bernoulli exports country
+clean bernoulli foreignmail country
+clean bernoulli imports country
+clean bernoulli caloriesconsumed country
+clean bernoulli protein country
+clean bernoulli russiantitles country
+clean bernoulli militarypersonnel country
+clean bernoulli investments country
+clean bernoulli politicalparties country
+clean bernoulli artsculturengo country
+clean bernoulli communistparty country
+clean bernoulli govspending country
+clean bernoulli monarchy country
+clean bernoulli primaryschool country
+clean bernoulli govchangelegal0 country
+clean bernoulli legitgov0 country
+clean bernoulli largestethnic country
+clean bernoulli assassinations country
+clean bernoulli majgovcrisis country
+clean bernoulli unpaymentdelinq country
+clean bernoulli balancepayments country
+clean bernoulli balanceinvestments country
+clean bernoulli systemstyle0 country
+clean bernoulli constitutional0 country
+clean bernoulli electoralsystem0 country
+clean bernoulli noncommunist country
+clean bernoulli politicalleadership0 country
+clean bernoulli horizontalpower0 country
+clean bernoulli military0 country
+clean bernoulli bureaucracy0 country
+clean bernoulli censorship0 country
+clean bernoulli geographyx country
+clean bernoulli geographyy country
+clean bernoulli geographyz country
+clean bernoulli blocmembership1 country
+clean bernoulli blocmembership2 country
+clean bernoulli freedomofopposition1 country
+clean bernoulli freedomofopposition2 country
+clean bernoulli govchangelegal1 country
+clean bernoulli govchangelegal2 country
+clean bernoulli legitgov1 country
+clean bernoulli systemstyle1 country
+clean bernoulli systemstyle2 country
+clean bernoulli constitutional1 country
+clean bernoulli constitutional2 country
+clean bernoulli electoralsystem1 country
+clean bernoulli electoralsystem2 country
+clean bernoulli politicalleadership1 country
+clean bernoulli politicalleadership2 country
+clean bernoulli horizontalpower2 country
+clean bernoulli military1 country
+clean bernoulli military2 country
+clean bernoulli bureaucracy1 country
+clean bernoulli bureaucracy2 country
+clean bernoulli censorship1 country
+clean bernoulli censorship2 country
+clean bernoulli economicaid country country
+clean bernoulli releconomicaid country country
+clean bernoulli treaties country country
+clean bernoulli reltreaties country country
+clean bernoulli officialvisits country country
+clean bernoulli conferences country country
+clean bernoulli exportbooks country country
+clean bernoulli relexportbooks country country
+clean bernoulli booktranslations country country
+clean bernoulli relbooktranslations country country
+clean bernoulli warning country country
+clean bernoulli violentactions country country
+clean bernoulli militaryactions country country
+clean bernoulli duration country country
+clean bernoulli negativebehavior country country
+clean bernoulli severdiplomatic country country
+clean bernoulli expeldiplomats country country
+clean bernoulli boycottembargo country country
+clean bernoulli aidenemy country country
+clean bernoulli negativecomm country country
+clean bernoulli accusation country country
+clean bernoulli protests_rel country country
+clean bernoulli unoffialacts country country
+clean bernoulli attackembassy country country
+clean bernoulli nonviolentbehavior country country
+clean bernoulli weightedunvote country country
+clean bernoulli unweightedunvote country country
+clean bernoulli tourism country country
+clean bernoulli reltourism country country
+clean bernoulli tourism3 country country
+clean bernoulli emigrants_rel country country
+clean bernoulli relemigrants country country
+clean bernoulli emigrants3 country country
+clean bernoulli students country country
+clean bernoulli relstudents country country
+clean bernoulli exports_rel country country
+clean bernoulli relexports country country
+clean bernoulli exports3 country country
+clean bernoulli intergovorgs country country
+clean bernoulli relintergovorgs country country
+clean bernoulli ngo country country
+clean bernoulli relngo country country
+clean bernoulli intergovorgs3 country country
+clean bernoulli ngoorgs3 country country
+clean bernoulli embassy country country
+clean bernoulli reldiplomacy country country
+clean bernoulli timesincewar country country
+clean bernoulli timesinceally country country
+clean bernoulli lostterritory country country
+clean bernoulli dependent country country
+clean bernoulli independence country country
+clean bernoulli commonbloc0 country country
+clean bernoulli blockpositionindex country country
+clean bernoulli militaryalliance country country
+clean bernoulli commonbloc1 country country
+clean bernoulli commonbloc2 country country

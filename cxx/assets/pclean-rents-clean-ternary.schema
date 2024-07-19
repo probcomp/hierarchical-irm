@@ -1,3 +1,3 @@
-stringcat(strings=1br:2br:3br:4br:studio,delim=:) has_type record County State
-normal has_rent record County State
-bigram county_name County State
+clean stringcat(strings=1br:2br:3br:4br:studio,delim=:) has_type record County State
+clean normal has_rent record County State
+clean bigram county_name County State

@@ -108,34 +108,35 @@ the relations in the system:
 
 ```
 $ cat assets/animals.unary.schema
-bernoulli black animal
-bernoulli white animal
-bernoulli blue animal
-bernoulli brown animal
-bernoulli gray animal
-bernoulli orange animal
-bernoulli red animal
-bernoulli yellow animal
-bernoulli patches animal
-bernoulli spots animal
+clean bernoulli black animal
+clean bernoulli white animal
+clean bernoulli blue animal
+clean bernoulli brown animal
+clean bernoulli gray animal
+clean bernoulli orange animal
+clean bernoulli red animal
+clean bernoulli yellow animal
+clean bernoulli patches animal
+clean bernoulli spots animal
 ...
 ```
 
 Each line specifies the signature of a relation in the system:
 
-- The first entry is the observation type
-  (only `bernoulli` is supported at the moment).
-- The second entry is the name of the relation (e.g., `black`); all the
+- The first entry indicates whether the relation is noisy (`"noisy"`) or not noisy (`"clean"`).
+- The second entry is the observation type. See the `DistributionSpec` definition for supported values for clean relations and the `EmissionSpec` definition for supported values for noisy relations.
+- The third entry is the name of the relation (e.g., `black`); all the
   relations names must be unique.
-- The third entry is the domain of the relation (in this example, the only
+- For noisy relations only, the fourth entry is the name of the base relation for which the relation models noisy observations.
+- The remaining entries are the domains of the relation (in this example, the only
   domain is `animal`).
 
-Thus, for this schema, we have a list of unary relations that each specify
+Thus, for this schema, we have a list of non-noisy unary relations that each specify
 whether an `animal` has a given attribute.
 
 Note that, in general a given relational system can be encoded in multiple
 ways. See `assets/animals.binary.schema` for an encoding of this system using
-a single higher-order relation with signature: `bernoulli has feature animal`.
+a single higher-order relation with signature: `clean bernoulli has feature animal`.
 
 #### Observation file
 

@@ -1,0 +1,6 @@
+clean bernoulli R1 D1
+noisy gaussian R2 R6 D1 D2
+clean bigram R3 D2
+noisy gaussian R4 R2 D1 D2 D3
+noisy sometimes_bitflip R5 R1 D1
+clean normal R6 D1
