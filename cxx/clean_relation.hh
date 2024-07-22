@@ -166,7 +166,7 @@ class CleanRelation : public Relation<T> {
     return prior_logp;
   }
 
-  ValueType cluster_or_prior_sample(std::mt19937* prng,
+  ValueType sample_at_items(std::mt19937* prng,
                                     const T_items& items) const {
     if (clusters.contains(items)) {
       return clusters.at(items)->sample(prng);

@@ -186,8 +186,7 @@ class NoisyRelation : public Relation<T> {
     return emission_logp;
   }
 
-  ValueType cluster_or_prior_sample(std::mt19937* prng,
-                                    const T_items& items) const {
+  ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {
     // TODO(emilyaf): Maybe take a sample if there is no base value.
     const ValueType& base_value = get_base_value(items);
     if (emission_relation.clusters.contains(items)) {

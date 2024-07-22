@@ -179,7 +179,7 @@ void incorporate_observations_relation(
             using T = typename std::remove_pointer_t<
                 std::decay_t<decltype(rel)>>::ValueType;
             const auto& rel_data = rel->get_data();
-            T value = rel->cluster_or_prior_sample(prng, items);
+            T value = rel->sample_at_items(prng, items);
             if (!rel_data.contains(items)) {
               std::visit(
                   [&](auto& m) {

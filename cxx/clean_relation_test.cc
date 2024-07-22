@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test_cluster_logp_sample) {
   R1.incorporate(&prng, {0, 2}, 2.8);
   R1.incorporate(&prng, {5, 2}, 2.3);
 
-  double sample = R1.cluster_or_prior_sample(&prng, {0, 2});
+  double sample = R1.sample_at_items(&prng, {0, 2});
   double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, sample);
   BOOST_TEST(lp < 0.0);
 }
