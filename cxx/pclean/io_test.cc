@@ -34,7 +34,7 @@ class Record
 
 observe
   physician.specialty as Specialty
-  phsyician.school.name as School
+  physician.school.name as School
   physician.observed_degree as Degree
   location.bad_city as City
   location.city.state as State
@@ -67,7 +67,7 @@ observe
   BOOST_TEST(schema.classes[1].vars.size() == 4);
   BOOST_TEST(schema.classes[1].vars[0].name == "school");
   BOOST_TEST(std::get<ClassVar>(schema.classes[1].vars[0].spec).class_name == "School");
-  BOOST_TEST(schema.classes[0].vars[3].name == "observed_degree");
+  BOOST_TEST(schema.classes[1].vars[3].name == "observed_degree");
   BOOST_TEST(std::get<EmissionVar>(schema.classes[1].vars[3].spec).emission_name == "maybe_swap");
   std::vector<std::string> expected_path3 = {"degree"};
   BOOST_TEST(std::get<EmissionVar>(schema.classes[1].vars[3].spec).field_path

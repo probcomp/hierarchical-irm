@@ -41,7 +41,6 @@ bool resolve_variable_definition(const std::vector<Token> &tokens,
   if (is_emission) {
     EmissionVar ev;
     ev.emission_name = tokens[2].val;
-    pcv->spec = ev;
 
     size_t i = 3;
     if (tokens[i].val == "[") {  // Emission parameters
@@ -57,29 +56,36 @@ bool resolve_variable_definition(const std::vector<Token> &tokens,
     }
 
     if (tokens[i].val != "(") {  // Field path
-      printf("Expected '(' in declaration of emission variable %s\n", tokens[0].val.c_str());
+      printf("Expected '(' but got %s in declaration of emission variable %s\n", tokens[i].val.c_str(), tokens[0].val.c_str());
       return false;
     }
 
-    i += 1;
-    while (tokens[i + 1].val == ".") {
-      ev.field_path.push_back(tokens[i].val);
-      i += 2;
-    }
+    do {
+      i += 1;
+      if (tokens[i].type != TokenType::identifier) {
+        printf("Expected identifier but got %s in declaration of emission variable %s\n", tokens[i].val.c_str(), tokens[0].val.c_str());
+        return false;
+      }
+      ev.field_path.push_back(tokens[i++].val);
+    } while (tokens[i].val == ".");
 
     if (tokens[i].val != ")") {
-      printf("Expected ')' in declaration of emission variable %s\n", tokens[0].val.c_str());
+      printf("Expected ')' but got %s in declaration of emission variable %s\n",
+             tokens[i].val.c_str(), tokens[0].val.c_str());
+      printf("emission name = %s\n", ev.emission_name.c_str());
       return false;
     }
 
+    pcv->spec = ev;
     return true;
   }
 
   DistributionVar dv;
   dv.distribution_name = tokens[2].val;
-  for (size_t i = 4; i < tokens.size(); i += 3) {
+  for (size_t i = 4; i < tokens.size() - 1; i += 4) {
     if (i + 3 > tokens.size()) {
       printf("Error parsing parameters of distribution variable %s -- too few tokens\n", tokens[0].val.c_str());
+      printf("At token %ld of %ld\n", i, tokens.size());
       return false;
     }
     if (tokens[i+1].val != "=") {
@@ -112,6 +118,7 @@ bool read_class(std::istream& is, PCleanClass* pclass) {
     if (line.empty()) {
       return true;
     }
+    tokens.clear();
     if (!tokenize(line, &tokens)) {
       printf("Error tokenizing line %s\n", line.c_str());
       return false;
@@ -135,6 +142,7 @@ bool read_class(std::istream& is, PCleanClass* pclass) {
 
     bool success = resolve_variable_definition(tokens, &v);
     if (!success) {
+      printf("on line %s\n", line.c_str());
       return false;
     }
 
@@ -159,6 +167,7 @@ bool read_query(std::istream& is, PCleanQuery* query) {
     if (line.empty()) {
       return true;
     }
+    tokens.clear();
     if (!tokenize(line, &tokens)) {
       printf("Error tokenizing line %s\n", line.c_str());
       return false;
@@ -206,6 +215,7 @@ bool read_schema(std::istream& is, PCleanSchema* schema) {
   std::string line;
   std::vector<Token> tokens;
   while (std::getline(is, line)) {
+    tokens.clear();
     if (!tokenize(line, &tokens)) {
       printf("Error tokenizing line %s\n", line.c_str());
       return false;
@@ -266,6 +276,8 @@ bool read_schema(std::istream& is, PCleanSchema* schema) {
 
     printf("Error parsing line %s:  expected `class` or `query` as first "
            "token\n", line.c_str());
+    printf("Got %s of type %d instead\n",
+             tokens[0].val.c_str(), (int)(tokens[0].type));
     return false;
   }
   return true;

@@ -20,9 +20,7 @@ bool tokenize(std::string line, std::vector<Token>* tokens) {
     if (std::strchr(SYMBOL_CHARS, c) != NULL) {  // Symbols
       t.type = TokenType::symbol;
       t.val += c;
-    }
-
-    if ((c == '"') || (c == '\'')) {  // Strings
+    } else if ((c == '"') || (c == '\'')) {  // Strings
       t.type = TokenType::string;
       char sc;
       while (i < line.length()) {
@@ -36,9 +34,7 @@ bool tokenize(std::string line, std::vector<Token>* tokens) {
         printf("Unclosed string token while parsing line %s", line.c_str());
         return false;
       }
-    }
-
-    if (isdigit(c) || (c == '.')) {  // Numbers
+    } else if (isdigit(c) || (c == '.')) {  // Numbers
       // TODO(thomaswc): Handle exponential notation like "1.2e-5".
       t.type = TokenType::number;
       t.val += c;
@@ -51,10 +47,9 @@ bool tokenize(std::string line, std::vector<Token>* tokens) {
         i++;
         t.val += c;
       }
-    }
-
-    if (isalnum(c) || (c == '_')) {  // Identifiers
+    } else if (isalnum(c) || (c == '_')) {  // Identifiers
       t.type = TokenType::identifier;
+      t.val += c;
       while (i < line.length()) {
         c = line[i];
         bool still_id = isalnum(c) || (c == '_');
@@ -64,7 +59,11 @@ bool tokenize(std::string line, std::vector<Token>* tokens) {
         i++;
         t.val += c;
       }
+    } else {
+      printf("Unexpected character %c while passing line %s\n", c, line.c_str());
+      return false;
     }
+
     tokens->push_back(t);
   }
   return true;

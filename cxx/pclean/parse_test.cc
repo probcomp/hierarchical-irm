@@ -10,6 +10,7 @@ BOOST_AUTO_TEST_CASE(test_tokenize) {
   BOOST_TEST(tokenize("this is a test line", &tokens));
   BOOST_TEST(tokens.size() == 5);
   BOOST_CHECK(tokens[0].type == TokenType::identifier);
+  BOOST_CHECK(tokens[0].val == "this");
 }
 
 BOOST_AUTO_TEST_CASE(test_tokenize_types) {
@@ -50,4 +51,20 @@ BOOST_AUTO_TEST_CASE(test_tokenize_good_string) {
   BOOST_CHECK(tokens[2].type == TokenType::string);
   BOOST_CHECK(tokens[3].type == TokenType::symbol);
   BOOST_CHECK(tokens[4].type == TokenType::string);
+}
+
+BOOST_AUTO_TEST_CASE(test_tokenize_period) {
+  std::vector<Token> tokens;
+  BOOST_TEST(tokenize("  bad_city ~ bigram(city.name)", &tokens));
+  BOOST_TEST(tokens.size() == 8);
+  BOOST_CHECK(tokens[0].val == "bad_city");
+  BOOST_CHECK(tokens[1].val == "~");
+  BOOST_CHECK(tokens[2].val == "bigram");
+  BOOST_CHECK(tokens[3].val == "(");
+  BOOST_CHECK(tokens[4].val == "city");
+  printf("tokens[5] = %s\n", tokens[5].val.c_str());
+  printf("tokens[5].type = %d\n", (int)(tokens[5].type));
+  BOOST_CHECK(tokens[5].val == ".");
+  BOOST_CHECK(tokens[6].val == "name");
+  BOOST_CHECK(tokens[7].val == ")");
 }
