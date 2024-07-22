@@ -130,6 +130,10 @@ T_encoding encode_observations(const T_schema& schema,
   return std::make_pair(item_to_code, code_to_item);
 }
 
+// Incorporates the observations of a single relation. If the relation is noisy,
+// this function recursively incorporates observations of the base relation. If
+// the relation is latent and not observed, initial latent values are sampled
+// from the relation's cluster prior.
 void incorporate_observations_relation(
     std::mt19937* prng, const std::string& relation,
     std::variant<IRM*, HIRM*> h_irm, const T_encoded_observations& observations,
@@ -140,7 +144,7 @@ void incorporate_observations_relation(
   RelationVariant rel_var =
       std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
   // base relations must be incorporated before noisy relations, so recursively
-  // incporate all base relations.
+  // incorporate all base relations.
   if (noisy_to_base.contains(relation)) {
     const std::string& base_name = noisy_to_base.at(relation);
     if (!observations.contains(base_name)) {

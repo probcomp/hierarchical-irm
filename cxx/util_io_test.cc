@@ -98,16 +98,18 @@ BOOST_AUTO_TEST_CASE(test_input_types) {
 
 BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
   T_clean_relation TR1({"D1", "D2"}, false, DistributionSpec("normal"));
-  T_noisy_relation TR2({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"), "R1");
+  T_noisy_relation TR2({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"),
+                       "R1");
   T_schema schema = {{"R1", TR1}, {"R2", TR2}};
 
   T_observations observations = {{"R2",
-                                  {{{"apple", "cat", "circle"}, 1.2},
-                                   {{"banana", "dog", "square"}, 1.3},
-                                   {{"apple", "dog", "triangle"}, 0.9},
-                                   {{"apple", "cat", "square"}, 1.0},
-                                   {{"banana", "cat", "rhombus"}, 1.1},
-                                   }}};
+                                  {
+                                      {{"apple", "cat", "circle"}, 1.2},
+                                      {{"banana", "dog", "square"}, 1.3},
+                                      {{"apple", "dog", "triangle"}, 0.9},
+                                      {{"apple", "cat", "square"}, 1.0},
+                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                  }}};
 
   T_encoding encoding = encode_observations(schema, observations);
   IRM* irm = new IRM(schema);
@@ -123,19 +125,45 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
   BOOST_TEST(NR2->base_relation == R1);
 }
 
+BOOST_AUTO_TEST_CASE(test_incorporate_observations_relation_irm) {
+  T_clean_relation TR1({"D1", "D2"}, false, DistributionSpec("normal"));
+  T_noisy_relation TR2({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"),
+                       "R1");
+  T_schema schema = {{"R1", TR1}, {"R2", TR2}};
+
+  std::mt19937 prng;
+  IRM* irm = new IRM(schema);
+  T_encoded_observations encoded_observations = {
+      {"R2", {{{1, 3, 5}, 2.3}, {{1, 3, 6}, 4.3}}}};
+  std::unordered_map<std::string, std::string> noisy_to_base = {{"R2", "R1"}};
+  std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
+      relation_items = {{"R2", {{1, 3, 5}, {1, 3, 6}}}};
+  std::unordered_set<std::string> completed_relations;
+  incorporate_observations_relation(&prng, "R2", irm, encoded_observations,
+                                    noisy_to_base, relation_items,
+                                    completed_relations);
+  // R1 was incorporated recursively.
+  Relation<double>* R1 = std::get<Relation<double>*>(irm->get_relation("R1"));
+  Relation<double>* R2 = std::get<Relation<double>*>(irm->get_relation("R2"));
+  BOOST_TEST(R1->get_data().size() == 1);
+  BOOST_TEST(R2->get_data().size() == 2);
+}
+
 BOOST_AUTO_TEST_CASE(test_incorporate_observations_hirm) {
   T_clean_relation TR1({"D1"}, false, DistributionSpec("normal"));
   T_noisy_relation TR2({"D1", "D2"}, false, EmissionSpec("gaussian"), "R1");
-  T_noisy_relation TR3({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"), "R2");
+  T_noisy_relation TR3({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"),
+                       "R2");
   T_schema schema = {{"R2", TR2}, {"R3", TR3}, {"R1", TR1}};
 
   T_observations observations = {{"R3",
-                                  {{{"apple", "cat", "circle"}, 1.2},
-                                   {{"banana", "dog", "square"}, 1.3},
-                                   {{"apple", "dog", "triangle"}, 0.9},
-                                   {{"apple", "cat", "square"}, 1.0},
-                                   {{"banana", "cat", "rhombus"}, 1.1},
-                                   }}};
+                                  {
+                                      {{"apple", "cat", "circle"}, 1.2},
+                                      {{"banana", "dog", "square"}, 1.3},
+                                      {{"apple", "dog", "triangle"}, 0.9},
+                                      {{"apple", "cat", "square"}, 1.0},
+                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                  }}};
 
   T_encoding encoding = encode_observations(schema, observations);
   std::mt19937 prng;
@@ -153,4 +181,32 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_hirm) {
   NoisyRelation<double>* NR3 = reinterpret_cast<NoisyRelation<double>*>(R3);
   BOOST_TEST(NR2->base_relation == R1);
   BOOST_TEST(NR3->base_relation == R2);
+}
+
+BOOST_AUTO_TEST_CASE(test_incorporate_observations_relation_hirm) {
+  T_clean_relation TR1({"D1"}, false, DistributionSpec("normal"));
+  T_noisy_relation TR2({"D1", "D2"}, false, EmissionSpec("gaussian"), "R1");
+  T_noisy_relation TR3({"D1", "D2", "D3"}, true, EmissionSpec("gaussian"),
+                       "R2");
+  T_schema schema = {{"R2", TR2}, {"R3", TR3}, {"R1", TR1}};
+
+  std::mt19937 prng;
+  HIRM* hirm = new HIRM(schema, &prng);
+  T_encoded_observations encoded_observations = {
+      {"R3", {{{1, 3, 5}, 2.3}, {{1, 3, 6}, 4.3}}}};
+  std::unordered_map<std::string, std::string> noisy_to_base = {{"R3", "R2"},
+                                                                {"R2", "R1"}};
+  std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
+      relation_items = {{"R3", {{1, 3, 5}, {1, 3, 6}}}};
+  std::unordered_set<std::string> completed_relations;
+  incorporate_observations_relation(&prng, "R3", hirm, encoded_observations,
+                                    noisy_to_base, relation_items,
+                                    completed_relations);
+  // R1 and R2 were incorporated recursively.
+  Relation<double>* R1 = std::get<Relation<double>*>(hirm->get_relation("R1"));
+  Relation<double>* R2 = std::get<Relation<double>*>(hirm->get_relation("R2"));
+  Relation<double>* R3 = std::get<Relation<double>*>(hirm->get_relation("R3"));
+  BOOST_TEST(R1->get_data().size() == 1);
+  BOOST_TEST(R2->get_data().size() == 1);
+  BOOST_TEST(R3->get_data().size() == 2);
 }

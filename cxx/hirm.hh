@@ -44,6 +44,8 @@ class HIRM {
   void transition_cluster_assignment_relation(std::mt19937* prng,
                                               const std::string& r);
 
+  // Updates the latent values contained in relation `r` using Gibbs sampling.
+  // `r` must be the base relation of at least one noisy relation.
   void transition_latent_values_relation(std::mt19937* prng,
                                          const std::string& r);
 

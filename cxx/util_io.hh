@@ -21,6 +21,13 @@ T_observations load_observations(const std::string& path,
 T_encoding encode_observations(const T_schema& schema,
                                const T_observations& observations);
 
+void incorporate_observations_relation(
+    std::mt19937* prng, const std::string& relation,
+    std::variant<IRM*, HIRM*> h_irm, const T_encoded_observations& observations,
+    std::unordered_map<std::string, std::string>& noisy_to_base,
+    std::unordered_map<std::string, std::unordered_set<T_items, H_items>>&
+        relation_items,
+    std::unordered_set<std::string>& completed_relations);
 void incorporate_observations(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
                               const T_encoding& encoding,
                               const T_observations& observations);
