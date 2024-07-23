@@ -1,1 +1,1 @@
-bigram has_name flight
+has_name ~ bigram(flight)

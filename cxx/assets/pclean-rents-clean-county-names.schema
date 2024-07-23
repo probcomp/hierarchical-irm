@@ -1,1 +1,1 @@
-bigram has_name County
+has_name ~ bigram(County)

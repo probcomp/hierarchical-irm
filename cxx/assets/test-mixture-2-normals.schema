@@ -1,1 +1,1 @@
-normal has_value id
+has_value ~ normal(id)
