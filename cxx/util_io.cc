@@ -23,7 +23,8 @@ void verify_noisy_relation_domains(const T_schema& schema) {
                 schema.at(trel.base_relation));
             for (size_t i = 0; i != base_domains.size(); ++i) {
               assert(base_domains[i] == trel.domains[i] &&
-                     "The first domains of a noisy relation must be the same " ￼                     "as the domains of the base relation.");
+                     "The first domains of a noisy relation must be the same "
+                     "as the domains of the base relation.");
             }
           }
         }, trelation);
@@ -77,7 +78,7 @@ T_schema load_schema(const std::string& path) {
 
     size_t i = 3;
     std::map<std::string, std::string> params;
-    if (tokens[i].val == '[') { // Handle parameters
+    if (tokens[i].val == "[") { // Handle parameters
       do {
         i += 1;
         if (tokens[i].type != TokenType::identifier) {
@@ -96,16 +97,16 @@ T_schema load_schema(const std::string& path) {
         }
         i += 1;
 
-        params[name] = tokens[i++].val;
+        params[param_name] = tokens[i++].val;
 
-        if ((tokens[i].val != ",") && (tokens[i].val != ']')) {
+        if ((tokens[i].val != ",") && (tokens[i].val != "]")) {
           printf("Error parsing schema line %s: expected ',' or ']' after parameter definition\n", line.c_str());
           printf("Got %s of type %d instead\n",
                  tokens[i].val.c_str(), (int)(tokens[i].type));
           assert(false);
         }
 
-      } while (tokens[i].val == ',');
+      } while (tokens[i].val == ",");
       i += 1;
     }
 
@@ -119,11 +120,11 @@ T_schema load_schema(const std::string& path) {
     i += 1;
 
     // Handle domains and maybe base emission
-    std::vector<std::string> base_relation;
+    std::string base_relation;
     std::vector<std::string> domains;
 
     if (tokens[i].type != TokenType::identifier) {
-      printf("Error parsing schema line %s:  expected identifier after '('.\n"
+      printf("Error parsing schema line %s:  expected identifier after '('.\n",
              line.c_str());
       printf("Got %s of type %d instead\n",
              tokens[i].val.c_str(), (int)(tokens[i].type));
@@ -136,17 +137,17 @@ T_schema load_schema(const std::string& path) {
     }
 
     do {
-      domains.push_back(tokens[i++]);
+      domains.push_back(tokens[i++].val);
 
-      if ((tokens[i].val != ",") && (tokens[i].val != ')')) {
+      if ((tokens[i].val != ",") && (tokens[i].val != ")")) {
         printf("Error parsing schema line %s: expected ',' or ')' after domain\n", line.c_str());
         printf("Got %s of type %d instead\n",
                tokens[i].val.c_str(), (int)(tokens[i].type));
         assert(false);
       }
-    } while (tokens[i++].val == ',');
+    } while (tokens[i++].val == ",");
 
-    if (input_relation.empty()) { // Clean relation
+    if (base_relation.empty()) { // Clean relation
       T_clean_relation relation;
       relation.domains = domains;
       assert(relation.domains.size() > 0);
