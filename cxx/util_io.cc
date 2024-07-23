@@ -2,6 +2,7 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
 #include "util_io.hh"
+#include "util_parse.hh"
 
 #include <cstdio>
 #include <fstream>
@@ -11,32 +12,162 @@
 #include <unordered_set>
 #include <vector>
 
+void verify_noisy_relation_domains(const T_schema& schema) {
+  for (const auto& [relname, trelation] : schema) {
+    std::visit(
+        [&](const auto& trel) {
+          using T = std::decay_t<decltype(trel)>;
+          if constexpr (std::is_same_v<T, T_noisy_relation>) {
+            std::vector<std::string> base_domains = std::visit(
+                [&](const auto& brel) { return brel.domains; },
+                schema.at(trel.base_relation));
+            for (size_t i = 0; i != base_domains.size(); ++i) {
+              assert(base_domains[i] == trel.domains[i] &&
+                     "The first domains of a noisy relation must be the same " ￼                     "as the domains of the base relation.");
+            }
+          }
+        }, trelation);
+  }
+}
+
 T_schema load_schema(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
 
   T_schema schema;
   std::string line;
+  std::vector<Token> tokens;
   while (std::getline(fp, line)) {
-    std::istringstream stream(line);
+    tokens.clear();
+    assert(tokenize(line, &tokens));
 
-    // TODO(emilyaf): Handle noisy relations. Need to include an emission type
-    // and a base relation in the spec.
-    T_clean_relation relation;
-
-    std::string relname;
-    std::string distribution_spec_str;
-
-    stream >> distribution_spec_str;
-    stream >> relname;
-    for (std::string w; stream >> w;) {
-      relation.domains.push_back(w);
+    if (tokens.empty()) {
+      continue;
     }
-    assert(relation.domains.size() > 0);
-    relation.distribution_spec = DistributionSpec(distribution_spec_str);
-    schema[relname] = relation;
+
+    if (tokens.size() < 6) {
+      printf("Error parsing schema line %s:  expected at least six tokens, "
+             "got %ld instead.\n", line.c_str(), tokens.size());
+      assert(false);
+    }
+
+    if (tokens[0].type != TokenType::identifier) {
+      printf("Error parsing schema line %s:  expected relation name as first token\n", line.c_str());
+      printf("Got %s of type %d instead\n",
+             tokens[0].val.c_str(), (int)(tokens[0].type));
+      assert(false);
+    }
+    std::string relname = tokens[0].val;
+
+    if (tokens[1].val != "~") {
+      printf("Error parsing schema line %s:  expected '~' as second token\n", line.c_str());
+      printf("Got %s of type %d instead\n",
+             tokens[1].val.c_str(), (int)(tokens[1].type));
+      assert(false);
+    }
+
+    if (tokens[2].type != TokenType::identifier) {
+      printf("Error parsing schema line %s:  expected distribution or "
+             "emission name as third token\n", line.c_str());
+      printf("Got %s of type %d instead\n",
+             tokens[2].val.c_str(), (int)(tokens[2].type));
+      assert(false);
+    }
+    std::string dist_name = tokens[2].val;
+
+    size_t i = 3;
+    std::map<std::string, std::string> params;
+    if (tokens[i].val == '[') { // Handle parameters
+      do {
+        i += 1;
+        if (tokens[i].type != TokenType::identifier) {
+          printf("Error parsing schema line %s: expected identifier as parameter name\n", line.c_str());
+          printf("Got %s of type %d instead\n",
+                 tokens[i].val.c_str(), (int)(tokens[i].type));
+          assert(false);
+        }
+        std::string param_name = tokens[i++].val;
+
+        if (tokens[i].val != "=") {
+          printf("Error parsing schema line %s: expected '=' in parameter definition\n", line.c_str());
+          printf("Got %s of type %d instead\n",
+                 tokens[i].val.c_str(), (int)(tokens[i].type));
+          assert(false);
+        }
+        i += 1;
+
+        params[name] = tokens[i++].val;
+
+        if ((tokens[i].val != ",") && (tokens[i].val != ']')) {
+          printf("Error parsing schema line %s: expected ',' or ']' after parameter definition\n", line.c_str());
+          printf("Got %s of type %d instead\n",
+                 tokens[i].val.c_str(), (int)(tokens[i].type));
+          assert(false);
+        }
+
+      } while (tokens[i].val == ',');
+      i += 1;
+    }
+
+    if (tokens[i].val != "(") {
+      printf("Error parsing schema line %s:  expected ( as %ld-th token\n",
+             line.c_str(), i+1);
+      printf("Got %s of type %d instead\n",
+             tokens[i].val.c_str(), (int)(tokens[i].type));
+      assert(false);
+    }
+    i += 1;
+
+    // Handle domains and maybe base emission
+    std::vector<std::string> base_relation;
+    std::vector<std::string> domains;
+
+    if (tokens[i].type != TokenType::identifier) {
+      printf("Error parsing schema line %s:  expected identifier after '('.\n"
+             line.c_str());
+      printf("Got %s of type %d instead\n",
+             tokens[i].val.c_str(), (int)(tokens[i].type));
+      assert(false);
+    }
+
+    if (tokens[i+1].val == ";") {  // We have an emission!
+      base_relation = tokens[i].val;
+      i += 2;
+    }
+
+    do {
+      domains.push_back(tokens[i++]);
+
+      if ((tokens[i].val != ",") && (tokens[i].val != ')')) {
+        printf("Error parsing schema line %s: expected ',' or ')' after domain\n", line.c_str());
+        printf("Got %s of type %d instead\n",
+               tokens[i].val.c_str(), (int)(tokens[i].type));
+        assert(false);
+      }
+    } while (tokens[i++].val == ',');
+
+    if (input_relation.empty()) { // Clean relation
+      T_clean_relation relation;
+      relation.domains = domains;
+      assert(relation.domains.size() > 0);
+      relation.distribution_spec = DistributionSpec(dist_name, params);
+      schema[relname] = relation;
+    } else {
+      T_noisy_relation relation;
+      relation.domains = domains;
+      assert(relation.domains.size() > 0);
+      relation.emission_spec = EmissionSpec(dist_name, params);
+      relation.base_relation = base_relation;
+      // If the data contains observations of this relation, this bool will be
+      // overwritten to true.
+      relation.is_observed = false;
+      schema[relname] = relation;
+    }
   }
   fp.close();
+
+  verify_noisy_relation_domains(schema);
+
   return schema;
 }
 
