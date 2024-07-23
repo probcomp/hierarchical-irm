@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
 
   printf("===== IRM ====\n");
   std::map<std::string, T_relation> schema1{
-      {"R1", T_clean_relation{{"D1", "D1"}, DistributionSpec("bernoulli")}},
-      {"R2", T_clean_relation{{"D1", "D2"}, DistributionSpec("normal")}},
-      {"R3", T_clean_relation{{"D3", "D1"}, DistributionSpec("bigram")}}};
+      {"R1", T_clean_relation{{"D1", "D1"}, false, DistributionSpec("bernoulli")}},
+      {"R2", T_clean_relation{{"D1", "D2"}, false, DistributionSpec("normal")}},
+      {"R3", T_clean_relation{{"D3", "D1"}, false, DistributionSpec("bigram")}}};
   IRM irm(schema1);
 
   for (auto const& kv : irm.domains) {
