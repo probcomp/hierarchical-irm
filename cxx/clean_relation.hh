@@ -24,8 +24,8 @@ class T_clean_relation {
   // is a distribution over.
   std::vector<std::string> domains;
 
-  // TODO(emilyaf): Enable observed vs. latent.
-  // bool is_observed;
+  // Indicates if the CleanRelation's values are observed or latent.
+  bool is_observed;
 
   DistributionSpec distribution_spec;
 };
@@ -128,10 +128,10 @@ class CleanRelation : public Relation<T> {
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
   // extreme care, since they mutate the clusters only and not the relation. In
-  // particular, for every call to unincorporate_from_cluster, there must be a 
+  // particular, for every call to unincorporate_from_cluster, there must be a
   // corresponding call to incorporate_to_cluster with the same items, or the
-  // Relation will be in an invalid state. See the Attribute class for usage/
-  // justification of this choice.
+  // Relation will be in an invalid state. See `transition_latent_value` for
+  // usage/justification of this choice.
   void incorporate_to_cluster(const T_items& items, const ValueType& value) {
     T_items z = get_cluster_assignment(items);
     assert(clusters.contains(z));
@@ -155,15 +155,25 @@ class CleanRelation : public Relation<T> {
     return z;
   }
 
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& z,
+  double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
                                const ValueType& value) const {
-    if (clusters.contains(z)) {
-      return clusters.at(z)->logp(value);
+    if (clusters.contains(items)) {
+      return clusters.at(items)->logp(value);
     }
     Distribution<ValueType>* prior = make_new_distribution(prng);
     double prior_logp = prior->logp(value);
     delete prior;
     return prior_logp;
+  }
+
+  ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {
+    if (clusters.contains(items)) {
+      return clusters.at(items)->sample(prng);
+    }
+    Distribution<ValueType>* prior = make_new_distribution(prng);
+    ValueType prior_sample = prior->sample(prng);
+    delete prior;
+    return prior_sample;
   }
 
   std::vector<int> get_cluster_assignment_gibbs(const T_items& items,
@@ -259,7 +269,8 @@ class CleanRelation : public Relation<T> {
       cluster->incorporate(x);
     }
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) <= std::numeric_limits<double>::epsilon() * abs(logp0));
+    assert(abs(cluster->logp_score() - logp0) <=
+           std::numeric_limits<double>::epsilon() * abs(logp0));
     return logp0 - logp1;
   }
 
@@ -287,7 +298,8 @@ class CleanRelation : public Relation<T> {
     }
 
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) <= std::numeric_limits<double>::epsilon() * abs(logp0));
+    assert(abs(cluster->logp_score() - logp0) <=
+           std::numeric_limits<double>::epsilon() * abs(logp0));
     delete prior;
     return logp1 - logp0;
   }
@@ -414,6 +426,7 @@ class CleanRelation : public Relation<T> {
   const std::vector<Domain*>& get_domains() const { return domains; }
 
   const ValueType& get_value(const T_items& items) const {
+    assert(data.contains(items));
     return data.at(items);
   }
 

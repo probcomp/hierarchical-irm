@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-// TODO(emilyaf): Is this necessary? Is it so that vectors have the same hash
-// values regardless of the order of their elements?
 struct VectorIntHash {
   int operator()(const std::vector<int>& V) const {
     int hash = V.size();

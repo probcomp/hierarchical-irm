@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 
   HIRM hirm(schema_unary, &prng);
   printf("--- initialized HIRM --- \n");
-  incorporate_observations(&prng, hirm, encoding_unary, observations_unary);
+  incorporate_observations(&prng, &hirm, encoding_unary, observations_unary);
   printf("--- incorporated observations --- \n");
   size_t n_obs_unary = 0;
   for (const auto& [z, irm] : hirm.irms) {

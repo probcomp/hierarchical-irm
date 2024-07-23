@@ -148,8 +148,8 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
 
 void HIRM::update_base_relation(const std::string& r) {
   // Updates the pointer to the base relation in each noisy relation.
-  if (base_to_noisy_relation.contains(r)) {
-    for (const std::string& nrel : base_to_noisy_relation.at(r)) {
+  if (base_to_noisy_relations.contains(r)) {
+    for (const std::string& nrel : base_to_noisy_relations.at(r)) {
       RelationVariant noisy_rel_var = get_relation(nrel);
       std::visit(
           [&](auto nr) {
@@ -223,7 +223,7 @@ void HIRM::add_relation(std::mt19937* prng, const std::string& name,
             add_relation(prng, trel.base_relation,
                          schema.at(trel.base_relation));
           }
-          base_to_noisy_relation[trel.base_relation].push_back(name);
+          base_to_noisy_relations[trel.base_relation].push_back(name);
         }
       },
       rel);
@@ -252,6 +252,23 @@ void HIRM::remove_relation(const std::string& name) {
   }
   relation_to_code.erase(name);
   code_to_relation.erase(rc);
+}
+
+void HIRM::transition_latent_values_relation(std::mt19937* prng,
+                                             const std::string& r) {
+  auto transition_values = [&](auto base_rel) {
+    using T = typename std::remove_pointer_t<
+        std::decay_t<decltype(base_rel)>>::ValueType;
+    std::unordered_map<std::string, NoisyRelation<T>*> noisy_rels;
+    for (const std::string& name : base_to_noisy_relations.at(r)) {
+      noisy_rels[name] = reinterpret_cast<NoisyRelation<T>*>(
+          std::get<Relation<T>*>(get_relation(name)));
+    }
+    for (const auto& [items, value] : base_rel->get_data()) {
+      transition_latent_value(prng, items, base_rel, noisy_rels);
+    }
+  };
+  std::visit(transition_values, get_relation(r));
 }
 
 double HIRM::logp(

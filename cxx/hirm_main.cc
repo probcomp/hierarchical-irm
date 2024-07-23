@@ -38,7 +38,7 @@ void inference_irm(std::mt19937* prng, IRM* irm, int iters, int timeout,
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
     CHECK_TIMEOUT(timeout, t_begin);
-    single_step_irm_inference(prng, irm, t_total, verbose);
+    single_step_irm_inference(prng, irm, t_total, verbose, 10, true);
   }
 }
 
@@ -48,6 +48,15 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
     CHECK_TIMEOUT(timeout, t_begin);
+    // TRANSITION LATENT VALUES.
+    for (const auto& [rel, nrels] : hirm->base_to_noisy_relations) {
+      if (std::visit([](const auto& s) { return !s.is_observed; },
+                     hirm->schema.at(rel))) {
+        clock_t t = clock();
+        hirm->transition_latent_values_relation(prng, rel);
+        REPORT_SCORE(verbose, t, t_total, hirm);
+      }
+    }
     // TRANSITION RELATIONS.
     for (const auto& [r, rc] : hirm->relation_to_code) {
       clock_t t = clock();
@@ -56,7 +65,7 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
     }
     // TRANSITION IRMs.
     for (const auto& [t, irm] : hirm->irms) {
-      single_step_irm_inference(prng, irm, t_total, verbose);
+      single_step_irm_inference(prng, irm, t_total, verbose, 10, false);
     }
   }
 }
@@ -114,11 +123,11 @@ int main(int argc, char** argv) {
   std::mt19937 prng(seed);
 
   std::cout << "loading schema from " << path_schema << std::endl;
-  auto schema = load_schema(path_schema);
+  T_schema schema = load_schema(path_schema);
 
   std::cout << "loading observations from " << path_obs << std::endl;
-  auto observations = load_observations(path_obs, schema);
-  auto encoding = encode_observations(schema, observations);
+  T_observations observations = load_observations(path_obs, schema);
+  T_encoding encoding = encode_observations(schema, observations);
 
   if (mode == "irm") {
     std::cout << "selected model is IRM" << std::endl;
@@ -127,7 +136,7 @@ int main(int argc, char** argv) {
     if (path_clusters.empty()) {
       irm = new IRM(schema);
       std::cout << "incorporating observations" << std::endl;
-      incorporate_observations(&prng, *irm, encoding, observations);
+      incorporate_observations(&prng, irm, encoding, observations);
     } else {
       irm = new IRM({});
       std::cout << "loading clusters from " << path_clusters << std::endl;
@@ -153,7 +162,7 @@ int main(int argc, char** argv) {
     if (path_clusters.empty()) {
       hirm = new HIRM(schema, &prng);
       std::cout << "incorporating observations" << std::endl;
-      incorporate_observations(&prng, *hirm, encoding, observations);
+      incorporate_observations(&prng, hirm, encoding, observations);
     } else {
       hirm = new HIRM({}, &prng);
       std::cout << "loading clusters from " << path_clusters << std::endl;
