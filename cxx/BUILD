@@ -151,6 +151,7 @@ cc_library(
     name = "util_parse",
     hdrs = ["util_parse.hh"],
     srcs = ["util_parse.cc"],
+    visibility = [":__subpackages__"],
     deps = [],
 )
 

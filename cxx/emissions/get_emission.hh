@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <variant>
 
@@ -27,8 +28,10 @@ using EmissionVariant = std::variant<GaussianEmission*, SometimesGaussian*,
 struct EmissionSpec {
   EmissionEnum emission;
   ObservationEnum observation_type;
+  std::map<std::string, std::string> emission_args = {};
 
-  EmissionSpec(const std::string& emission_str);
+  EmissionSpec(const std::string& emission_str,
+               std::map<std::string, std::string> emission_args = {});
   EmissionSpec() = default;
 };
 

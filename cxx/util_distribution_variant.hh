@@ -34,7 +34,8 @@ struct DistributionSpec {
   ObservationEnum observation_type;
   std::map<std::string, std::string> distribution_args = {};
 
-  DistributionSpec(const std::string& dist_str);
+  DistributionSpec(const std::string& dist_str,
+                   std::map<std::string, std::string> distribution_args = {});
   DistributionSpec() = default;
 };
 

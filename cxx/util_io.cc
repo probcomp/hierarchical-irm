@@ -151,6 +151,9 @@ T_schema load_schema(const std::string& path) {
       relation.domains = domains;
       assert(relation.domains.size() > 0);
       relation.distribution_spec = DistributionSpec(dist_name, params);
+      // If the data contains observations of this relation, this bool will be
+      // overwritten to true.
+      relation.is_observed = false;
       schema[relname] = relation;
     } else {
       T_noisy_relation relation;

@@ -24,8 +24,7 @@ class T_clean_relation {
   // is a distribution over.
   std::vector<std::string> domains;
 
-  // TODO(emilyaf): Enable observed vs. latent.
-  // bool is_observed;
+  bool is_observed;
 
   DistributionSpec distribution_spec;
 };

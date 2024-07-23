@@ -26,8 +26,7 @@ class T_noisy_relation {
   std::vector<std::string> domains;
 
   // Indicates if the NoisyRelation's values are observed or latent.
-  // TODO(emilyaf): Enable unobserved relations.
-  // bool is_observed;
+  bool is_observed;
 
   // Describes the Emission that models the noise.
   EmissionSpec emission_spec;
