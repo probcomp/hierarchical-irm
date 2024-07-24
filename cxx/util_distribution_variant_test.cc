@@ -29,10 +29,8 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((ds.distribution == DistributionEnum::skellam));
   BOOST_TEST(ds.distribution_args.empty());
 
-  //DistributionSpec dc = DistributionSpec("categorical(k=6)");
   DistributionSpec dc("categorical(k=6)");
   BOOST_TEST((dc.distribution == DistributionEnum::categorical));
-  printf("dist_args.size = %ld\n", dc.distribution_args.size());
   BOOST_TEST((dc.distribution_args.size() == 1));
   std::string expected = "6";
   BOOST_CHECK_EQUAL(dc.distribution_args.at("k"), expected);

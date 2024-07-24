@@ -31,6 +31,34 @@ void verify_noisy_relation_domains(const T_schema& schema) {
   }
 }
 
+#define TYPE_CHECK(i, expected_type) \
+    if (i >= tokens.size()) { \
+      printf("Error parsing schema line %s: expected at least %ld tokens\n", \
+             line.c_str(), i+1); \
+      assert(false); \
+    } \
+    if (tokens[i].type != TokenType::expected_type) { \
+      printf("Error parsing schema line %s:  expected expected_type for %ld-th token\n", \
+            line.c_str(), i+1); \
+      printf("Got %s of type %d instead\n", \
+             tokens[0].val.c_str(), (int)(tokens[0].type)); \
+      assert(false); \
+    }
+
+#define VAL_CHECK(i, expected_val) \
+    if (i >= tokens.size()) { \
+      printf("Error parsing schema line %s: expected at least %ld tokens\n", \
+             line.c_str(), i+1); \
+      assert(false); \
+    } \
+    if (tokens[i].val != expected_val ) { \
+      printf("Error parsing schema line %s:  expected %s for %ld-th token\n", \
+            line.c_str(), expected_val, i+1); \
+      printf("Got %s of type %d instead\n", \
+             tokens[0].val.c_str(), (int)(tokens[0].type)); \
+      assert(false); \
+    }
+
 T_schema load_schema(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
   assert(fp.good());
@@ -46,56 +74,27 @@ T_schema load_schema(const std::string& path) {
       continue;
     }
 
-    if (tokens.size() < 6) {
-      printf("Error parsing schema line %s:  expected at least six tokens, "
-             "got %ld instead.\n", line.c_str(), tokens.size());
-      assert(false);
-    }
+    size_t i = 0;
+    TYPE_CHECK(i, identifier);
+    std::string relname = tokens[i].val;
 
-    if (tokens[0].type != TokenType::identifier) {
-      printf("Error parsing schema line %s:  expected relation name as first token\n", line.c_str());
-      printf("Got %s of type %d instead\n",
-             tokens[0].val.c_str(), (int)(tokens[0].type));
-      assert(false);
-    }
-    std::string relname = tokens[0].val;
+    i = 1;
+    VAL_CHECK(i, "~");
 
-    if (tokens[1].val != "~") {
-      printf("Error parsing schema line %s:  expected '~' as second token\n", line.c_str());
-      printf("Got %s of type %d instead\n",
-             tokens[1].val.c_str(), (int)(tokens[1].type));
-      assert(false);
-    }
-
-    if (tokens[2].type != TokenType::identifier) {
-      printf("Error parsing schema line %s:  expected distribution or "
-             "emission name as third token\n", line.c_str());
-      printf("Got %s of type %d instead\n",
-             tokens[2].val.c_str(), (int)(tokens[2].type));
-      assert(false);
-    }
+    i = 2;
+    TYPE_CHECK(i, identifier);
     std::string dist_name = tokens[2].val;
 
-    size_t i = 3;
+    i = 3;
     std::map<std::string, std::string> params;
     if (tokens[i].val == "[") { // Handle parameters
       do {
-        i += 1;
-        if (tokens[i].type != TokenType::identifier) {
-          printf("Error parsing schema line %s: expected identifier as parameter name\n", line.c_str());
-          printf("Got %s of type %d instead\n",
-                 tokens[i].val.c_str(), (int)(tokens[i].type));
-          assert(false);
-        }
+        ++i;
+        TYPE_CHECK(i, identifier);
         std::string param_name = tokens[i++].val;
 
-        if (tokens[i].val != "=") {
-          printf("Error parsing schema line %s: expected '=' in parameter definition\n", line.c_str());
-          printf("Got %s of type %d instead\n",
-                 tokens[i].val.c_str(), (int)(tokens[i].type));
-          assert(false);
-        }
-        i += 1;
+        VAL_CHECK(i, "=");
+        ++i;
 
         params[param_name] = tokens[i++].val;
 
@@ -107,29 +106,17 @@ T_schema load_schema(const std::string& path) {
         }
 
       } while (tokens[i].val == ",");
-      i += 1;
+      ++i;
     }
 
-    if (tokens[i].val != "(") {
-      printf("Error parsing schema line %s:  expected ( as %ld-th token\n",
-             line.c_str(), i+1);
-      printf("Got %s of type %d instead\n",
-             tokens[i].val.c_str(), (int)(tokens[i].type));
-      assert(false);
-    }
-    i += 1;
+    VAL_CHECK(i, "(");
+    ++i;
 
     // Handle domains and maybe base emission
     std::string base_relation;
     std::vector<std::string> domains;
 
-    if (tokens[i].type != TokenType::identifier) {
-      printf("Error parsing schema line %s:  expected identifier after '('.\n",
-             line.c_str());
-      printf("Got %s of type %d instead\n",
-             tokens[i].val.c_str(), (int)(tokens[i].type));
-      assert(false);
-    }
+    TYPE_CHECK(i, identifier);
 
     if (tokens[i+1].val == ";") {  // We have an emission!
       base_relation = tokens[i].val;

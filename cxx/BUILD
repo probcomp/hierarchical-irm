@@ -242,6 +242,7 @@ filegroup(
     srcs = [
         "test_schema/nary.schema",
         "test_schema/all_types.schema",
+        "test_schema/with_noisy.schema",
     ],
 )
 
