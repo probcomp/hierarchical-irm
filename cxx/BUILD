@@ -38,6 +38,7 @@ cc_library(
     deps = [
         ":clean_relation",
         ":noisy_relation",
+        ":transition_latent_value",
         ":util_distribution_variant",
         "//emissions:get_emission"
     ],

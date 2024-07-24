@@ -10,6 +10,7 @@
 
 #include "irm.hh"
 #include "relation.hh"
+#include "transition_latent_value.hh"
 #include "util_distribution_variant.hh"
 
 class HIRM {
@@ -21,9 +22,9 @@ class HIRM {
   std::unordered_map<int, std::string>
       code_to_relation;  // map from code to relation
   std::unordered_map<std::string, std::vector<std::string>>
-      base_to_noisy_relation;  // map from relation to the noisy relation that
-                               // has it as a base
-  CRP crp;                     // clustering model for relations
+      base_to_noisy_relations;  // map from relation to the noisy relation that
+                                // has it as a base
+  CRP crp;                      // clustering model for relations
 
   HIRM(const T_schema& schema, std::mt19937* prng);
 
@@ -42,6 +43,11 @@ class HIRM {
                                       const std::vector<std::string>& rs);
   void transition_cluster_assignment_relation(std::mt19937* prng,
                                               const std::string& r);
+
+  // Updates the latent values contained in relation `r` using Gibbs sampling.
+  // `r` must be the base relation of at least one noisy relation.
+  void transition_latent_values_relation(std::mt19937* prng,
+                                         const std::string& r);
 
   void set_cluster_assignment_gibbs(std::mt19937* prng, const std::string& r,
                                     int table);
