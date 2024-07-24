@@ -3,7 +3,7 @@
 #include <cctype>
 #include <cstring>
 
-#define SYMBOL_CHARS "~()[]{}<>.,;=+*-/"
+#define SYMBOL_CHARS "~()[]{}<>.,:;=+*-/"
 bool tokenize(std::string line, std::vector<Token>* tokens) {
   size_t i = 0;
   while (i < line.length()) {

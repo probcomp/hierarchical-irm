@@ -32,10 +32,10 @@ enum class DistributionEnum {
 struct DistributionSpec {
   DistributionEnum distribution;
   ObservationEnum observation_type;
-  std::map<std::string, std::string> distribution_args = {};
+  std::map<std::string, std::string> distribution_args;
 
   DistributionSpec(const std::string& dist_str,
-                   std::map<std::string, std::string> distribution_args = {});
+                   const std::map<std::string, std::string>& _distribution_args = {});
   DistributionSpec() = default;
 };
 

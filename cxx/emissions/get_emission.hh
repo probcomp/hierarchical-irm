@@ -28,10 +28,10 @@ using EmissionVariant = std::variant<GaussianEmission*, SometimesGaussian*,
 struct EmissionSpec {
   EmissionEnum emission;
   ObservationEnum observation_type;
-  std::map<std::string, std::string> emission_args = {};
+  std::map<std::string, std::string> emission_args;
 
   EmissionSpec(const std::string& emission_str,
-               std::map<std::string, std::string> emission_args = {});
+               const std::map<std::string, std::string>& _emission_args = {});
   EmissionSpec() = default;
 };
 

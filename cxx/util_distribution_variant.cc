@@ -17,8 +17,10 @@
 
 DistributionSpec::DistributionSpec(
     const std::string& dist_str,
-    std::map<std::string, std::string> distribution_args):
-  distribution_args(distribution_args) {
+    const std::map<std::string, std::string>& _distribution_args):
+  distribution_args(_distribution_args) {
+  printf("DEBUG:  dist_str = %s, dist_args.size = %ld\n",
+         dist_str.c_str(), distribution_args.size());
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
   std::string args_str = dist_str.substr(dist_name.length());
   if (!args_str.empty()) {
@@ -35,6 +37,8 @@ DistributionSpec::DistributionSpec(
       distribution_args[arg_name] = arg_val;
     }
   }
+  printf("DEBUG2:  dist_str = %s, dist_args.size = %ld\n",
+         dist_str.c_str(), distribution_args.size());
   if (dist_name == "bernoulli") {
     distribution = DistributionEnum::bernoulli;
     observation_type = ObservationEnum::bool_type;

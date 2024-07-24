@@ -11,9 +11,10 @@
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
 
-EmissionSpec::EmissionSpec(const std::string& emission_str,
-                           std::map<std::string, std::string> emission_args):
-  emission_args(emission_args) {
+EmissionSpec::EmissionSpec(
+    const std::string& emission_str,
+    const std::map<std::string, std::string>& _emission_args):
+  emission_args(_emission_args) {
   if (emission_str == "gaussian") {
     emission = EmissionEnum::gaussian;
     observation_type = ObservationEnum::double_type;
