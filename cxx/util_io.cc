@@ -187,26 +187,25 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 
     ObservationVariant value;
 
-    try {
-      value = observation_string_to_value(
-          value_str,
-          std::visit(
-              [](const auto& trel) {
-                using T = std::decay_t<decltype(trel)>;
-                if constexpr (std::is_same_v<T, T_clean_relation>) {
-                  return trel.distribution_spec.observation_type;
-                } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
-                  return trel.emission_spec.observation_type;
-                } else {
-                  assert(false && "Unrecognized relation type.");
-                }
-              },
-              schema.at(relname)));
-    } catch(const std::out_of_range& e) {
-      std::cerr << "Can't find " << relname
-                << " in schema " << e.what() << "\n";
-      exit(1);
+    if (!schema.contains(relname)) {
+      printf("Can not find %s in schema\n", relname.c_str());
+      assert(false);
     }
+
+    value = observation_string_to_value(
+        value_str,
+        std::visit(
+            [](const auto& trel) {
+              using T = std::decay_t<decltype(trel)>;
+              if constexpr (std::is_same_v<T, T_clean_relation>) {
+                return trel.distribution_spec.observation_type;
+              } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
+                return trel.emission_spec.observation_type;
+              } else {
+                assert(false && "Unrecognized relation type.");
+              }
+            },
+            schema.at(relname)));
     std::string word;
     while(getline(stream, word, ',')) {
       items.push_back(word);
