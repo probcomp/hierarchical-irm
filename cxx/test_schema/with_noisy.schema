@@ -1,0 +1,7 @@
+# A schema with noisy relations.
+R1 ~ bernoulli(D1)
+R2 ~ gaussian(R6; D1, D2)
+R3 ~ bigram(D2)
+R4 ~ gaussian(R2; D1, D2, D3)
+R5 ~ sometimes_bitflip(R1; D1)
+R6 ~ normal(D1)

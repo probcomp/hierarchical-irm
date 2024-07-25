@@ -15,7 +15,10 @@
 #include "distributions/stringcat.hh"
 #include "util_observation.hh"
 
-DistributionSpec::DistributionSpec(const std::string& dist_str) {
+DistributionSpec::DistributionSpec(
+    const std::string& dist_str,
+    const std::map<std::string, std::string>& _distribution_args):
+  distribution_args(_distribution_args) {
   std::string dist_name = dist_str.substr(0, dist_str.find('('));
   std::string args_str = dist_str.substr(dist_name.length());
   if (!args_str.empty()) {

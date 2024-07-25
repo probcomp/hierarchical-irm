@@ -108,34 +108,37 @@ the relations in the system:
 
 ```
 $ cat assets/animals.unary.schema
-bernoulli black animal
-bernoulli white animal
-bernoulli blue animal
-bernoulli brown animal
-bernoulli gray animal
-bernoulli orange animal
-bernoulli red animal
-bernoulli yellow animal
-bernoulli patches animal
-bernoulli spots animal
+black ~ bernoulli(animal)
+white ~ bernoulli(animal)
+blue ~ bernoulli(animal)
+brown ~ bernoulli(animal)
+gray ~ bernoulli(animal)
+orange ~ bernoulli(animal)
+red ~ bernoulli(animal)
+yellow ~ bernoulli(animal)
+patches ~ bernoulli(animal)
+spots ~ bernoulli(animal)
 ...
 ```
 
 Each line specifies the signature of a relation in the system:
 
-- The first entry is the observation type
-  (only `bernoulli` is supported at the moment).
-- The second entry is the name of the relation (e.g., `black`); all the
-  relations names must be unique.
-- The third entry is the domain of the relation (in this example, the only
-  domain is `animal`).
+- The first token is the name of the relation; all the relation names must be
+  unique.
+- The second token is the `~` character.
+- The third token is the observation type.  See the `DistributionSpec`
+  definition for supported values for clean relations and the `EmissionSpec`
+  definition for supported values for noisy relations.
+- Inside the parenthesis is the list of domains of the relation.  In this
+  example, the only domain is `animal`.
 
 Thus, for this schema, we have a list of unary relations that each specify
 whether an `animal` has a given attribute.
 
 Note that, in general a given relational system can be encoded in multiple
 ways. See `assets/animals.binary.schema` for an encoding of this system using
-a single higher-order relation with signature: `bernoulli has feature animal`.
+a single higher-order relation with signature:
+`has ~ bernoulli(feature, animal)`.
 
 #### Observation file
 

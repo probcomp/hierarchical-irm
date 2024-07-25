@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE test pclean_parse
 
-#include "pclean/parse.hh"
+#include "util_parse.hh"
 
 #include <boost/test/included/unit_test.hpp>
 namespace tt = boost::test_tools;
