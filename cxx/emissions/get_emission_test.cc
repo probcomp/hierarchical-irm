@@ -41,12 +41,13 @@ BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_categorical) {
-  std::map<std::string, std::string> args = {{"k": "5"}};
-  EmissionVariant ev = get_prior(EmissionSpec("sometimes_categorical"));
+  std::map<std::string, std::string> args;
+  args["k"] = "9";
+  EmissionVariant ev = get_prior(EmissionSpec("sometimes_categorical", args));
   Emission<int>* sc = std::get<Emission<int>*>(ev);
 
-  sbf->incorporate(std::make_pair<int, int>(5, 5));
-  BOOST_TEST(sbf->N == 1);
+  sc->incorporate(std::make_pair<int, int>(5, 5));
+  BOOST_TEST(sc->N == 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {

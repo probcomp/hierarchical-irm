@@ -171,6 +171,7 @@ cc_test(
     srcs = ["sometimes_test.cc"],
     deps = [
         ":bitflip",
+        ":categorical",
         ":sometimes",
         "@boost//:algorithm",
         "@boost//:test",

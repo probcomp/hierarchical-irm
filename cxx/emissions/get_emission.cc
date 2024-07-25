@@ -9,6 +9,7 @@
 
 #include "emissions/bigram_string.hh"
 #include "emissions/bitflip.hh"
+#include "emissions/categorical.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
 #include "emissions/sometimes.hh"
@@ -51,8 +52,10 @@ EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
     case EmissionEnum::sometimes_bitflip:
       return new Sometimes<bool>(new BitFlip());
     case EmissionEnum::sometimes_categorical:
-      int num_states = std::stoi(emission_args.at("k"));
-      return new Sometimes<int>(new CategoricalEmission(num_states), true);
+      {
+        int num_states = std::stoi(spec.emission_args.at("k"));
+        return new Sometimes<int>(new CategoricalEmission(num_states), true);
+      }
     case EmissionEnum::sometimes_gaussian:
       return new Sometimes<double>(new GaussianEmission());
     default:
