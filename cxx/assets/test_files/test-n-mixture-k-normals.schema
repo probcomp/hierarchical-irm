@@ -1,0 +1,4 @@
+value_a ~ normal(a)
+label_a ~ stringcat[strings="a0:a1:a2",delim=:](a)
+value_b ~ normal(b)
+label_b ~ stringcat[strings="b0:b1:b2",delim=:](b)
