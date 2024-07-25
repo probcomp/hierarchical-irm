@@ -11,7 +11,7 @@
 #include "irm.hh"
 #include "relation.hh"
 #include "transition_latent_value.hh"
-#include "util_distribution_variant.hh"
+#include "distributions/get_distribution.hh"
 
 class HIRM {
  public:

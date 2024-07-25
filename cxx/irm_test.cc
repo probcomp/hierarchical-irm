@@ -5,8 +5,8 @@
 #include "irm.hh"
 
 #include <boost/test/included/unit_test.hpp>
+#include "distributions/get_distribution.hh"
 
-#include "util_distribution_variant.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_irm) {
@@ -27,12 +27,10 @@ BOOST_AUTO_TEST_CASE(test_irm) {
 
   irm.remove_relation("R3");
 
-  auto obs0 = observation_string_to_value("0", ObservationEnum::bool_type);
-
-  double logp_x = irm.logp({{"R1", {1, 2}, obs0}}, &prng);
+  double logp_x = irm.logp({{"R1", {1, 2}, false}}, &prng);
   BOOST_TEST(logp_x < 0.0);
 
-  irm.incorporate(&prng, "R1", {1, 2}, obs0);
+  irm.incorporate(&prng, "R1", {1, 2}, false);
   double one_obs_score = irm.logp_score();
   BOOST_TEST(one_obs_score < 0.0);
 

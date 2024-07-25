@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "domain.hh"
-#include "util_distribution_variant.hh"
 #include "util_hash.hh"
+#include "distributions/get_distribution.hh"
 
 typedef std::vector<T_item> T_items;
 typedef VectorIntHash H_items;
@@ -58,6 +58,14 @@ class Relation {
   virtual std::vector<int> get_cluster_assignment(const T_items& items) const = 0;
 
   virtual bool has_observation(const Domain& domain, const T_item& item) const = 0;
+
+  // Convert a string to ValueType.
+  ValueType from_string(const std::string& s) {
+    ValueType t;
+    std::stringstream ss(s);
+    ss >> t;
+    return t;
+  };
 
   virtual ~Relation() = default;
 

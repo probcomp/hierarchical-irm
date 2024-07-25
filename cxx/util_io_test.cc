@@ -150,11 +150,11 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
 
   T_observations observations = {{"R2",
                                   {
-                                      {{"apple", "cat", "circle"}, 1.2},
-                                      {{"banana", "dog", "square"}, 1.3},
-                                      {{"apple", "dog", "triangle"}, 0.9},
-                                      {{"apple", "cat", "square"}, 1.0},
-                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                      {{"apple", "cat", "circle"}, "1.2"},
+                                      {{"banana", "dog", "square"}, "1.3"},
+                                      {{"apple", "dog", "triangle"}, "0.9"},
+                                      {{"apple", "cat", "square"}, "1.0"},
+                                      {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
   T_encoding encoding = encode_observations(schema, observations);
@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_hirm) {
 
   T_observations observations = {{"R3",
                                   {
-                                      {{"apple", "cat", "circle"}, 1.2},
-                                      {{"banana", "dog", "square"}, 1.3},
-                                      {{"apple", "dog", "triangle"}, 0.9},
-                                      {{"apple", "cat", "square"}, 1.0},
-                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                      {{"apple", "cat", "circle"}, "1.2"},
+                                      {{"banana", "dog", "square"}, "1.3"},
+                                      {{"apple", "dog", "triangle"}, "0.9"},
+                                      {{"apple", "cat", "square"}, "1.0"},
+                                      {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
   T_encoding encoding = encode_observations(schema, observations);

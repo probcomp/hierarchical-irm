@@ -2,11 +2,11 @@
 
 #define BOOST_TEST_MODULE test UtilDistributionVariant
 
-#include "util_distribution_variant.hh"
+#include "get_distribution.hh"
 
+#include <string.h>
+#include <typeinfo>
 #include <boost/test/included/unit_test.hpp>
-
-#include "distributions/dirichlet_categorical.hh"
 
 namespace tt = boost::test_tools;
 
@@ -46,21 +46,67 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((dsc.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc.distribution_args.size() == 1));
   BOOST_CHECK_EQUAL(dsc.distribution_args.at("strings"), "a b c d");
-  DistributionVariant dv = get_prior(dsc, &prng);
-  BOOST_TEST(std::get<StringCat*>(dv)->strings.size() == 4);
 
   DistributionSpec dsc2 = DistributionSpec("stringcat(strings=yes:no,delim=:)");
   BOOST_TEST((dsc2.distribution == DistributionEnum::stringcat));
   BOOST_TEST((dsc2.distribution_args.size() == 2));
   BOOST_CHECK_EQUAL(dsc2.distribution_args.at("strings"), "yes:no");
-  DistributionVariant dv2 = get_prior(dsc2, &prng);
-  BOOST_TEST(std::get<StringCat*>(dv2)->strings.size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_get_prior) {
+BOOST_AUTO_TEST_CASE(test_get_prior_bernoulli) {
   std::mt19937 prng;
-  DistributionSpec dc = DistributionSpec("categorical(k=4)");
-  DistributionVariant dcdv = get_prior(dc, &prng);
-  DirichletCategorical* dcd = std::get<DirichletCategorical*>(dcdv);
-  BOOST_TEST(dcd->counts.size() == 4);
+
+  DistributionVariant dv = get_prior(DistributionSpec("bernoulli"), &prng);
+  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("BetaBernoulli") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_bigram) {
+  std::mt19937 prng;
+
+  DistributionVariant dv = get_prior(DistributionSpec("bigram"), &prng);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Bigram") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_categorical) {
+  std::mt19937 prng;
+
+  DistributionSpec ds("categorical", {{"k", "5"}});
+  DistributionVariant dv = get_prior(ds, &prng);
+  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("DirichletCategorical") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_normal) {
+  std::mt19937 prng;
+
+  DistributionSpec ds("normal");
+  DistributionVariant dv = get_prior(ds, &prng);
+  Distribution<double> *d = std::get<Distribution<double>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Normal") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_skellam) {
+  std::mt19937 prng;
+
+  DistributionSpec ds("skellam");
+  DistributionVariant dv = get_prior(ds, &prng);
+  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Skellam") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_stringcat) {
+  std::mt19937 prng;
+
+  DistributionSpec ds("stringcat", {{"strings", "hello world"}});
+  DistributionVariant dv = get_prior(ds, &prng);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("StringCat") != std::string::npos);
 }

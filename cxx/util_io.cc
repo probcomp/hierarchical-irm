@@ -177,25 +177,11 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 
     stream >> value_str;
     stream >> relname;
-    ObservationVariant value = observation_string_to_value(
-        value_str,
-        std::visit(
-            [](const auto& trel) {
-              using T = std::decay_t<decltype(trel)>;
-              if constexpr (std::is_same_v<T, T_clean_relation>) {
-                return trel.distribution_spec.observation_type;
-              } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
-                return trel.emission_spec.observation_type;
-              } else {
-                assert(false && "Unrecognized relation type.");
-              }
-            },
-            schema.at(relname)));
     for (std::string w; stream >> w;) {
       items.push_back(w);
     }
     assert(items.size() > 0);
-    auto entry = std::make_tuple(items, value);
+    auto entry = std::make_tuple(items, value_str);
     observations[relname].push_back(entry);
   }
   fp.close();

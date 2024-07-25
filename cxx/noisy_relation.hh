@@ -9,13 +9,12 @@
 #include <vector>
 
 #include "clean_relation.hh"
-#include "distributions/base.hh"
 #include "domain.hh"
-#include "emissions/base.hh"
 #include "relation.hh"
-#include "util_distribution_variant.hh"
 #include "util_hash.hh"
 #include "util_math.hh"
+#include "distributions/get_distribution.hh"
+#include "emissions/base.hh"
 
 // T_noisy_relation is the text we get from reading a line of the schema file;
 // NoisyRelation is the object that does the work.

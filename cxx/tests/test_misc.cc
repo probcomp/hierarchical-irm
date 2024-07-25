@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
   for (const auto& [relation, obs] : observations) {
     for (const auto& [items, value] : obs) {
       printf("incorporating %s ", relation.c_str());
-      printf("%d ", std::get<bool>(value));
+      printf("%s ", value.c_str());
       int counter = 0;
       T_items items_code;
       auto rel_domains =

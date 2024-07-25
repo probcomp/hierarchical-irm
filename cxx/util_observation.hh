@@ -11,8 +11,5 @@
 
 // Set of all observation types.
 // ObservationVariant and ObservationEnum need not be listed in the same order.
-using ObservationVariant = std::variant<double, int, bool, std::string>;
-enum class ObservationEnum { double_type, int_type, bool_type, string_type };
-
-ObservationVariant observation_string_to_value(
-    const std::string& value_str, const ObservationEnum& observation_type);
+using ObservationVariant = std::variant<bool, double, int, std::string>;
+enum class ObservationEnum { bool_type, double_type, int_type, string_type };

@@ -10,7 +10,7 @@
 
 #include "clean_relation.hh"
 #include "domain.hh"
-#include "util_distribution_variant.hh"
+#include "distributions/get_distribution.hh"
 
 namespace tt = boost::test_tools;
 

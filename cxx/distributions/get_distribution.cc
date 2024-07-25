@@ -1,7 +1,7 @@
 // Copyright 2024
 // See LICENSE.txt
 
-#include "util_distribution_variant.hh"
+#include "get_distribution.hh"
 
 #include <boost/algorithm/string.hpp>
 #include <cassert>
