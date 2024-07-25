@@ -6,6 +6,7 @@ cc_library(
     hdrs = ["get_emission.hh"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":bigram_string",
         ":bitflip",
         ":gaussian",
         ":simple_string",

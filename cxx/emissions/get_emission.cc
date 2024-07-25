@@ -7,6 +7,7 @@
 #include <random>
 #include <string>
 
+#include "emissions/bigram_string.hh"
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
@@ -15,7 +16,10 @@ EmissionSpec::EmissionSpec(
     const std::string& emission_str,
     const std::map<std::string, std::string>& _emission_args):
   emission_args(_emission_args) {
-  if (emission_str == "gaussian") {
+  if (emission_str == "bigram") {
+    emission = EmissionEnum::bigram_string;
+    observation_type = ObservationEnum::string_type;
+    else if (emission_str == "gaussian") {
     emission = EmissionEnum::gaussian;
     observation_type = ObservationEnum::double_type;
   } else if (emission_str == "simple_string") {
@@ -34,6 +38,8 @@ EmissionSpec::EmissionSpec(
 
 EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
   switch (spec.emission) {
+    case EmissionEnum::bigram-string:
+      return new BigramStringEmission();
     case EmissionEnum::gaussian:
       return new GaussianEmission();
     case EmissionEnum::simple_string:

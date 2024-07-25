@@ -8,9 +8,17 @@
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
 
+BOOST_AUTO_TEST_CASE(test_get_emission_bigram_string) {
+  EmissionVariant ev = get_prior(EmissionSpec("bigram_string"));
+  Emission<std::string>* bse = std::get<Emission<std::string>*>(ev);
+
+  bse->incorporate(std::make_pair<std::string, std::string>("hello", "hi"));
+  BOOST_TEST(bse->N == 1);
+}
+
 BOOST_AUTO_TEST_CASE(test_get_emission_gaussian) {
   EmissionVariant ev = get_prior(EmissionSpec("gaussian"));
-  GaussianEmission* ge = std::get<GaussianEmission*>(ev);
+  Emission<double>* ge = std::get<Emission<double>*>(ev);
 
   ge->incorporate(std::make_pair<double, double>(2.0, 2.1));
   BOOST_TEST(ge->N == 1);
@@ -18,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_gaussian) {
 
 BOOST_AUTO_TEST_CASE(test_get_emission_simple_string) {
   EmissionVariant ev = get_prior(EmissionSpec("simple_string"));
-  SimpleStringEmission* sse = std::get<SimpleStringEmission*>(ev);
+  Emission<std::string>* sse = std::get<Emission<std::string>*>(ev);
 
   sse->incorporate(std::make_pair<std::string, std::string>("hello", "hi"));
   BOOST_TEST(sse->N == 1);
@@ -26,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_simple_string) {
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
   EmissionVariant ev = get_prior(EmissionSpec("sometimes_gaussian"));
-  SometimesGaussian* sg = std::get<SometimesGaussian*>(ev);
+  Emission<double>* sg = std::get<Emission<double>*>(ev);
 
   sg->incorporate(std::make_pair<double, double>(2.0, 2.1));
   BOOST_TEST(sg->N == 1);
@@ -34,7 +42,7 @@ BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
 
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
   EmissionVariant ev = get_prior(EmissionSpec("sometimes_bitflip"));
-  SometimesBitFlip* sbf = std::get<SometimesBitFlip*>(ev);
+  Emission<bool>* sbf = std::get<Emission<bool>*>(ev);
 
   sbf->incorporate(std::make_pair<bool, bool>(true, true));
   BOOST_TEST(sbf->N == 1);
