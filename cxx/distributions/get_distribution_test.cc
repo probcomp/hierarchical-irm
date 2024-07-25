@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(test_get_prior_bernoulli) {
   std::mt19937 prng;
 
   DistributionVariant dv = get_prior(DistributionSpec("bernoulli"), &prng);
-  Distribution<int> *d = std::get<Distribution<int>*>(dv);
+  Distribution<bool> *d = std::get<Distribution<bool>*>(dv);
   std::string name = typeid(*d).name();
   BOOST_TEST(name.find("BetaBernoulli") != std::string::npos);
 }

@@ -11,7 +11,7 @@ typedef std::tuple<T_encoding_f, T_encoding_r> T_encoding;
 
 typedef std::tuple<std::vector<std::string>, std::string> T_observation;
 typedef std::unordered_map<std::string, std::vector<T_observation>> T_observations;
-typedef std::tuple<std::vector<int>, ObservationVariant> T_encoded_observation;
+typedef std::tuple<std::vector<int>, std::string> T_encoded_observation;
 typedef std::unordered_map<std::string, std::vector<T_encoded_observation>> T_encoded_observations;
 
 // disk IO

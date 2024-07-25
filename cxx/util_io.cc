@@ -271,11 +271,14 @@ void incorporate_observations_relation(
                                       completed_relations);
   }
 
+  ObservationVariant ov;
   if (observations.contains(relation)) {
     // If this relation is observed, incorporate its observations.
     for (const auto& [items, value] : observations.at(relation)) {
-      std::visit([&](auto& m) { m->incorporate(prng, relation, items, value); },
-                 h_irm);
+      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
+      std::visit([&](auto& m) {
+        m->incorporate(prng, relation, items, ov);
+      }, h_irm);
     }
   } else {
     // If this relation is not observed, incorporate samples from the prior.
