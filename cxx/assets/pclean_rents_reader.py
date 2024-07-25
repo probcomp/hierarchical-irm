@@ -17,33 +17,29 @@ def main():
 
   # Write out value, name of field, record # for HIRM.
 
-  # NOTE: HIRM expects space separated data, hence we hyphenate.
-  f = open('pclean-rents-clean-unary.obs', 'w')
+  # NOTE: HIRM expects space separated schema, hence we hyphenate.
+  f = open('pclean_rents_clean_unary.obs', 'w')
   for index, row in df.iterrows():
     for col_name in df.columns:
       if col_name == 'ID':
         continue
       value = row[col_name]
       new_col_name = col_name.replace(' ', '-')
-      if isinstance(value, str):
-        new_value = value.replace(' ','-')
-      else:
-        new_value = value
-      f.write(f"{new_value} {new_col_name} {row['ID']}\n")
+      f.write(f"{row[col_name]},{new_col_name},{row['ID']}\n")
   f.close()
 
-  f = open('pclean-rents-clean-ternary.obs', 'w')
+  f = open('pclean_rents_clean_ternary.obs', 'w')
   for index, row in df.iterrows():
-    county = row['County'].replace(' ', '-')
-    f.write(f"{row['Monthly Rent']} has_rent {row['ID']} {county} {row['State']}\n")
-    f.write(f"{row['Room Type']} has_type {row['ID']} {county} {row['State']}\n")
-    f.write(f"{county} has_name {county} {row['State']}\n")
+    county = row['County']
+    f.write(f"{row['Monthly Rent']},has_rent,{row['ID']},{county},{row['State']}\n")
+    f.write(f"{row['Room Type']},has_type,{row['ID']},{county} {row['State']}\n")
+    f.write(f"{county},has_name,{county},{row['State']}\n")
   f.close()
 
-  f = open('pclean-rents-clean-county-names.obs', 'w')
+  f = open('pclean_rents_clean_county_names.obs', 'w')
   for name in df['County'].unique():
     name = name.replace(' ', '-')
-    f.write(f"{name} has_name {name}\n")
+    f.write(f"{name},has_name,{name}\n")
   f.close()
 
 main()

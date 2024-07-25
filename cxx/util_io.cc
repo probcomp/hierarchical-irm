@@ -5,9 +5,13 @@
 #include "util_parse.hh"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -156,9 +160,7 @@ T_schema load_schema(const std::string& path) {
     }
   }
   fp.close();
-
   verify_noisy_relation_domains(schema);
-
   return schema;
 }
 
@@ -175,9 +177,22 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
     std::string relname;
     std::vector<std::string> items;
 
-    stream >> value_str;
-    stream >> relname;
-    ObservationVariant value = observation_string_to_value(
+    if (!getline(stream, value_str, ',')) {
+      assert(false && "Error parsing schema. No comma separating value.");
+    }
+
+    if (!getline(stream, relname, ',')) {
+      assert(false && "Error parsing schema. No comma separating relation.");
+    }
+
+    ObservationVariant value;
+
+    if (!schema.contains(relname)) {
+      printf("Can not find %s in schema\n", relname.c_str());
+      assert(false);
+    }
+
+    value = observation_string_to_value(
         value_str,
         std::visit(
             [](const auto& trel) {
@@ -191,10 +206,11 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
               }
             },
             schema.at(relname)));
-    for (std::string w; stream >> w;) {
-      items.push_back(w);
+    std::string word;
+    while(getline(stream, word, ',')) {
+      items.push_back(word);
     }
-    assert(items.size() > 0);
+    assert((items.size() > 0) && "No Domain values specified.");
     auto entry = std::make_tuple(items, value);
     observations[relname].push_back(entry);
   }
@@ -381,13 +397,18 @@ void to_txt(std::ostream& fp, const IRM& irm, const T_encoding& encoding) {
       fp << domain->name << " ";
       fp << table << " ";
       int i = 1;
+      // Iterate in order. Create a list of item names:
+      std::set<std::string> item_names;
       for (const T_item& item : items) {
-        fp << code_to_item.at(domain->name).at(item);
+        item_names.insert(code_to_item.at(domain->name).at(item));
+      }
+      for (const std::string& item_name : item_names) {
+        fp << item_name;
         if (i++ < std::ssize(items)) {
           fp << " ";
         }
       }
-      fp << "\n";
+      fp << "\n\n";
     }
   }
 }
@@ -416,7 +437,7 @@ void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
     fp << "irm=" << table << "\n";
     to_txt(fp, *irm, encoding);
     if (j < std::ssize(tables) - 1) {
-      fp << "\n";
+      fp << "\n\n";
       j += 1;
     }
   }
