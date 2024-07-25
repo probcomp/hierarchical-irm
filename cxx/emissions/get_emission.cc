@@ -11,6 +11,7 @@
 #include "emissions/bitflip.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
+#include "emissions/sometimes.hh"
 
 EmissionSpec::EmissionSpec(
     const std::string& emission_str,
@@ -19,7 +20,7 @@ EmissionSpec::EmissionSpec(
   if (emission_str == "bigram") {
     emission = EmissionEnum::bigram_string;
     observation_type = ObservationEnum::string_type;
-    else if (emission_str == "gaussian") {
+  } else if (emission_str == "gaussian") {
     emission = EmissionEnum::gaussian;
     observation_type = ObservationEnum::double_type;
   } else if (emission_str == "simple_string") {
@@ -38,16 +39,16 @@ EmissionSpec::EmissionSpec(
 
 EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
   switch (spec.emission) {
-    case EmissionEnum::bigram-string:
+    case EmissionEnum::bigram_string:
       return new BigramStringEmission();
     case EmissionEnum::gaussian:
       return new GaussianEmission();
     case EmissionEnum::simple_string:
       return new SimpleStringEmission();
     case EmissionEnum::sometimes_bitflip:
-      return new SometimesBitFlip();
+      return new Sometimes<bool>(new BitFlip());
     case EmissionEnum::sometimes_gaussian:
-      return new SometimesGaussian();
+      return new Sometimes<double>(new GaussianEmission());
     default:
       assert(false && "Unsupported emission enum value.");
   }

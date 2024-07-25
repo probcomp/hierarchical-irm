@@ -10,7 +10,7 @@
 #include "emissions/bitflip.hh"
 
 BOOST_AUTO_TEST_CASE(test_simple) {
-  Sometimes<BitFlip> sbf;
+  Sometimes<bool> sbf(new BitFlip());
 
   double orig_lp = sbf.logp_score();
   BOOST_TEST(sbf.N == 0);

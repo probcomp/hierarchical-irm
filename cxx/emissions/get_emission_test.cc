@@ -9,7 +9,7 @@
 #include "emissions/simple_string.hh"
 
 BOOST_AUTO_TEST_CASE(test_get_emission_bigram_string) {
-  EmissionVariant ev = get_prior(EmissionSpec("bigram_string"));
+  EmissionVariant ev = get_prior(EmissionSpec("bigram"));
   Emission<std::string>* bse = std::get<Emission<std::string>*>(ev);
 
   bse->incorporate(std::make_pair<std::string, std::string>("hello", "hi"));
