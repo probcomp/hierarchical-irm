@@ -1,2 +1,2 @@
-bernoulli has feature country
-bernoulli applies predicate country country
+has ~ bernoulli(feature, country)
+applies ~ bernoulli(predicate, country, country)

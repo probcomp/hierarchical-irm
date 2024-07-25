@@ -1,5 +1,6 @@
-bernoulli R1 D1
-bernoulli R2 D2
-bernoulli R3 D1 D2
-bernoulli R4 D1 D2 D3
-bernoulli R5 D1 D2 D3 D1
+# Test that we can handle relations of different arity.
+R1 ~ bernoulli(D1)
+R2 ~ bernoulli(D2)
+R3 ~ bernoulli(D1,D2)
+R4 ~ bernoulli(D1,D2,D3)
+R5 ~ bernoulli(D1,D2,D3,D1)

@@ -1,8 +1,11 @@
+// Copyright 2024
+// Apache License, Version 2.0, refer to LICENSE.txt
 
 #include <fstream>
 
 #include "pclean/io.hh"
-#include "pclean/parse.hh"
+
+#include "util_parse.hh"
 
 bool read_schema_file(const std::string& path, PCleanSchema* schema) {
   std::ifstream f(path);

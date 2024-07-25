@@ -144,7 +144,6 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
       {"R2", T_clean_relation{{"D2"}, true, DistributionSpec("normal")}},
       {"R3", T_clean_relation{{"D1", "D2"}, true, DistributionSpec("normal")}}};
 
-
   std::mt19937 prng;
   IRM irm(schema);
   construct_test_irm(&prng, &irm);
@@ -152,8 +151,8 @@ BOOST_AUTO_TEST_CASE(test_irm_logp_logp_score_agreement) {
   // Now we would like to add the observation for {4, 4}.
   double logp_x = irm.logp({{"R3", {4, 4}, 0.5}}, &prng);
 
-  // If we want to compare against logp_score, we need to compute logp_score for each 
-  // way we incorporate this observation.
+  // If we want to compare against logp_score, we need to compute logp_score
+  // for each way we incorporate this observation.
   std::vector<double> logps;
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 4; ++j) {

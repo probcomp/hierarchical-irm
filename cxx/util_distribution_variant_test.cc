@@ -29,11 +29,18 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((ds.distribution == DistributionEnum::skellam));
   BOOST_TEST(ds.distribution_args.empty());
 
-  DistributionSpec dc = DistributionSpec("categorical(k=6)");
+  DistributionSpec dc("categorical(k=6)");
   BOOST_TEST((dc.distribution == DistributionEnum::categorical));
   BOOST_TEST((dc.distribution_args.size() == 1));
   std::string expected = "6";
   BOOST_CHECK_EQUAL(dc.distribution_args.at("k"), expected);
+
+  std::map<std::string, std::string> params = {{"k", "6"}};
+  DistributionSpec dc2 = DistributionSpec("categorical", params);
+  BOOST_TEST((dc2.distribution == DistributionEnum::categorical));
+  BOOST_TEST((dc2.distribution_args.size() == 1));
+  std::string expected2 = "6";
+  BOOST_CHECK_EQUAL(dc2.distribution_args.at("k"), expected2);
 
   DistributionSpec dsc = DistributionSpec("stringcat(strings=a b c d)");
   BOOST_TEST((dsc.distribution == DistributionEnum::stringcat));

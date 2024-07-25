@@ -5,7 +5,7 @@ cc_library(
     hdrs = ["io.hh"],
     srcs = ["io.cc"],
     deps = [
-        ":parse",
+        "//:util_parse",
         ":schema",
     ],
 )
@@ -15,22 +15,6 @@ cc_test(
     srcs = ["io_test.cc"],
     deps = [
         ":io",
-        "@boost//:test",
-    ],
-)
-
-cc_library(
-    name = "parse",
-    hdrs = ["parse.hh"],
-    srcs = ["parse.cc"],
-    deps = [],
-)
-
-cc_test(
-    name = "parse_test",
-    srcs = ["parse_test.cc"],
-    deps = [
-        ":parse",
         "@boost//:test",
     ],
 )

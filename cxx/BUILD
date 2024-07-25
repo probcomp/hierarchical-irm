@@ -147,6 +147,7 @@ cc_library(
     ],
     deps = [
         ":hirm_lib",
+        ":util_parse",
         "//distributions",
     ],
 )
@@ -155,6 +156,14 @@ cc_library(
     name = "util_math",
     srcs = ["util_math.cc"],
     hdrs = ["util_math.hh"],
+    visibility = [":__subpackages__"],
+    deps = [],
+)
+
+cc_library(
+    name = "util_parse",
+    hdrs = ["util_parse.hh"],
+    srcs = ["util_parse.cc"],
     visibility = [":__subpackages__"],
     deps = [],
 )
@@ -245,6 +254,7 @@ filegroup(
     srcs = [
         "test_schema/nary.schema",
         "test_schema/all_types.schema",
+        "test_schema/with_noisy.schema",
     ],
 )
 
@@ -266,6 +276,15 @@ cc_test(
     deps = [
         ":util_math",
         "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "util_parse_test",
+    srcs = ["util_parse_test.cc"],
+    deps = [
+        ":util_parse",
         "@boost//:test",
     ],
 )
