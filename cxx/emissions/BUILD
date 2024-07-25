@@ -8,6 +8,7 @@ cc_library(
     deps = [
         ":bigram_string",
         ":bitflip",
+        ":categorical",
         ":gaussian",
         ":simple_string",
         ":sometimes",

@@ -7,7 +7,7 @@
 #include <string>
 #include <variant>
 
-#include "emissions/sometimes.hh"
+#include "emissions/base.hh"
 #include "util_observation.hh"
 
 using EmissionVariant = std::variant<Emission<bool>*,
@@ -20,6 +20,7 @@ enum class EmissionEnum {
   gaussian,
   simple_string,
   sometimes_bitflip,
+  sometimes_categorical,
   sometimes_gaussian
 };
 
