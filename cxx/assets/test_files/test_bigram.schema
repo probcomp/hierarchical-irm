@@ -1,1 +1,1 @@
-has_name ~ bigram(record)
+has_value ~ bigram ( record )

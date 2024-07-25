@@ -5,9 +5,13 @@
 #include "util_parse.hh"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -156,9 +160,7 @@ T_schema load_schema(const std::string& path) {
     }
   }
   fp.close();
-
   verify_noisy_relation_domains(schema);
-
   return schema;
 }
 
@@ -175,26 +177,41 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
     std::string relname;
     std::vector<std::string> items;
 
-    stream >> value_str;
-    stream >> relname;
-    ObservationVariant value = observation_string_to_value(
-        value_str,
-        std::visit(
-            [](const auto& trel) {
-              using T = std::decay_t<decltype(trel)>;
-              if constexpr (std::is_same_v<T, T_clean_relation>) {
-                return trel.distribution_spec.observation_type;
-              } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
-                return trel.emission_spec.observation_type;
-              } else {
-                assert(false && "Unrecognized relation type.");
-              }
-            },
-            schema.at(relname)));
-    for (std::string w; stream >> w;) {
-      items.push_back(w);
+    if (!getline(stream, value_str, ',')) {
+      assert(false && "Error parsing schema. No comma separating value.");
     }
-    assert(items.size() > 0);
+
+    if (!getline(stream, relname, ',')) {
+      assert(false && "Error parsing schema. No comma separating relation.");
+    }
+
+    ObservationVariant value;
+
+    try {
+      value = observation_string_to_value(
+          value_str,
+          std::visit(
+              [](const auto& trel) {
+                using T = std::decay_t<decltype(trel)>;
+                if constexpr (std::is_same_v<T, T_clean_relation>) {
+                  return trel.distribution_spec.observation_type;
+                } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
+                  return trel.emission_spec.observation_type;
+                } else {
+                  assert(false && "Unrecognized relation type.");
+                }
+              },
+              schema.at(relname)));
+    } catch(const std::out_of_range& e) {
+      std::cerr << "Can't find " << relname
+                << " in schema " << e.what() << "\n";
+      exit(1);
+    }
+    std::string word;
+    while(getline(stream, word, ',')) {
+      items.push_back(word);
+    }
+    assert((items.size() > 0) && "No Domain values specified.");
     auto entry = std::make_tuple(items, value);
     observations[relname].push_back(entry);
   }
@@ -381,13 +398,18 @@ void to_txt(std::ostream& fp, const IRM& irm, const T_encoding& encoding) {
       fp << domain->name << " ";
       fp << table << " ";
       int i = 1;
+      // Iterate in order. Create a list of item names:
+      std::set<std::string> item_names;
       for (const T_item& item : items) {
-        fp << code_to_item.at(domain->name).at(item);
+        item_names.insert(code_to_item.at(domain->name).at(item));
+      }
+      for (const std::string& item_name : item_names) {
+        fp << item_name;
         if (i++ < std::ssize(items)) {
           fp << " ";
         }
       }
-      fp << "\n";
+      fp << "\n\n";
     }
   }
 }
@@ -416,7 +438,7 @@ void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
     fp << "irm=" << table << "\n";
     to_txt(fp, *irm, encoding);
     if (j < std::ssize(tables) - 1) {
-      fp << "\n";
+      fp << "\n\n";
       j += 1;
     }
   }

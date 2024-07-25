@@ -1,1 +1,1 @@
-has_name ~ stringcat[strings="ayeaye buffalo crow hyrax saiga"](record)
+has_value ~ stringcat[strings="ayeaye:buffalo:crow:hyrax:saiga",delim=:](record)
