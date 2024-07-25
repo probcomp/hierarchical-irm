@@ -1,0 +1,4 @@
+Room-Type ~ stringcat[strings="1br:2br:3br:4br:studio",delim=:](record)
+Monthly-Rent ~ skellam(record)
+County ~ bigram(record)
+State ~ bigram(record)

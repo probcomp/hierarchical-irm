@@ -1,0 +1,1 @@
+has_name ~ stringcat[strings="ayeaye buffalo crow hyrax saiga"](record)
