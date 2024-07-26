@@ -8,6 +8,7 @@ cc_library(
     deps = [
         ":bigram_string",
         ":bitflip",
+        ":categorical",
         ":gaussian",
         ":simple_string",
         ":sometimes",
@@ -170,6 +171,7 @@ cc_test(
     srcs = ["sometimes_test.cc"],
     deps = [
         ":bitflip",
+        ":categorical",
         ":sometimes",
         "@boost//:algorithm",
         "@boost//:test",
