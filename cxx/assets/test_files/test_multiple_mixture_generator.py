@@ -26,8 +26,8 @@ def main():
       samples_val = rng.normal(mean, STDDEV, NUM_SAMPLES)
       samples_label = rng.normal(mean, STDDEV, NUM_SAMPLES)
       for j in range(NUM_SAMPLES):
-        f_obs.write(f"{samples_val[j]},value_{label},{samples_val[j]}\n")
-        f_obs.write(f"{label}{i},label_{label},{samples_label[j]}\n")
+        f_obs.write(f"{samples_val[j]},value_{label},{label}{i}_{samples_val[j]}\n")
+        f_obs.write(f"{label}{i},label_{label},{label}{i}_{samples_label[j]}\n")
       mean += COMPONENT_SPACING
   f_obs.close()
 
