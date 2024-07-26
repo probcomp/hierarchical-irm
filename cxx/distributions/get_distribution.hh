@@ -12,13 +12,8 @@
 #include <variant>
 #include <vector>
 
-#include "distributions/beta_bernoulli.hh"
-#include "distributions/bigram.hh"
-#include "distributions/dirichlet_categorical.hh"
-#include "distributions/normal.hh"
-#include "distributions/skellam.hh"
-#include "distributions/stringcat.hh"
 #include "util_observation.hh"
+#include "distributions/base.hh"
 
 enum class DistributionEnum {
   bernoulli,
@@ -39,12 +34,14 @@ struct DistributionSpec {
   DistributionSpec() = default;
 };
 
+// If you are adding a new Distribution type to DistributionVariant, you will
+// also need to update ObservationVariant and ObservationEnum in
+// util_observation.h.
 using DistributionVariant =
-    std::variant<BetaBernoulli*, Bigram*, DirichletCategorical*, Normal*,
-                 Skellam*, StringCat*>;
-
-ObservationVariant observation_string_to_value(
-    const std::string& value_str, const ObservationEnum& observation_type);
+    std::variant<Distribution<bool>*,
+                 Distribution<int>*,
+                 Distribution<double>*,
+                 Distribution<std::string>*>;
 
 // `get_prior` is an overloaded function with one version that returns
 // DistributionVariant and one that returns EmissionVariant, for ease of use in

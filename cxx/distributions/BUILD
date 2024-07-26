@@ -1,7 +1,9 @@
 licenses(["notice"])
 
 cc_library(
-    name = "distributions",
+    name = "get_distribution",
+    hdrs = ["get_distribution.hh"],
+    srcs = ["get_distribution.cc"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":base",
@@ -12,6 +14,8 @@ cc_library(
         ":normal",
         ":skellam",
         ":stringcat",
+        "//:util_observation",
+        "@boost//:algorithm",
     ],
 )
 
@@ -154,6 +158,15 @@ cc_test(
         ":beta_bernoulli",
         ":dirichlet_categorical",
         "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "get_distribution_test",
+    srcs = ["get_distribution_test.cc"],
+    deps = [
+        ":get_distribution",
         "@boost//:test",
     ],
 )

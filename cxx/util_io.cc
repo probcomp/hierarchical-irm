@@ -185,33 +185,17 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
       assert(false && "Error parsing schema. No comma separating relation.");
     }
 
-    ObservationVariant value;
-
     if (!schema.contains(relname)) {
       printf("Can not find %s in schema\n", relname.c_str());
       assert(false);
     }
 
-    value = observation_string_to_value(
-        value_str,
-        std::visit(
-            [](const auto& trel) {
-              using T = std::decay_t<decltype(trel)>;
-              if constexpr (std::is_same_v<T, T_clean_relation>) {
-                return trel.distribution_spec.observation_type;
-              } else if constexpr (std::is_same_v<T, T_noisy_relation>) {
-                return trel.emission_spec.observation_type;
-              } else {
-                assert(false && "Unrecognized relation type.");
-              }
-            },
-            schema.at(relname)));
     std::string word;
     while(getline(stream, word, ',')) {
       items.push_back(word);
     }
     assert((items.size() > 0) && "No Domain values specified.");
-    auto entry = std::make_tuple(items, value);
+    auto entry = std::make_tuple(items, value_str);
     observations[relname].push_back(entry);
   }
   fp.close();
@@ -301,11 +285,14 @@ void incorporate_observations_relation(
                                       completed_relations);
   }
 
+  ObservationVariant ov;
   if (observations.contains(relation)) {
     // If this relation is observed, incorporate its observations.
     for (const auto& [items, value] : observations.at(relation)) {
-      std::visit([&](auto& m) { m->incorporate(prng, relation, items, value); },
-                 h_irm);
+      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
+      std::visit([&](auto& m) {
+        m->incorporate(prng, relation, items, ov);
+      }, h_irm);
     }
   } else {
     // If this relation is not observed, incorporate samples from the prior.

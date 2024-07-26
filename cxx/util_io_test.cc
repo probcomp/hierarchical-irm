@@ -150,11 +150,11 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
 
   T_observations observations = {{"R2",
                                   {
-                                      {{"apple", "cat", "circle"}, 1.2},
-                                      {{"banana", "dog", "square"}, 1.3},
-                                      {{"apple", "dog", "triangle"}, 0.9},
-                                      {{"apple", "cat", "square"}, 1.0},
-                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                      {{"apple", "cat", "circle"}, "1.2"},
+                                      {{"banana", "dog", "square"}, "1.3"},
+                                      {{"apple", "dog", "triangle"}, "0.9"},
+                                      {{"apple", "cat", "square"}, "1.0"},
+                                      {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
   T_encoding encoding = encode_observations(schema, observations);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_relation_irm) {
   std::mt19937 prng;
   IRM* irm = new IRM(schema);
   T_encoded_observations encoded_observations = {
-      {"R2", {{{1, 3, 5}, 2.3}, {{1, 3, 6}, 4.3}}}};
+      {"R2", {{{1, 3, 5}, "2.3"}, {{1, 3, 6}, "4.3"}}}};
   std::unordered_map<std::string, std::string> noisy_to_base = {{"R2", "R1"}};
   std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
       relation_items = {{"R2", {{1, 3, 5}, {1, 3, 6}}}};
@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_hirm) {
 
   T_observations observations = {{"R3",
                                   {
-                                      {{"apple", "cat", "circle"}, 1.2},
-                                      {{"banana", "dog", "square"}, 1.3},
-                                      {{"apple", "dog", "triangle"}, 0.9},
-                                      {{"apple", "cat", "square"}, 1.0},
-                                      {{"banana", "cat", "rhombus"}, 1.1},
+                                      {{"apple", "cat", "circle"}, "1.2"},
+                                      {{"banana", "dog", "square"}, "1.3"},
+                                      {{"apple", "dog", "triangle"}, "0.9"},
+                                      {{"apple", "cat", "square"}, "1.0"},
+                                      {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
   T_encoding encoding = encode_observations(schema, observations);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_relation_hirm) {
   std::mt19937 prng;
   HIRM* hirm = new HIRM(schema, &prng);
   T_encoded_observations encoded_observations = {
-      {"R3", {{{1, 3, 5}, 2.3}, {{1, 3, 6}, 4.3}}}};
+      {"R3", {{{1, 3, 5}, "2.3"}, {{1, 3, 6}, "4.3"}}}};
   std::unordered_map<std::string, std::string> noisy_to_base = {{"R3", "R2"},
                                                                 {"R2", "R1"}};
   std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
