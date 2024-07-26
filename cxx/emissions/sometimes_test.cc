@@ -8,6 +8,7 @@
 #include <random>
 
 #include "emissions/bitflip.hh"
+#include "emissions/categorical.hh"
 
 BOOST_AUTO_TEST_CASE(test_simple) {
   Sometimes<bool> sbf(new BitFlip());
@@ -31,4 +32,24 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   std::mt19937 prng;
   BOOST_TEST(sbf.propose_clean({true, true, false}, &prng));
+}
+
+BOOST_AUTO_TEST_CASE(test_dirty_can_equal_clean) {
+  Sometimes<int> sc(new CategoricalEmission(10), true);
+
+  double orig_lp = sc.logp_score();
+  BOOST_TEST(sc.N == 0);
+  sc.incorporate(std::make_pair<int, int>(7, 8));
+  BOOST_TEST(sc.logp_score() < 0.0);
+  BOOST_TEST(sc.N == 1);
+  sc.unincorporate(std::make_pair<int, int>(7, 8));
+  BOOST_TEST(sc.logp_score() == orig_lp);
+  BOOST_TEST(sc.N == 0);
+
+  sc.incorporate(std::make_pair<int, int>(8, 7));
+  sc.incorporate(std::make_pair<int, int>(8, 7));
+  BOOST_TEST(sc.logp_score() < 0.0);
+  BOOST_TEST(sc.N == 2);
+
+  BOOST_TEST(sc.logp(std::make_pair<int, int>(7, 8)) < 0.0);
 }

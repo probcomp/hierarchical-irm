@@ -7,15 +7,21 @@
 
 // An Emission class that sometimes applies another Emission and sometimes
 // doesn't.
-// BaseEmissor must assign zero probability to <clean, dirty> pairs with
-// clean == dirty.  [For example, BitFlip and Gaussian both satisfy this].
 template <typename SampleType = double>
 class Sometimes : public Emission<SampleType> {
  public:
   BetaBernoulli bb;
   Emission<SampleType>* be;  // We own be.
+  bool dirty_can_equal_clean;
 
-  Sometimes(Emission<SampleType>* _be): be(_be) {};
+  // By default, Sometimes only works with BaseEmissors that assign zero
+  // probability to dirty == clean.  Pass _dirty_can_equal_clean=true to
+  // override that assumption.  Warning: do not pass
+  // _dirty_can_equal_clean=true when logp is a density instead of a discrete
+  // probability, otherwise nonsensical values will be produced.
+  Sometimes(Emission<SampleType>* _be,
+            bool _dirty_can_equal_clean = false):
+    be(_be), dirty_can_equal_clean(_dirty_can_equal_clean) {}
 
   ~Sometimes() {
     delete be;
@@ -24,17 +30,31 @@ class Sometimes : public Emission<SampleType> {
   void incorporate(const std::pair<SampleType, SampleType>& x,
                    double weight = 1.0) {
     this->N += weight;
-    bb.incorporate(x.first != x.second, weight);
+
     if (x.first != x.second) {
+      bb.incorporate(true, weight);
       be->incorporate(x, weight);
+      return;
     }
+
+    if (dirty_can_equal_clean) {
+      double p_came_from_be = exp(bb.logp(true) + be->logp(x));
+      bb.incorporate(true, p_came_from_be * weight);
+      be->incorporate(x, p_came_from_be * weight);
+      bb.incorporate(false, (1.0 - p_came_from_be) * weight);
+      return;
+    }
+    bb.incorporate(false, weight);
   }
 
   double logp(const std::pair<SampleType, SampleType>& x) const {
     if (x.first != x.second) {
       return bb.logp(true) + be->logp(x);
     }
-    return bb.logp(false);
+    if (!dirty_can_equal_clean) {
+      return bb.logp(false);
+    }
+    return log(exp(bb.logp(false)) + exp(bb.logp(true) + be->logp(x)));
   }
 
   double logp_score() const { return bb.logp_score() + be->logp_score(); }

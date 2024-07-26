@@ -9,6 +9,7 @@
 
 #include "emissions/bigram_string.hh"
 #include "emissions/bitflip.hh"
+#include "emissions/categorical.hh"
 #include "emissions/gaussian.hh"
 #include "emissions/simple_string.hh"
 #include "emissions/sometimes.hh"
@@ -26,12 +27,15 @@ EmissionSpec::EmissionSpec(
   } else if (emission_str == "simple_string") {
     emission = EmissionEnum::simple_string;
     observation_type = ObservationEnum::string_type;
-  } else if (emission_str == "sometimes_gaussian") {
-    emission = EmissionEnum::sometimes_gaussian;
-    observation_type = ObservationEnum::double_type;
   } else if (emission_str == "sometimes_bitflip") {
     emission = EmissionEnum::sometimes_bitflip;
     observation_type = ObservationEnum::bool_type;
+  } else if (emission_str == "sometimes_categorical") {
+    emission = EmissionEnum::sometimes_categorical;
+    observation_type = ObservationEnum::int_type;
+  } else if (emission_str == "sometimes_gaussian") {
+    emission = EmissionEnum::sometimes_gaussian;
+    observation_type = ObservationEnum::double_type;
   } else {
     assert(false && "Unsupported emission name.");
   }
@@ -47,6 +51,11 @@ EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
       return new SimpleStringEmission();
     case EmissionEnum::sometimes_bitflip:
       return new Sometimes<bool>(new BitFlip());
+    case EmissionEnum::sometimes_categorical:
+      {
+        int num_states = std::stoi(spec.emission_args.at("k"));
+        return new Sometimes<int>(new CategoricalEmission(num_states), true);
+      }
     case EmissionEnum::sometimes_gaussian:
       return new Sometimes<double>(new GaussianEmission());
     default:

@@ -28,6 +28,17 @@ The PClean related datasets are:
 
 Test datasets
 
-* test-mixture-2-normals
- - Contains only real valued entries sourced from a mixture of 2 normals (Normal(-1., 0.5) and Normal(2., 0.5)).
+* test_files/test-bigram
+ - Contains only string valued entries. There are only 5 unique strings in the
+   file.
 
+* test_files/test-categorical
+ - Contains only categorical valued entries. There are only 5 unique categories
+   in the file.
+
+* test_files/test-simple_categorical
+ - Contains only categorical valued entries. This only contains "yes" and "no"
+   entries.
+
+* test_files/test-mixture-2-normals
+ - Contains only real valued entries sourced from a mixture of 2 normals (Normal(-1., 0.5) and Normal(2., 0.5)).

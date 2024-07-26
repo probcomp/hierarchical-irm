@@ -46,6 +46,9 @@ The underlying code can be built and installed via bazel. To install bazel:
 
     $ sudo apt-get install bazel
 
+If bazel is not available, first add the Bazel distribution URI as discussed
+on this [page](https://bazel.build/install/ubuntu).
+
 The binary can be installed by first cloning this repository and then writing
 
     $ cd cxx
@@ -142,20 +145,21 @@ a single higher-order relation with signature:
 
 #### Observation file
 
-The observation file `assets/animals.unary.obs` specifies realizations of the relations
+The observation file `assets/animals.unary.obs` specifies realizations of the relations. Observations
+are comma separated (CSV).
 
 ```
 $ cat assets/animals.unary.obs
-0 black antelope
-1 black grizzlybear
-1 black killerwhale
-0 black beaver
-1 black dalmatian
-0 black persiancat
-1 black horse
-1 black germanshepherd
-0 black bluewhale
-1 black siamesecat
+0,black,antelope
+1,black,grizzlybear
+1,black,killerwhale
+0,black,beaver
+1,black,dalmatian
+0,black,persiancat
+1,black,horse
+1,black,germanshepherd
+0,black,bluewhale
+1,black,siamesecat
 ...
 ```
 

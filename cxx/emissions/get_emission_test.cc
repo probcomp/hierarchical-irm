@@ -32,6 +32,24 @@ BOOST_AUTO_TEST_CASE(test_get_emission_simple_string) {
   BOOST_TEST(sse->N == 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
+  EmissionVariant ev = get_prior(EmissionSpec("sometimes_bitflip"));
+  Emission<bool>* sbf = std::get<Emission<bool>*>(ev);
+
+  sbf->incorporate(std::make_pair<bool, bool>(true, true));
+  BOOST_TEST(sbf->N == 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_categorical) {
+  std::map<std::string, std::string> args;
+  args["k"] = "9";
+  EmissionVariant ev = get_prior(EmissionSpec("sometimes_categorical", args));
+  Emission<int>* sc = std::get<Emission<int>*>(ev);
+
+  sc->incorporate(std::make_pair<int, int>(5, 5));
+  BOOST_TEST(sc->N == 1);
+}
+
 BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
   EmissionVariant ev = get_prior(EmissionSpec("sometimes_gaussian"));
   Emission<double>* sg = std::get<Emission<double>*>(ev);
@@ -40,10 +58,3 @@ BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_gaussian) {
   BOOST_TEST(sg->N == 1);
 }
 
-BOOST_AUTO_TEST_CASE(test_get_emission_sometimes_bitflip) {
-  EmissionVariant ev = get_prior(EmissionSpec("sometimes_bitflip"));
-  Emission<bool>* sbf = std::get<Emission<bool>*>(ev);
-
-  sbf->incorporate(std::make_pair<bool, bool>(true, true));
-  BOOST_TEST(sbf->N == 1);
-}
