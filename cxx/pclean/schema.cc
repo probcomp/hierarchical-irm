@@ -14,26 +14,26 @@ void PCleanSchemaHelper::compute_class_name_cache() {
 void PCleanSchemaHelper::compute_ancestors_cache() {
   for (auto const& c: schema.classes) {
     if (ancestors.find(c.name) == ancestors.end()) {
-      ancestors[c.cname] = compute_ancestors_for(c.name);
+      ancestors[c.name] = compute_ancestors_for(c.name);
     }
   }
 }
 
 std::set<std::string> PCleanSchemaHelper::compute_ancestors_for(
     const std::string& name) {
-  std::set<std::string> ancestors;
+  std::set<std::string> ancs;
   std::set<std::string> parents = get_parent_classes(name);
   for (auto const& p: parents) {
-    ancestors.insert(p);
+    ancs.insert(p);
     if (ancestors.find(p) == ancestors.end()) {
       ancestors[p] = compute_ancestors_for(p);
     }
-    ancestors.insert(ancestors[p].begin(), ancestors[p].end());
+    ancs.insert(ancestors[p].begin(), ancestors[p].end());
   }
-  return ancestors;
+  return ancs;
 }
 
-PCleanClass PCleanSchemaHelper:get_class_by_name(const std::string& name) {
+PCleanClass PCleanSchemaHelper::get_class_by_name(const std::string& name) {
   return schema.classes[class_name_to_index[name]];
 }
 
@@ -58,11 +58,28 @@ std::set<std::string> PCleanSchemaHelper::get_source_classes(
     const std::string& name) {
   std::set<std::string> sources;
   for (auto const& c: ancestors[name]) {
-    if (get_parent_classes[c].empty()) {
+    const std::set<std::string>& parents = get_parent_classes(c);
+    if (parents.empty()) {
       sources.insert(c);
     }
   }
   return sources;
+}
+
+std::string get_base_relation_name(
+    const PCleanClass& c, std::vector<std::string>& field_path) {
+  assert(field_path.size() == 2);
+  std::string& class_var = field_path[0];
+  std::string& var_name = field_path[1];
+  std::string class_name = "";
+  for (const auto& v : c.vars) {
+    if (v.name == class_var) {
+      class_name = std::get<ClassVar>(v.spec).class_name;
+      break;
+    }
+  }
+  assert(class_name != "");
+  return class_name + ':' + var_name;
 }
 
 T_schema PCleanSchemaHelper::make_hirm_schema() {
@@ -85,11 +102,15 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
         EmissionVar ev = std::get<EmissionVar>(v.spec);
         relation.emission_spec = EmissionSpec(
             ev.emission_name, ev.emission_params);
-        relation.base_relation = XXX;
-        relation.domains = XXX;
+        relation.base_relation = get_base_relation_name(c, ev.field_path);
         relation.is_observed = false;
+        for (const std::string& sc : get_source_classes(c.name)) {
+          relation.domains.push_back(sc);
+        }
         tschema[rel_name] = relation;
       }
+      // TODO(thomaswc): If this class isn't the observation class,
+      // create additional noisy relations.
     }
   }
   return tschema;

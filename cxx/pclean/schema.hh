@@ -4,9 +4,12 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "irm.hh"
 
 struct DistributionVar {
   std::string distribution_name;
@@ -17,6 +20,9 @@ struct DistributionVar {
 struct EmissionVar {
   std::string emission_name;
   std::map<std::string, std::string> emission_params;
+  // Currently only length two field_paths of the form
+  // [name_of_ClassVar_in_this_class, name_of_variable_in_that_class]
+  // are supported.
   std::vector<std::string> field_path;
 };
 

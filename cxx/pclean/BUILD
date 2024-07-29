@@ -24,7 +24,7 @@ cc_binary(
     srcs = ["pclean.cc"],
     deps = [
         ":io",
-        ":translate_schema",
+        ":schema",
         "//:cxxopts",
         "//:hirm_lib",
         "//:inference",
@@ -35,15 +35,7 @@ cc_library(
     name = "schema",
     hdrs = ["schema.hh"],
     srcs = ["schema.cc"],
-    deps = [],
-)
-
-cc_library(
-    name = "translate_schema",
-    hdrs = ["translate_schema.hh"],
-    srcs = ["translate_schema.cc"],
     deps = [
-        ":schema",
         "//:irm",
     ],
 )

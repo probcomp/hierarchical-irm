@@ -11,7 +11,7 @@
 #include "hirm.hh"
 #include "inference.hh"
 #include "pclean/io.hh"
-#include "pclean/translate_schema.hh"
+#include "pclean/schema.hh"
 
 int main(int argc, char** argv) {
   cxxopts::Options options(
@@ -52,8 +52,8 @@ int main(int argc, char** argv) {
   }
 
   // Translate schema
-  T_schema hirm_schema;
-  translate_pclean_schema_to_hirm_schema(pclean_schema, &hirm_schema);
+  PCleanSchemaHelper schema_helper(pclean_schema);
+  T_schema hirm_schema = schema_helper.make_hirm_schema();
 
   // Read observations
   std::string obs_fn = result["obs"].as<std::string>();
