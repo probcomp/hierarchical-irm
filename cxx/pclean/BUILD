@@ -34,6 +34,7 @@ cc_binary(
 cc_library(
     name = "schema",
     hdrs = ["schema.hh"],
+    srcs = ["schema.cc"],
     deps = [],
 )
 
