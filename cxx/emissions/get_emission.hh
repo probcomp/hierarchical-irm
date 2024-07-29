@@ -7,23 +7,22 @@
 #include <string>
 #include <variant>
 
-#include "emissions/sometimes.hh"
+#include "emissions/base.hh"
 #include "util_observation.hh"
 
-class BitFlip;
-class GaussianEmission;
-class SimpleStringEmission;
-using SometimesBitFlip = Sometimes<BitFlip>;
-using SometimesGaussian = Sometimes<GaussianEmission>;
+using EmissionVariant = std::variant<Emission<bool>*,
+                                     Emission<double>*,
+                                     Emission<int>*,
+                                     Emission<std::string>*>;
 
 enum class EmissionEnum {
+  bigram_string,
   gaussian,
   simple_string,
   sometimes_bitflip,
+  sometimes_categorical,
   sometimes_gaussian
 };
-using EmissionVariant = std::variant<GaussianEmission*, SometimesGaussian*,
-                                     SometimesBitFlip*, SimpleStringEmission*>;
 
 struct EmissionSpec {
   EmissionEnum emission;

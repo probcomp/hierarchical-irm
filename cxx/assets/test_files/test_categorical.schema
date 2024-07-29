@@ -1,0 +1,1 @@
+has_value ~ stringcat[strings="ayeaye:buffalo:crow:hyrax:saiga",delim=:](record)

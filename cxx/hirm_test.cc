@@ -6,8 +6,8 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
+#include "distributions/get_distribution.hh"
 
-#include "util_distribution_variant.hh"
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_hirm) {

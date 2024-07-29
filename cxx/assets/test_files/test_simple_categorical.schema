@@ -1,0 +1,1 @@
+has_value ~ stringcat[strings="yes:no",delim=:](record)

@@ -8,13 +8,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "distributions/base.hh"
 #include "domain.hh"
-#include "emissions/get_emission.hh"
 #include "relation.hh"
-#include "util_distribution_variant.hh"
 #include "util_hash.hh"
 #include "util_math.hh"
+#include "distributions/get_distribution.hh"
+#include "emissions/get_emission.hh"
 
 // T_clean_relation is the text we get from reading a line of the schema
 // file; CleanRelation is the object that does the work.

@@ -1,6 +1,0 @@
-src ~ bigram(record)
-flight ~ bigram(record)
-sched_dep_time ~ bigram(record)
-act_dep_time ~ bigram(record)
-sched_arr_time ~ bigram(record)
-act_arr_time ~ bigram(record)

@@ -1,3 +1,0 @@
-has_type ~ stringcat[strings="1br 2br 3br 4br studio"](record County State)
-has_rent ~ normal(record, County, State)
-county_name ~ bigram(County, State)
