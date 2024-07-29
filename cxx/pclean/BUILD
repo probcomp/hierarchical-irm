@@ -39,3 +39,13 @@ cc_library(
         "//:irm",
     ],
 )
+
+cc_test(
+    name = "schema_test",
+    srcs = ["schema_test.cc"],
+    deps = [
+        ":io",
+        ":schema",
+        "@boost//:test",
+    ],
+)
