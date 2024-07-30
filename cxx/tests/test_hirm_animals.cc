@@ -36,7 +36,11 @@ int main(int argc, char** argv) {
           [](const auto r) { return r->get_data().size(); }, relation);
     }
   }
-  assert(n_obs_unary == std::size(observations_unary));
+  size_t total_num_observations = 0;
+  for (const auto& [relname, observations] : observations_unary) {
+    total_num_observations += observations.size();
+  }
+  assert(n_obs_unary == total_num_observations);
 
   hirm.transition_cluster_assignments_all(&prng);
   hirm.transition_cluster_assignments_all(&prng);

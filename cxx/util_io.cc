@@ -416,7 +416,7 @@ void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
     }
     fp << "\n";
   }
-  fp << "\n";
+  fp << "\n\n";
   // Write the IRMs.
   int j = 0;
   for (const auto& [table, rcs] : tables) {
@@ -424,7 +424,7 @@ void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
     fp << "irm=" << table << "\n";
     to_txt(fp, *irm, encoding);
     if (j < std::ssize(tables) - 1) {
-      fp << "\n\n";
+      fp << "\n";
       j += 1;
     }
   }
@@ -454,6 +454,10 @@ load_clusters_irm(const std::string& path) {
   std::map<std::string, std::map<int, std::vector<std::string>>> clusters;
   std::string line;
   while (std::getline(fp, line)) {
+    // Ignore the new lines that are there for readability.
+    if (line.size() == 0) {
+      continue;
+    }
     std::istringstream stream(line);
 
     std::string domain;
@@ -504,9 +508,23 @@ load_clusters_hirm(const std::string& path) {
 
   std::string line;
   int irmc = 0;
+  // Only reset the IRM cluster when we see two newlines in a row.
+  bool start_of_irm_separator = false;
 
   while (std::getline(fp, line)) {
     std::istringstream stream(line);
+    // Skip a newline.
+    if (line.size() == 0) {
+      if (start_of_irm_separator) {
+        irmc = -1;
+        start_of_irm_separator = false;
+      } else {
+        start_of_irm_separator = true;
+      }
+      continue;
+    }
+
+    start_of_irm_separator = false;
 
     std::string first;
     stream >> first;
@@ -521,12 +539,6 @@ load_clusters_hirm(const std::string& path) {
       assert(items.size() > 0);
       assert(relations.count(table) == 0);
       relations[table] = items;
-      continue;
-    }
-
-    // Skip a new line.
-    if (first.size() == 0) {
-      irmc = -1;
       continue;
     }
 
