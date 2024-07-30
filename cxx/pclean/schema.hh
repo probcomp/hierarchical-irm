@@ -11,20 +11,12 @@
 
 #include "irm.hh"
 
-struct DistributionVar {
-  std::string distribution_name;
-  std::map<std::string, std::string> distribution_params;
+struct ScalarVar {
+  // joint_name is the name for the joint distribution/emission combination.
+  std::string joint_name;
+  std::map<std::string, std::string> params;
 };
 
-
-struct EmissionVar {
-  std::string emission_name;
-  std::map<std::string, std::string> emission_params;
-  // Currently only length two field_paths of the form
-  // [name_of_ClassVar_in_this_class, name_of_variable_in_that_class]
-  // are supported.
-  std::vector<std::string> field_path;
-};
 
 struct ClassVar {
   std::string class_name;
@@ -32,7 +24,7 @@ struct ClassVar {
 
 struct PCleanVariable {
   std::string name;
-  std::variant<DistributionVar, EmissionVar, ClassVar> spec;
+  std::variant<ScalarVar, ClassVar> spec;
 };
 
 struct PCleanClass {
@@ -66,7 +58,7 @@ class PCleanSchemaHelper {
   PCleanClass get_class_by_name(const std::string& name);
 
   // The parent classes of a class are those that are referred to by a
-  // ClassVar or EmissionVar inside the class.
+  // ClassVar inside the class.
   std::set<std::string> get_parent_classes(const std::string& name);
   // The ancestors of a class are the transitive closure of the parent
   // relationship.

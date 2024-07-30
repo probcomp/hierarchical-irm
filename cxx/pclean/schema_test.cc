@@ -11,21 +11,20 @@ struct SchemaTestFixture {
     std::stringstream ss(R"""(
 class School
   name ~ bigram
-  degree_dist ~ categorical[num_classes=100]
+  degree_dist ~ categorical(num_classes=100)
 
 class Physician
   school ~ School
-  degree ~ stringcat[strings="MD PT NP DO PHD"]
-  specialty ~ stringcat[strings="Family Med:Internal Med:Physical Therapy", delim=":"]
+  degree ~ stringcat(strings="MD PT NP DO PHD")
+  specialty ~ stringcat(strings="Family Med:Internal Med:Physical Therapy", delim=":")
   # observed_degree ~ maybe_swap(degree)
 
 class City
   name ~ bigram
-  state ~ stringcat[strings="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY"]
+  state ~ stringcat(strings="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY")
 
 class Practice
   city ~ City
-  bad_city ~ bigram(city.name)
 
 class Record
   physician ~ Physician
@@ -35,7 +34,7 @@ observe
   physician.specialty as Specialty
   physician.school.name as School
   physician.observed_degree as Degree
-  location.bad_city as City
+  location.city.name as City
   location.city.state as State
   from Record
 )""");
@@ -114,13 +113,6 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(cr4.domains == expected_domains3);
 
   BOOST_TEST(tschema.contains("City:state"));
-
-  BOOST_TEST(tschema.contains("Practice:bad_city"));
-  T_noisy_relation nr = std::get<T_noisy_relation>(tschema["Practice:bad_city"]);
-  BOOST_TEST(!nr.is_observed);
-  BOOST_TEST((nr.emission_spec.emission == EmissionEnum::bigram_string));
-  std::vector<std::string> expected_domains4 = {"Practice", "City"};
-  BOOST_TEST(nr.domains == expected_domains4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -87,21 +87,12 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
   for (const auto& c : schema.classes) {
     for (const auto& v : c.vars) {
       std::string rel_name = c.name + ':' + v.name;
-      if (const DistributionVar* dv = std::get_if<DistributionVar>(&(v.spec))) {
+      if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.spec))) {
         T_clean_relation relation;
+        // TODO(thomaswc): Add code to resolve joint names and params
+        // into both a DistributionSpec and EmissionSpec.
         relation.distribution_spec = DistributionSpec(
-            dv->distribution_name, dv->distribution_params);
-        relation.is_observed = false;
-        relation.domains.push_back(c.name);
-        for (const std::string& sc : get_source_classes(c.name)) {
-          relation.domains.push_back(sc);
-        }
-        tschema[rel_name] = relation;
-      } else if (const EmissionVar *ev = std::get_if<EmissionVar>(&(v.spec))) {
-        T_noisy_relation relation;
-        relation.emission_spec = EmissionSpec(
-            ev->emission_name, ev->emission_params);
-        relation.base_relation = get_base_relation_name(c, ev->field_path);
+            dv->joint_name, dv->params);
         relation.is_observed = false;
         relation.domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
