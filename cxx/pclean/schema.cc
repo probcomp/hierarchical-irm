@@ -42,8 +42,8 @@ std::set<std::string> PCleanSchemaHelper::get_parent_classes(
   std::set<std::string> parents;
   PCleanClass c = get_class_by_name(name);
   for (const auto& v: c.vars) {
-    if (std::holds_alternative<ClassVar>(v.spec)) {
-      parents.insert(std::get<ClassVar>(v.spec).class_name);
+    if (const ClassVar* cv = std::get_if<ClassVar>(&(v.spec))) {
+      parents.insert(cv->class_name);
     }
   }
   return parents;
@@ -67,10 +67,10 @@ std::set<std::string> PCleanSchemaHelper::get_source_classes(
 }
 
 std::string get_base_relation_name(
-    const PCleanClass& c, std::vector<std::string>& field_path) {
+    const PCleanClass& c, const std::vector<std::string>& field_path) {
   assert(field_path.size() == 2);
-  std::string& class_var = field_path[0];
-  std::string& var_name = field_path[1];
+  const std::string& class_var = field_path[0];
+  const std::string& var_name = field_path[1];
   std::string class_name = "";
   for (const auto& v : c.vars) {
     if (v.name == class_var) {
@@ -87,23 +87,21 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
   for (const auto& c : schema.classes) {
     for (const auto& v : c.vars) {
       std::string rel_name = c.name + ':' + v.name;
-      if (std::holds_alternative<DistributionVar>(v.spec)) {
+      if (const DistributionVar* dv = std::get_if<DistributionVar>(&(v.spec))) {
         T_clean_relation relation;
-        DistributionVar dv = std::get<DistributionVar>(v.spec);
         relation.distribution_spec = DistributionSpec(
-            dv.distribution_name, dv.distribution_params);
+            dv->distribution_name, dv->distribution_params);
         relation.is_observed = false;
         relation.domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
           relation.domains.push_back(sc);
         }
         tschema[rel_name] = relation;
-      } else if (std::holds_alternative<EmissionVar>(v.spec)) {
+      } else if (const EmissionVar *ev = std::get_if<EmissionVar>(&(v.spec))) {
         T_noisy_relation relation;
-        EmissionVar ev = std::get<EmissionVar>(v.spec);
         relation.emission_spec = EmissionSpec(
-            ev.emission_name, ev.emission_params);
-        relation.base_relation = get_base_relation_name(c, ev.field_path);
+            ev->emission_name, ev->emission_params);
+        relation.base_relation = get_base_relation_name(c, ev->field_path);
         relation.is_observed = false;
         relation.domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
