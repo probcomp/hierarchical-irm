@@ -33,74 +33,24 @@ bool resolve_variable_definition(const std::vector<Token> &tokens,
     return true;
   }
 
-  bool is_emission = false;
-  for (size_t i = 3; i < tokens.size(); ++i) {
-    if (tokens[i].val == "(") {
-      is_emission = true;
-      break;
-    }
-  }
-
-  if (is_emission) {
-    EmissionVar ev;
-    ev.emission_name = tokens[2].val;
-
-    size_t i = 3;
-    if (tokens[i].val == "[") {  // Emission parameters
-      i += 1;
-      while (tokens[i + 3].val == ",") {
-        if (tokens[i + 1].val != "=") {
-          printf("Expected '=' in declaration of emission variable %s\n", tokens[0].val.c_str());
-          return false;
-        }
-        ev.emission_params[tokens[i].val] = tokens[i+2].val;
-        i += 4;
-      }
-    }
-
-    if (tokens[i].val != "(") {  // Field path
-      printf("Expected '(' but got %s in declaration of emission variable %s\n", tokens[i].val.c_str(), tokens[0].val.c_str());
-      return false;
-    }
-
-    do {
-      i += 1;
-      if (tokens[i].type != TokenType::identifier) {
-        printf("Expected identifier but got %s in declaration of emission variable %s\n", tokens[i].val.c_str(), tokens[0].val.c_str());
-        return false;
-      }
-      ev.field_path.push_back(tokens[i++].val);
-    } while (tokens[i].val == ".");
-
-    if (tokens[i].val != ")") {
-      printf("Expected ')' but got %s in declaration of emission variable %s\n",
-             tokens[i].val.c_str(), tokens[0].val.c_str());
-      printf("emission name = %s\n", ev.emission_name.c_str());
-      return false;
-    }
-
-    pcv->spec = ev;
-    return true;
-  }
-
-  DistributionVar dv;
-  dv.distribution_name = tokens[2].val;
+  ScalarVar dv;
+  dv.joint_name = tokens[2].val;
   for (size_t i = 4; i < tokens.size() - 1; i += 4) {
     if (i + 3 > tokens.size()) {
-      printf("Error parsing parameters of distribution variable %s -- too few tokens\n", tokens[0].val.c_str());
+      printf("Error parsing parameters of scalar variable %s -- too few tokens\n", tokens[0].val.c_str());
       printf("At token %ld of %ld\n", i, tokens.size());
       return false;
     }
     if (tokens[i+1].val != "=") {
-      printf("Error parsing parameters of distribution variable %s -- expected '=' but got %s\n", tokens[0].val.c_str(), tokens[i+1].val.c_str());
+      printf("Error parsing parameters of scalar variable %s -- expected '=' but got %s\n", tokens[0].val.c_str(), tokens[i+1].val.c_str());
       return false;
     }
     std::string s = tokens[i+3].val;
-    if ((s != ",") && (s != "]")) {
-      printf("Error parsing parameters of distribution variable %s -- expected ',' or '] but got %s'\n", tokens[0].val.c_str(), s.c_str());
+    if ((s != ",") && (s != ")")) {
+      printf("Error parsing parameters of scalar variable %s -- expected ',' or '] but got %s'\n", tokens[0].val.c_str(), s.c_str());
       return false;
     }
-    dv.distribution_params[tokens[i].val] = tokens[i+2].val;
+    dv.params[tokens[i].val] = tokens[i+2].val;
   }
   pcv->spec = dv;
 
@@ -109,9 +59,8 @@ bool resolve_variable_definition(const std::vector<Token> &tokens,
 
 // We expect a class to look like
 // class ClassName                       # Should start with an uppercase char!
-//   name ~ categorical[num_classes=5]   # distribution variable
+//   name ~ categorical(num_classes=5)   # distribution variable
 //   city ~ City                         # class variable
-//   bad_city ~ typos(city.name)         # emission variable
 //
 // ^ class definition ends with a blank line (or end of file)
 bool read_class(std::istream& is, PCleanClass* pclass) {
