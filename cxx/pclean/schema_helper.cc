@@ -91,7 +91,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
       if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.spec))) {
         std::vector<std::string> domains;
         domains.push_back(c.name);
-        for (const std::string& sc : get_source_classes(c.name)) {
+        for (const std::string& sc : get_ancestor_classes(c.name)) {
           domains.push_back(sc);
         }
         tschema[rel_name] = get_distribution_relation(*dv, domains);

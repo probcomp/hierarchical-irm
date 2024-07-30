@@ -11,7 +11,7 @@
 #include "pclean/schema.hh"
 
 // Given the joint_name and params in the ScalarVar, and a list of domains,
-// return a clean elation containing the generative distribution for the
+// return a clean relation containing the generative distribution for the
 // variable.
 T_clean_relation get_distribution_relation(
     const ScalarVar& scalar_var,
