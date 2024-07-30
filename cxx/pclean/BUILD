@@ -19,8 +19,33 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "pclean",
+    srcs = ["pclean.cc"],
+    deps = [
+        ":io",
+        ":schema",
+        "//:cxxopts",
+        "//:hirm_lib",
+        "//:inference",
+    ],
+)
+
 cc_library(
     name = "schema",
     hdrs = ["schema.hh"],
-    deps = [],
+    srcs = ["schema.cc"],
+    deps = [
+        "//:irm",
+    ],
+)
+
+cc_test(
+    name = "schema_test",
+    srcs = ["schema_test.cc"],
+    deps = [
+        ":io",
+        ":schema",
+        "@boost//:test",
+    ],
 )

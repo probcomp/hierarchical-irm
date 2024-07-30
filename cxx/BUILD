@@ -30,6 +30,17 @@ cc_library(
 )
 
 cc_library(
+    name = "inference",
+    hdrs = ["inference.hh"],
+    srcs = ["inference.cc"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":irm",
+        ":hirm_lib",
+    ],
+)
+
+cc_library(
     name = "irm",
     hdrs = ["irm.hh"],
     srcs = ["irm.cc"],
@@ -59,6 +70,7 @@ cc_binary(
     deps = [
         ":cxxopts",
         ":hirm_lib",
+        ":inference",
         ":util_hash",
         ":util_io",
         ":util_math",
