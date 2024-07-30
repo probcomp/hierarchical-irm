@@ -12,8 +12,8 @@ void PCleanSchemaHelper::compute_class_name_cache() {
 }
 
 void PCleanSchemaHelper::compute_ancestors_cache() {
-  for (auto const& c: schema.classes) {
-    if (ancestors.find(c.name) == ancestors.end()) {
+  for (const auto& c: schema.classes) {
+    if (!ancestors.contains(c.name)) {
       ancestors[c.name] = compute_ancestors_for(c.name);
     }
   }
@@ -23,12 +23,12 @@ std::set<std::string> PCleanSchemaHelper::compute_ancestors_for(
     const std::string& name) {
   std::set<std::string> ancs;
   std::set<std::string> parents = get_parent_classes(name);
-  for (auto const& p: parents) {
+  for (const std::string& p: parents) {
     ancs.insert(p);
-    if (ancestors.find(p) == ancestors.end()) {
+    if (!ancestors.contains(p)) {
       ancestors[p] = compute_ancestors_for(p);
     }
-    ancs.insert(ancestors[p].begin(), ancestors[p].end());
+    ancs.insert(ancestors[p].cbegin(), ancestors[p].cend());
   }
   return ancs;
 }
@@ -41,7 +41,7 @@ std::set<std::string> PCleanSchemaHelper::get_parent_classes(
     const std::string& name) {
   std::set<std::string> parents;
   PCleanClass c = get_class_by_name(name);
-  for (auto const& v: c.vars) {
+  for (const auto& v: c.vars) {
     if (std::holds_alternative<ClassVar>(v.spec)) {
       parents.insert(std::get<ClassVar>(v.spec).class_name);
     }
@@ -57,7 +57,7 @@ std::set<std::string> PCleanSchemaHelper::get_ancestor_classes(
 std::set<std::string> PCleanSchemaHelper::get_source_classes(
     const std::string& name) {
   std::set<std::string> sources;
-  for (auto const& c: ancestors[name]) {
+  for (const std::string& c: ancestors[name]) {
     const std::set<std::string>& parents = get_parent_classes(c);
     if (parents.empty()) {
       sources.insert(c);
@@ -84,8 +84,8 @@ std::string get_base_relation_name(
 
 T_schema PCleanSchemaHelper::make_hirm_schema() {
   T_schema tschema;
-  for (auto const& c : schema.classes) {
-    for (auto const& v : c.vars) {
+  for (const auto& c : schema.classes) {
+    for (const auto& v : c.vars) {
       std::string rel_name = c.name + ':' + v.name;
       if (std::holds_alternative<DistributionVar>(v.spec)) {
         T_clean_relation relation;
@@ -93,6 +93,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
         relation.distribution_spec = DistributionSpec(
             dv.distribution_name, dv.distribution_params);
         relation.is_observed = false;
+        relation.domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
           relation.domains.push_back(sc);
         }
@@ -104,6 +105,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
             ev.emission_name, ev.emission_params);
         relation.base_relation = get_base_relation_name(c, ev.field_path);
         relation.is_observed = false;
+        relation.domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
           relation.domains.push_back(sc);
         }

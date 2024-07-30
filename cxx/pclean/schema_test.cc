@@ -86,13 +86,41 @@ BOOST_AUTO_TEST_CASE(test_get_source_classes) {
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
   T_schema tschema = schema_helper.make_hirm_schema();
-  BOOST_TEST(tschema.count("School:name") == 1);
-  BOOST_TEST(tschema.count("School:degree_dist") == 1);
-  BOOST_TEST(tschema.count("Physician:degree") == 1);
-  BOOST_TEST(tschema.count("Physician:specialty") == 1);
-  BOOST_TEST(tschema.count("City:name") == 1);
-  BOOST_TEST(tschema.count("City:state") == 1);
-  BOOST_TEST(tschema.count("Practice:bad_city") == 1);
+
+  BOOST_TEST(tschema.contains("School:name"));
+  T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
+  BOOST_TEST(!cr.is_observed);
+  BOOST_TEST((cr.distribution_spec.distribution == DistributionEnum::bigram));
+  std::vector<std::string> expected_domains = {"School"};
+  BOOST_TEST(cr.domains == expected_domains);
+
+  BOOST_TEST(tschema.contains("School:degree_dist"));
+  T_clean_relation cr2 = std::get<T_clean_relation>(tschema["School:degree_dist"]);
+  BOOST_TEST((cr2.distribution_spec.distribution == DistributionEnum::categorical));
+  BOOST_TEST(cr2.distribution_spec.distribution_args.contains("num_classes"));
+  BOOST_TEST(cr2.domains == expected_domains);
+
+  BOOST_TEST(tschema.contains("Physician:degree"));
+  T_clean_relation cr3 = std::get<T_clean_relation>(tschema["Physician:degree"]);
+  BOOST_TEST((cr3.distribution_spec.distribution == DistributionEnum::stringcat));
+  std::vector<std::string> expected_domains2 = {"Physician", "School"};
+  BOOST_TEST(cr3.domains == expected_domains2);
+
+  BOOST_TEST(tschema.contains("Physician:specialty"));
+
+  BOOST_TEST(tschema.contains("City:name"));
+  T_clean_relation cr4 = std::get<T_clean_relation>(tschema["City:name"]);
+  std::vector<std::string> expected_domains3 = {"City"};
+  BOOST_TEST(cr4.domains == expected_domains3);
+
+  BOOST_TEST(tschema.contains("City:state"));
+
+  BOOST_TEST(tschema.contains("Practice:bad_city"));
+  T_noisy_relation nr = std::get<T_noisy_relation>(tschema["Practice:bad_city"]);
+  BOOST_TEST(!nr.is_observed);
+  BOOST_TEST((nr.emission_spec.emission == EmissionEnum::bigram_string));
+  std::vector<std::string> expected_domains4 = {"Practice", "City"};
+  BOOST_TEST(nr.domains == expected_domains4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
