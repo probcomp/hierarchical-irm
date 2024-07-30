@@ -1,4 +1,5 @@
-#include "pclean/schema.hh"
+#include "pclean/schema_helper.hh"
+#include "pclean/get_joint_relations.hh"
 
 PCleanSchemaHelper::PCleanSchemaHelper(const PCleanSchema& s): schema(s) {
   compute_class_name_cache();
@@ -88,17 +89,12 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
     for (const auto& v : c.vars) {
       std::string rel_name = c.name + ':' + v.name;
       if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.spec))) {
-        T_clean_relation relation;
-        // TODO(thomaswc): Add code to resolve joint names and params
-        // into both a DistributionSpec and EmissionSpec.
-        relation.distribution_spec = DistributionSpec(
-            dv->joint_name, dv->params);
-        relation.is_observed = false;
-        relation.domains.push_back(c.name);
+        std::vector<std::string> domains;
+        domains.push_back(c.name);
         for (const std::string& sc : get_source_classes(c.name)) {
-          relation.domains.push_back(sc);
+          domains.push_back(sc);
         }
-        tschema[rel_name] = relation;
+        tschema[rel_name] = get_distribution_relation(*dv, domains);
       }
       // TODO(thomaswc): If this class isn't the observation class,
       // create additional noisy relations.
