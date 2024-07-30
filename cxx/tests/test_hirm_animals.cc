@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <random>
-#include <iostream>
 
 #include "hirm.hh"
 #include "util_hash.hh"
