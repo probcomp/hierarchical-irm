@@ -59,12 +59,14 @@ cc_binary(
     name = "pclean",
     srcs = ["pclean.cc"],
     deps = [
+        ":csv",
         ":io",
         ":schema",
         ":schema_helper",
         "//:cxxopts",
         "//:hirm_lib",
         "//:inference",
+        "//:util_io",
     ],
 )
 
