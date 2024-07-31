@@ -25,14 +25,16 @@ class PCleanSchemaHelper {
   void compute_class_name_cache();
   void compute_domains_cache();
 
-  std::vector<std::string> compute_domains_for(const std::string& name);
+  void compute_domains_for(const std::string& name);
 
   PCleanVariable get_scalarvar_from_path(
       const PCleanClass& base_class,
       std::vector<std::string>::const_iterator path_iterator,
-      std::string* final_class_name);
+      std::string* final_class_name,
+      std::string* path_prefix);
 
   PCleanSchema schema;
   std::map<std::string, int> class_name_to_index;
   std::map<std::string, std::vector<std::string>> domains;
+  std::map<std::string, std::vector<std::string>> annotated_domains;
 };
