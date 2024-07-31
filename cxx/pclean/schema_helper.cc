@@ -55,18 +55,6 @@ std::set<std::string> PCleanSchemaHelper::get_ancestor_classes(
   return ancestors[name];
 }
 
-std::set<std::string> PCleanSchemaHelper::get_source_classes(
-    const std::string& name) {
-  std::set<std::string> sources;
-  for (const std::string& c: ancestors[name]) {
-    const std::set<std::string>& parents = get_parent_classes(c);
-    if (parents.empty()) {
-      sources.insert(c);
-    }
-  }
-  return sources;
-}
-
 std::string get_base_relation_name(
     const PCleanClass& c, const std::vector<std::string>& field_path) {
   assert(field_path.size() == 2);

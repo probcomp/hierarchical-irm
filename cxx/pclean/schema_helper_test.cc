@@ -72,16 +72,6 @@ BOOST_AUTO_TEST_CASE(test_get_ancestor_classes) {
   BOOST_TEST(schema_helper.get_ancestor_classes("Record").size() == 4);
 }
 
-BOOST_AUTO_TEST_CASE(test_get_source_classes) {
-  PCleanSchemaHelper schema_helper(schema);
-  BOOST_TEST(schema_helper.get_source_classes("School").empty());
-  BOOST_TEST(schema_helper.get_source_classes("City").empty());
-  BOOST_TEST(schema_helper.get_source_classes("Physician").size() == 1);
-  BOOST_TEST(schema_helper.get_source_classes("Practice").size() == 1);
-  BOOST_TEST(schema_helper.get_source_classes("Record").size() == 2);
-}
-
-
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
   T_schema tschema = schema_helper.make_hirm_schema();
