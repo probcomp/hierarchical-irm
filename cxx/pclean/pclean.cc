@@ -23,7 +23,7 @@ T_observations translate_observations(
 
   for (const auto& col : df.data) {
     const std::string& col_name = col.first;
-    const T_relation trel = schema[col_name];
+    const T_relation& trel = schema.at(col_name);
     size_t num_domains;
     std::visit([&](const auto &r) {
       num_domains = r.domains.size();
