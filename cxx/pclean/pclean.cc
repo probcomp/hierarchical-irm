@@ -12,6 +12,7 @@
 #include "inference.hh"
 #include "pclean/io.hh"
 #include "pclean/schema.hh"
+#include "pclean/schema_helper.hh"
 
 int main(int argc, char** argv) {
   cxxopts::Options options(

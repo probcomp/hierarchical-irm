@@ -17,6 +17,26 @@ cc_test(
 )
 
 cc_library(
+    name = "get_joint_relations",
+    hdrs = ["get_joint_relations.hh"],
+    srcs = ["get_joint_relations.cc"],
+    deps = [
+        ":schema",
+        "//:clean_relation",
+        "//:noisy_relation",
+    ],
+)
+
+cc_test(
+    name = "get_joint_relations_test",
+    srcs = ["get_joint_relations_test.cc"],
+    deps = [
+        ":get_joint_relations",
+        "@boost//:test",
+    ],
+)
+
+cc_library(
     name = "io",
     hdrs = ["io.hh"],
     srcs = ["io.cc"],
@@ -41,6 +61,7 @@ cc_binary(
     deps = [
         ":io",
         ":schema",
+        ":schema_helper",
         "//:cxxopts",
         "//:hirm_lib",
         "//:inference",
@@ -50,18 +71,27 @@ cc_binary(
 cc_library(
     name = "schema",
     hdrs = ["schema.hh"],
-    srcs = ["schema.cc"],
+    deps = [],
+)
+
+cc_library(
+    name = "schema_helper",
+    hdrs = ["schema_helper.hh"],
+    srcs = ["schema_helper.cc"],
     deps = [
+        ":get_joint_relations",
+        ":schema",
         "//:irm",
     ],
 )
 
+
 cc_test(
-    name = "schema_test",
-    srcs = ["schema_test.cc"],
+    name = "schema_helper_test",
+    srcs = ["schema_helper_test.cc"],
     deps = [
         ":io",
-        ":schema",
+        ":schema_helper",
         "@boost//:test",
     ],
 )
