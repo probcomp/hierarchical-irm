@@ -133,11 +133,11 @@ bool read_query(std::istream& is, PCleanQuery* query) {
         printf("Expected exactly two tokens on query from line %s", line.c_str());
         return false;
       }
-      if (!query->base_class.empty()) {
+      if (!query->record_class.empty()) {
         printf("Expected exactly one `from` clause in query.\n");
         return false;
       }
-      query->base_class = tokens[1].val;
+      query->record_class = tokens[1].val;
       continue;
     }
 
@@ -209,7 +209,7 @@ bool read_schema(std::istream& is, PCleanSchema* schema) {
     }
 
     if (tokens[0].val == "observe") {
-      if (!schema->query.base_class.empty()) {
+      if (!schema->query.record_class.empty()) {
         printf("Error reading schema line %s:  only one query is allowed\n",
                line.c_str());
         return false;

@@ -78,7 +78,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
     }
   }
 
-  const PCleanClass query_class = get_class_by_name(schema.query.base_class);
+  const PCleanClass query_class = get_class_by_name(schema.query.record_class);
   for (const auto& f : schema.query.fields) {
     std::string final_class_name;
     const PCleanVariable sv = get_scalarvar_from_path(

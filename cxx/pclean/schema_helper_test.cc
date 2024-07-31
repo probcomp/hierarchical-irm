@@ -93,6 +93,31 @@ class Person
   BOOST_TEST(schema_helper.domains["Person"] == expected_domains);
 }
 
+BOOST_AUTO_TEST_CASE(test_domains_cache_diamond) {
+  std::stringstream ss(R"""(
+class City
+  name ~ string
+
+class School
+  location ~ City
+
+class Practice
+  location ~ City
+
+class Physician
+  practice ~ Practice
+  school ~ School
+)""");
+  PCleanSchema schema;
+  assert(read_schema(ss, &schema));
+  PCleanSchemaHelper schema_helper(schema);
+
+  std::vector<std::string> expected_domains = {
+    "Physician", "practice:Practice", "practice:location:City",
+    "school:School", "school:location:City"};
+  BOOST_TEST(schema_helper.domains["Physician"] == expected_domains);
+}
+
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
   T_schema tschema = schema_helper.make_hirm_schema();
