@@ -3,7 +3,7 @@
 
 PCleanSchemaHelper::PCleanSchemaHelper(const PCleanSchema& s): schema(s) {
   compute_class_name_cache();
-  compute_ancestors_cache();
+  compute_domains_cache();
 }
 
 void PCleanSchemaHelper::compute_class_name_cache() {
@@ -44,17 +44,6 @@ PCleanClass PCleanSchemaHelper::get_class_by_name(const std::string& name) {
   return schema.classes[class_name_to_index[name]];
 }
 
-std::set<std::string> PCleanSchemaHelper::get_parent_classes(
-    const std::string& name) {
-  std::set<std::string> parents;
-  PCleanClass c = get_class_by_name(name);
-  for (const auto& v: c.vars) {
-      parents.insert(cv->class_name);
-    }
-  }
-  return parents;
-}
-
 PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
     const PCleanClass& base_class,
     std::vector<std::string>::const_iterator path_iterator,
@@ -62,7 +51,7 @@ PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
   const std::string& s = *path_iterator;
   for (const PCleanVariable& v : base_class.vars) {
     if (v.name == s) {
-      if (std::has_alternative<ScalarVar>(v.spec)) {
+      if (std::holds_alternative<ScalarVar>(v.spec)) {
         *final_class_name = base_class.name;
         return v;
       }

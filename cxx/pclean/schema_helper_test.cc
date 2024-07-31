@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(tschema.contains("Physician:degree"));
   T_clean_relation cr3 = std::get<T_clean_relation>(tschema["Physician:degree"]);
   BOOST_TEST((cr3.distribution_spec.distribution == DistributionEnum::stringcat));
-  std::vector<std::string> expected_domains2 = {"Physician", "schoool:School"};
+  std::vector<std::string> expected_domains2 = {"Physician", "school:School"};
   BOOST_TEST(cr3.domains == expected_domains2);
 
   BOOST_TEST(tschema.contains("Physician:specialty"));
