@@ -74,8 +74,6 @@ PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
   assert(false);
 }
 
-// Returns original_domains, but with the elements corresponding to
-// annotated_ds elements that start with prefix moved to the front.
 std::vector<std::string> reorder_domains(
     const std::vector<std::string>& original_domains,
     const std::vector<std::string>& annotated_ds,
