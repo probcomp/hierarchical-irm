@@ -31,6 +31,13 @@ T_observations translate_observations(
 
     for (size_t i = 0; i < col.second.size(); ++i) {
       const std::string& val = col.second[i];
+      if (val.empty()) {
+        // Don't incorporate missing values.
+        // TODO(thomaswc): Allow the user to specify other values that mean
+        // missing data.  ("missing", "NA", "nan", etc.).
+        continue;
+      }
+
       std::vector<std::string> entities;
       for (size_t j = 0; j < num_domains; ++j) {
         // Assume that each row of the dataframe is its own entity, *and*
