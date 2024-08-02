@@ -17,23 +17,31 @@ class PCleanSchemaHelper {
 
   PCleanClass get_class_by_name(const std::string& name);
 
-  // The parent classes of a class are those that are referred to by a
-  // ClassVar inside the class.
-  std::set<std::string> get_parent_classes(const std::string& name);
-  // The ancestors of a class are the transitive closure of the parent
-  // relationship.
-  std::set<std::string> get_ancestor_classes(const std::string& name);
-  // The source classes of a class are its ancestors without parents.
-  std::set<std::string> get_source_classes(const std::string& name);
-
   T_schema make_hirm_schema();
 
- private:
+  // The rest of these methods are conceptually private, but actually
+  // public for testing.
+
   void compute_class_name_cache();
-  void compute_ancestors_cache();
-  std::set<std::string> compute_ancestors_for(const std::string& name);
+  void compute_domains_cache();
+
+  void compute_domains_for(const std::string& name);
+
+  PCleanVariable get_scalarvar_from_path(
+      const PCleanClass& base_class,
+      std::vector<std::string>::const_iterator path_iterator,
+      std::string* final_class_name,
+      std::string* path_prefix);
 
   PCleanSchema schema;
   std::map<std::string, int> class_name_to_index;
-  std::map<std::string, std::set<std::string>> ancestors;
+  std::map<std::string, std::vector<std::string>> domains;
+  std::map<std::string, std::vector<std::string>> annotated_domains;
 };
+
+// Returns original_domains, but with the elements corresponding to
+// annotated_ds elements that start with prefix moved to the front.
+std::vector<std::string> reorder_domains(
+    const std::vector<std::string>& original_domains,
+    const std::vector<std::string>& annotated_ds,
+    const std::string& prefix);

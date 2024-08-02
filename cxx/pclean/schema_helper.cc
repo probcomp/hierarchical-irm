@@ -3,7 +3,7 @@
 
 PCleanSchemaHelper::PCleanSchemaHelper(const PCleanSchema& s): schema(s) {
   compute_class_name_cache();
-  compute_ancestors_cache();
+  compute_domains_cache();
 }
 
 void PCleanSchemaHelper::compute_class_name_cache() {
@@ -12,63 +12,84 @@ void PCleanSchemaHelper::compute_class_name_cache() {
   }
 }
 
-void PCleanSchemaHelper::compute_ancestors_cache() {
+void PCleanSchemaHelper::compute_domains_cache() {
   for (const auto& c: schema.classes) {
-    if (!ancestors.contains(c.name)) {
-      ancestors[c.name] = compute_ancestors_for(c.name);
+    if (!domains.contains(c.name)) {
+      compute_domains_for(c.name);
     }
   }
 }
 
-std::set<std::string> PCleanSchemaHelper::compute_ancestors_for(
-    const std::string& name) {
-  std::set<std::string> ancs;
-  std::set<std::string> parents = get_parent_classes(name);
-  for (const std::string& p: parents) {
-    ancs.insert(p);
-    if (!ancestors.contains(p)) {
-      ancestors[p] = compute_ancestors_for(p);
+void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
+  std::vector<std::string> ds;
+  std::vector<std::string> annotated_ds;
+  ds.push_back(name);
+  annotated_ds.push_back(name);
+  PCleanClass c = get_class_by_name(name);
+
+  for (const auto& v: c.vars) {
+    if (const ClassVar* cv = std::get_if<ClassVar>(&(v.spec))) {
+      if (!domains.contains(cv->class_name)) {
+        compute_domains_for(cv->class_name);
+      }
+      for (const std::string& s : domains[cv->class_name]) {
+        ds.push_back(s);
+      }
+      for (const std::string& s : annotated_domains[cv->class_name]) {
+        annotated_ds.push_back(v.name + ':' + s);
+      }
     }
-    ancs.insert(ancestors[p].cbegin(), ancestors[p].cend());
   }
-  return ancs;
+
+  domains[name] = ds;
+  annotated_domains[name] = annotated_ds;
 }
 
 PCleanClass PCleanSchemaHelper::get_class_by_name(const std::string& name) {
   return schema.classes[class_name_to_index[name]];
 }
 
-std::set<std::string> PCleanSchemaHelper::get_parent_classes(
-    const std::string& name) {
-  std::set<std::string> parents;
-  PCleanClass c = get_class_by_name(name);
-  for (const auto& v: c.vars) {
-    if (const ClassVar* cv = std::get_if<ClassVar>(&(v.spec))) {
-      parents.insert(cv->class_name);
+PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
+    const PCleanClass& base_class,
+    std::vector<std::string>::const_iterator path_iterator,
+    std::string* final_class_name,
+    std::string* path_prefix) {
+  const std::string& s = *path_iterator;
+  for (const PCleanVariable& v : base_class.vars) {
+    if (v.name == s) {
+      if (std::holds_alternative<ScalarVar>(v.spec)) {
+        *final_class_name = base_class.name;
+        return v;
+      }
+      path_prefix->append(v.name + ":");
+      const PCleanClass& next_class = get_class_by_name(
+          std::get<ClassVar>(v.spec).class_name);
+      PCleanVariable sv = get_scalarvar_from_path(
+          next_class, ++path_iterator, final_class_name, path_prefix);
+      return sv;
     }
   }
-  return parents;
+  printf("Error: could not find name %s in class %s\n",
+         s.c_str(), base_class.name.c_str());
+  assert(false);
 }
 
-std::set<std::string> PCleanSchemaHelper::get_ancestor_classes(
-    const std::string& name) {
-  return ancestors[name];
-}
-
-std::string get_base_relation_name(
-    const PCleanClass& c, const std::vector<std::string>& field_path) {
-  assert(field_path.size() == 2);
-  const std::string& class_var = field_path[0];
-  const std::string& var_name = field_path[1];
-  std::string class_name = "";
-  for (const auto& v : c.vars) {
-    if (v.name == class_var) {
-      class_name = std::get<ClassVar>(v.spec).class_name;
-      break;
+std::vector<std::string> reorder_domains(
+    const std::vector<std::string>& original_domains,
+    const std::vector<std::string>& annotated_ds,
+    const std::string& prefix) {
+  std::vector<std::string> output_domains;
+  for (size_t i = 0; i < original_domains.size(); ++i) {
+    if (annotated_ds[i].starts_with(prefix)) {
+      output_domains.push_back(original_domains[i]);
     }
   }
-  assert(class_name != "");
-  return class_name + ':' + var_name;
+  for (size_t i = 0; i < original_domains.size(); ++i) {
+    if (!annotated_ds[i].starts_with(prefix)) {
+      output_domains.push_back(original_domains[i]);
+    }
+  }
+  return output_domains;
 }
 
 T_schema PCleanSchemaHelper::make_hirm_schema() {
@@ -77,16 +98,31 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
     for (const auto& v : c.vars) {
       std::string rel_name = c.name + ':' + v.name;
       if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.spec))) {
-        std::vector<std::string> domains;
-        domains.push_back(c.name);
-        for (const std::string& sc : get_ancestor_classes(c.name)) {
-          domains.push_back(sc);
-        }
-        tschema[rel_name] = get_distribution_relation(*dv, domains);
+        tschema[rel_name] = get_distribution_relation(*dv, domains[c.name]);
       }
-      // TODO(thomaswc): If this class isn't the observation class,
-      // create additional noisy relations.
     }
   }
+
+  const PCleanClass query_class = get_class_by_name(schema.query.record_class);
+  for (const auto& f : schema.query.fields) {
+    std::string final_class_name;
+    std::string path_prefix;
+    const PCleanVariable sv = get_scalarvar_from_path(
+        query_class, f.class_path.cbegin(), &final_class_name, &path_prefix);
+    std::string base_relation = final_class_name + ':' + sv.name;
+    // If the base relation has n domains, we need the first n domains
+    // of this emission relation to be exactly the same (including order).
+    // The base relation's annotated_domains are exactly those that start
+    // with the path_prefix constructed above, and we use the fact that the
+    // domains and annotated_domains are in one-to-one correspondence to
+    // move the base relation's domains to the front.
+    std::vector<std::string> reordered_domains = reorder_domains(
+        domains[query_class.name],
+        annotated_domains[query_class.name],
+        path_prefix);
+    tschema[f.name] = get_emission_relation(
+        std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
+  }
+
   return tschema;
 }

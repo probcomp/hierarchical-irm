@@ -41,7 +41,7 @@ observe
 )""");
   PCleanSchema schema;
   BOOST_TEST(read_schema(ss, &schema));
-  BOOST_TEST(schema.query.base_class == "Record");
+  BOOST_TEST(schema.query.record_class == "Record");
 
   BOOST_TEST(schema.query.fields.size() == 5);
   BOOST_TEST(schema.query.fields[0].name == "Specialty");

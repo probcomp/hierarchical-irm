@@ -38,7 +38,7 @@ struct QueryField {
 };
 
 struct PCleanQuery {
-  std::string base_class;
+  std::string record_class;
   std::vector<QueryField> fields;
 };
 
