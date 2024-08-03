@@ -8,10 +8,10 @@
 #include <unordered_set>
 #include <variant>
 
+#include "distributions/get_distribution.hh"
 #include "irm.hh"
 #include "relation.hh"
 #include "transition_latent_value.hh"
-#include "distributions/get_distribution.hh"
 
 class HIRM {
  public:
@@ -64,6 +64,8 @@ class HIRM {
       std::mt19937* prng);
 
   double logp_score() const;
+
+  void sample_and_incorporate(std::mt19937* prng, int n);
 
   ~HIRM();
 

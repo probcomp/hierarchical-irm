@@ -177,3 +177,16 @@ BOOST_AUTO_TEST_CASE(test_cluster_logp_sample) {
   double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, sample);
   BOOST_TEST(lp < 0.0);
 }
+
+BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  R1.incorporate_sample(&prng, {0, 1});
+  R1.incorporate_sample(&prng, {0, 2});
+  R1.incorporate_sample(&prng, {5, 2});
+
+  BOOST_TEST(R1.data.size() == 3);
+}
