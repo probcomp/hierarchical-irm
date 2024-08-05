@@ -14,42 +14,9 @@
 #include "util_io.hh"
 #include "pclean/csv.hh"
 #include "pclean/io.hh"
+#include "pclean/pclean_lib.hh"
 #include "pclean/schema.hh"
 #include "pclean/schema_helper.hh"
-
-T_observations translate_observations(
-    const DataFrame& df, const T_schema &schema) {
-  T_observations obs;
-
-  for (const auto& col : df.data) {
-    const std::string& col_name = col.first;
-    const T_relation& trel = schema.at(col_name);
-    size_t num_domains;
-    std::visit([&](const auto &r) {
-      num_domains = r.domains.size();
-    }, trel);
-
-    for (size_t i = 0; i < col.second.size(); ++i) {
-      const std::string& val = col.second[i];
-      if (val.empty()) {
-        // Don't incorporate missing values.
-        // TODO(thomaswc): Allow the user to specify other values that mean
-        // missing data.  ("missing", "NA", "nan", etc.).
-        continue;
-      }
-
-      std::vector<std::string> entities;
-      for (size_t j = 0; j < num_domains; ++j) {
-        // Assume that each row of the dataframe is its own entity, *and*
-        // that all of its ancestor entities are distinct from those of any
-        // other entity.
-        entities.push_back(std::to_string(i));
-      }
-      obs[col_name].push_back(std::make_tuple(entities, val));
-    }
-  }
-  return obs;
-}
 
 int main(int argc, char** argv) {
   cxxopts::Options options(
