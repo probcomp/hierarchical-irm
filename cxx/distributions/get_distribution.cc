@@ -7,6 +7,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "distributions/adapter.hh"
 #include "distributions/beta_bernoulli.hh"
 #include "distributions/bigram.hh"
 #include "distributions/dirichlet_categorical.hh"
@@ -53,6 +54,12 @@ DistributionSpec::DistributionSpec(
   } else if (dist_name == "stringcat") {
     distribution = DistributionEnum::stringcat;
     observation_type = ObservationEnum::string_type;
+  } else if (dist_name == "string_normal") {
+    distribution = DistributionEnum::string_normal;
+    observation_type = ObservationEnum::string_type;
+  } else if (dist_name == "string_skellam") {
+    distribution = DistributionEnum::string_skellam;
+    observation_type = ObservationEnum::string_type;
   } else {
     assert(false && "Unsupported distribution name.");
   }
@@ -88,6 +95,13 @@ DistributionVariant get_prior(const DistributionSpec& spec,
       boost::split(strings, spec.distribution_args.at("strings"),
                    boost::is_any_of(delim));
       return new StringCat(strings);
+    }
+    case DistributionEnum::string_normal:
+      return new DistributionAdapter<double>(new Normal);
+    case DistributionEnum::string_skellam: {
+      Skellam* s = new Skellam;
+      s->init_theta(prng);
+      return new DistributionAdapter<int>(s);
     }
     default:
       assert(false && "Unsupported distribution enum value.");
