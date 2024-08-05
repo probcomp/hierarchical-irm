@@ -20,7 +20,7 @@ class Obs
   src ~ TrackingWebsite
 
 observe
-  src as src
+  src.name as src
   flight.flight_id as flight
   flight.sdt.time as sched_dep_time
   flight.sat.time as sched_arr_time
