@@ -6,6 +6,7 @@ cc_library(
     srcs = ["get_distribution.cc"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":adapter",
         ":base",
         ":beta_bernoulli",
         ":bigram",
@@ -19,6 +20,15 @@ cc_library(
     ],
 )
 
+cc_library(
+￼    name = "adapter",
+￼    hdrs = ["adapter.hh"],
+￼    visibility = ["//:__subpackages__"],
+￼    deps = [
+￼        ":base",
+￼    ],
+)
+￼
 cc_library(
     name = "base",
     hdrs = ["base.hh"],
@@ -118,6 +128,17 @@ cc_library(
         ":base",
         "//:util_math",
     ],
+)
+
+cc_test(
+￼    name = "adapter_test",
+￼    srcs = ["adapter_test.cc"],
+￼    deps = [
+￼        ":adapter",
+￼        ":normal",
+￼        "@boost//:algorithm",
+￼        "@boost//:test",
+￼    ],
 )
 
 cc_test(
