@@ -53,7 +53,16 @@ DataFrame DataFrame::from_csv(
       df.data[col_names[i++]].push_back(part);
     }
     if (!first_line) {
-      assert(i == col_names.size());
+      if (i != col_names.size()) {
+        if (line.back() == ',') {
+          // std::getline is broken and won't let the last field be empty.
+          df.data[col_names[i++]].push_back("");
+        } else {
+          printf("Only found %ld out of %ld expected columns in line\n%s\n",
+                 i, col_names.size(), line.c_str());
+          assert(false);
+        }
+      }
     }
     first_line = false;
   }

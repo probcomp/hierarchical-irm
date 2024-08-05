@@ -8,7 +8,6 @@
 T_observations translate_observations(
     const DataFrame& df, const T_schema &schema) {
   T_observations obs;
-  int uniq = 0;
 
   for (const auto& col : df.data) {
     const std::string& col_name = col.first;
@@ -32,8 +31,10 @@ T_observations translate_observations(
 
       std::vector<std::string> entities;
       for (size_t j = 0; j < num_domains; ++j) {
-        // Give each entity in every domain its own unique value.
-        entities.push_back(std::to_string(uniq++));
+        // Give every row it's own universe of unique id's.
+        // TODO(thomaswc): Correctly handle the case when a row makes
+        // references to two or more different entities of the same type.
+        entities.push_back(std::to_string(i));
       }
       obs[col_name].push_back(std::make_tuple(entities, val));
     }
