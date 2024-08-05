@@ -70,3 +70,13 @@ BOOST_AUTO_TEST_CASE(test_hirm) {
   Relation<double>* R2 = std::get<Relation<double>*>(hirm.get_relation("R2"));
   BOOST_TEST(R2->get_data().at({0, 3}) != 0.5);
 }
+
+BOOST_AUTO_TEST_CASE(test_hirm_relation_names) {
+  std::mt19937 prng;
+  std::map<std::string, T_relation> schema1{
+    {"a", T_noisy_relation{{"domain1"}, true, EmissionSpec("bigram"), "b"}},
+    {"b", T_clean_relation{{"domain1"}, false, DistributionSpec("bigram")}}
+  };
+  HIRM hirm(schema1, &prng);
+  hirm.transition_cluster_assignments_all(&prng);
+}

@@ -21,7 +21,9 @@ enum class DistributionEnum {
   categorical,
   normal,
   skellam,
-  stringcat
+  stringcat,
+  string_skellam,
+  string_normal
 };
 
 struct DistributionSpec {
