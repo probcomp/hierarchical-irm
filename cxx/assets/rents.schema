@@ -1,0 +1,18 @@
+# PClean schema for rents_dirty.csv
+# Based on https://github.com/probcomp/PClean/blob/master/experiments/rents/run.jl
+
+class County
+  name ~ string
+  state ~ stringcat(strings="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY")
+
+class Obs
+  county ~ County
+  br ~ stringcat(strings="1br 2br 3br 4br studio")
+  rent ~ real
+
+observe
+  county.name as County
+  county.state as State
+  br as "Room Type"
+  rent as "Monthly Rent"
+  from Obs

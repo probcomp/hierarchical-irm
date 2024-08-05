@@ -1,0 +1,29 @@
+# PClean schema for flights_dirty.csv
+# Based on https://github.com/probcomp/PClean/blob/master/experiments/flights/run.jl
+
+class TrackingWebsite
+  name ~ stringcat(strings="aa airtravelcenter allegiantair boston businesstravellogue CO den dfw flightarrival flightaware flightexplorer flights flightstats flightview flightwise flylouisville flytecomm foxbusiness gofox helloflight iad ifly mco mia myrateplan mytripandmore orbitz ord panynj phl quicktrip sfo src travelocity ua usatoday weather world-flight-tracker wunderground")
+
+class Time
+  time ~ string
+
+class Flight
+  flight_id ~ string
+  # These are all abbreviations for "scheduled/actual arrival/depature time"
+  sdt ~ Time
+  sat ~ Time
+  adt ~ Time
+  aat ~ Time
+
+class Obs
+  flight ~ Flight
+  src ~ TrackingWebsite
+
+observe
+  src.name as src
+  flight.flight_id as flight
+  flight.sdt.time as sched_dep_time
+  flight.sat.time as sched_arr_time
+  flight.adt.time as act_dep_time
+  flight.aat.time as act_arr_time
+  from Obs
