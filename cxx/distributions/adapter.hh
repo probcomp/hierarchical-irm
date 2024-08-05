@@ -45,12 +45,14 @@ class DistributionAdapter : public Distribution<std::string> {
 
   double logp_score() const { return d->logp_score(); }
 
-  std::string sample() {
-    S s = d->sample();
+  std::string sample(std::mt19937* prng) {
+    S s = d->sample(prng);
     return to_string(s);
   }
 
-  void transition_hyperparameters() { d->transition_hyperparameters(); }
+  void transition_hyperparameters(std::mt19937* prng) {
+    d->transition_hyperparameters(prng);
+  }
 
   void init_theta(std::mt19937* prng) { d->init_theta(prng); }
   void transition_theta(std::mt19937* prng) { d->transition_theta(prng); }

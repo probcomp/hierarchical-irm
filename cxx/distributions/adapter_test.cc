@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(adapt_normal) {
   BOOST_TEST(ad.logp("6.0") == n->logp(6.), tt::tolerance(1e-6));
   BOOST_TEST(ad.logp_score() == n->logp_score(), tt::tolerance(1e-6));
 
-  std::string samp = ad.sample();
+  std::mt19937 prng;
+  std::string samp = ad.sample(&prng);
 }
 
