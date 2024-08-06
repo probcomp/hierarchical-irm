@@ -70,23 +70,16 @@ int main(int argc, char** argv) {
   std::cout << "Reading observations file from " << obs_fn << "\n";
   DataFrame df = DataFrame::from_csv(obs_fn);
 
-  // Validate that we have a relation for each observation column.
-  for (const auto &col : df.data) {
-    if (!hirm_schema.contains(col.first)) {
-      printf("Error, could not find HIRM relation for column %s\n",
-             col.first.c_str());
-      assert(false);
-    }
-  }
-
   // Create model
   std::cout << "Creating hirm ...\n";
   HIRM hirm(hirm_schema, &prng);
 
   // Incorporate observations.
-  std::cout << "Incorporating observations ...\n";
+  std::cout << "Translating observations ...\n";
   T_observations observations = translate_observations(df, hirm_schema);
+  std::cout << "Encoding observations ...\n";
   T_encoding encoding = encode_observations(hirm_schema, observations);
+  std::cout << "Incorporating observations ...\n";
   incorporate_observations(&prng, &hirm, encoding, observations);
 
   // Run inference

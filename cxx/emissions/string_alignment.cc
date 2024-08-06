@@ -21,8 +21,11 @@ void topk_alignments(int k, const std::string& s1, const std::string& s2,
     std::pop_heap(heap.begin(), heap.end());
     heap.pop_back();
 
+
     // Does this alignment reach the end of both strings?  If so, ship it.
     double old_cost = -heap_top.cost;
+    printf("In topk_alignments, heap.size = %ld old_cost = %f\n",
+           heap.size(), old_cost);
     if (std::cmp_equal(heap_top.s1_position, s1.length())
         && std::cmp_equal(heap_top.s2_position, s2.length())) {
       heap_top.cost = old_cost;

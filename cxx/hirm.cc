@@ -19,8 +19,11 @@ HIRM::HIRM(const T_schema& schema, std::mt19937* prng) {
 
 void HIRM::incorporate(std::mt19937* prng, const std::string& r,
                        const T_items& items, const ObservationVariant& value) {
+  printf("Debug: in HIRM::incorporate for relation %s\n", r.c_str());
   IRM* irm = relation_to_irm(r);
+  printf("Debug: found irm\n");
   irm->incorporate(prng, r, items, value);
+  printf("Debug: done incorporating into irm.\n");
 }
 
 void HIRM::unincorporate(const std::string& r, const T_items& items) {
