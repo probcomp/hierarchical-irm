@@ -23,13 +23,12 @@ class HospitalType
 class Hospital
   loc ~ Place
   type ~ HospitalType
-  # TODO(thomaswc): Add joint type for "numbers corrupted by typos"
-  provider ~ stringcat(strings="10001 10005 10006 10007 10008 10009 10010 10011 10012 10015 10016 10018 10019 10021 10022 10023 10024 10025 10027 10029 10032 10033 10034 10035 10036 10038 10039 10040 10043 10044 10045 10046 10047 10049 10050 10055 10056 10085 10086 10087 10108 10158 10164 20017 20018")
+  provider ~ typo_int
   name ~ string
   addr ~ string
   phone ~ string
   owner ~ stringcat(strings="government - federal:government - hospital district or authority:government - local:government - state:government - federal:proprietary:voluntary non-profit - church:voluntary non-profit - other:voluntary non-profit - private", delim=":")
-  zip ~ stringcat(strings="35007 35045 35058 35121 35150 35205 35233 35235 35555 35570 35594 35609 35631 35640 35653 35660 35801 35901 35903 35957 35960 35968 35976 36033 36049 36067 36078 36106 36116 36201 36278 36302 36305 36323 36330 36360 36420 36467 36617 36784 36801 36854 99508 99559")
+  zip ~ typo_int
   service ~ stringcat(strings="no yes")
 
 class Record
