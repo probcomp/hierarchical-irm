@@ -23,13 +23,13 @@ BOOST_AUTO_TEST_CASE(test_translate_observations) {
     {"County:state",
       T_clean_relation{{"dCounty"}, false, DistributionSpec("stringcat", state_params)}},
     {"Room Type",
-      T_clean_relation{{"dObs"}, false, DistributionSpec("stringcat", br_params)}},
+      T_clean_relation{{"dObs"}, true, DistributionSpec("stringcat", br_params)}},
     {"Monthly Rent",
-      T_clean_relation{{"dObs"}, false, DistributionSpec("normal")}},
+      T_clean_relation{{"dObs"}, true, DistributionSpec("normal")}},
     {"County",
-      T_noisy_relation{{"dCounty", "dObs"}, false, EmissionSpec("bigram"), "County:name"}},
+      T_noisy_relation{{"dCounty", "dObs"}, true, EmissionSpec("bigram"), "County:name"}},
     {"State",
-      T_noisy_relation{{"dCounty", "dObs"}, false, EmissionSpec("bigram"), "County:state"}}};
+      T_noisy_relation{{"dCounty", "dObs"}, true, EmissionSpec("bigram"), "County:state"}}};
 
   T_observations obs = translate_observations(df, schema);
 
