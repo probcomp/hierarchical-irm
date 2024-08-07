@@ -34,6 +34,9 @@ T_observations translate_observations(
         // Give every row it's own universe of unique id's.
         // TODO(thomaswc): Correctly handle the case when a row makes
         // references to two or more different entities of the same type.
+        // TODO(thomaswc): Discuss other options for handling this, such
+        // as sampling the non-index domains from a CRP prior or specifying
+        // additional CSV columns to use as foreign keys.
         entities.push_back(std::to_string(i));
       }
       obs[col_name].push_back(std::make_tuple(entities, val));
