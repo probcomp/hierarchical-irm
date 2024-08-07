@@ -356,9 +356,10 @@ void incorporate_observations(std::mt19937* prng,
   for (const auto& [base_name, noisy_names] : base_to_noisy) {
     for (const std::string& noisy_name : noisy_names) {
       if (!base_to_noisy.contains(noisy_name)) {
-        assert(observations.contains(noisy_name) &&
-               "A relation that is not the base of a noisy relation must be "
-               "observed.");
+        if (!observations.contains(noisy_name)) {
+          printf("Relation %s has no observations and is not the base of a noisy relation.\n", noisy_name.c_str());
+          assert(false);
+        }
       }
       noisy_to_base[noisy_name] = base_name;
     }
