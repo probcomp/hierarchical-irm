@@ -1,7 +1,9 @@
 #include "pclean/schema_helper.hh"
 #include "pclean/get_joint_relations.hh"
 
-PCleanSchemaHelper::PCleanSchemaHelper(const PCleanSchema& s): schema(s) {
+PCleanSchemaHelper::PCleanSchemaHelper(
+    const PCleanSchema& s, bool _only_final_emissions):
+  schema(s), only_final_emissions(_only_final_emissions) {
   compute_class_name_cache();
   compute_domains_cache();
 }
@@ -104,24 +106,26 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
   }
 
   const PCleanClass query_class = get_class_by_name(schema.query.record_class);
-  for (const auto& f : schema.query.fields) {
-    std::string final_class_name;
-    std::string path_prefix;
-    const PCleanVariable sv = get_scalarvar_from_path(
-        query_class, f.class_path.cbegin(), &final_class_name, &path_prefix);
-    std::string base_relation = final_class_name + ':' + sv.name;
-    // If the base relation has n domains, we need the first n domains
-    // of this emission relation to be exactly the same (including order).
-    // The base relation's annotated_domains are exactly those that start
-    // with the path_prefix constructed above, and we use the fact that the
-    // domains and annotated_domains are in one-to-one correspondence to
-    // move the base relation's domains to the front.
-    std::vector<std::string> reordered_domains = reorder_domains(
-        domains[query_class.name],
-        annotated_domains[query_class.name],
-        path_prefix);
-    tschema[f.name] = get_emission_relation(
-        std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
+  if (only_final_emissions) {
+    for (const auto& f : schema.query.fields) {
+      std::string final_class_name;
+      std::string path_prefix;
+      const PCleanVariable sv = get_scalarvar_from_path(
+          query_class, f.class_path.cbegin(), &final_class_name, &path_prefix);
+      std::string base_relation = final_class_name + ':' + sv.name;
+      // If the base relation has n domains, we need the first n domains
+      // of this emission relation to be exactly the same (including order).
+      // The base relation's annotated_domains are exactly those that start
+      // with the path_prefix constructed above, and we use the fact that the
+      // domains and annotated_domains are in one-to-one correspondence to
+      // move the base relation's domains to the front.
+      std::vector<std::string> reordered_domains = reorder_domains(
+          domains[query_class.name],
+          annotated_domains[query_class.name],
+          path_prefix);
+      tschema[f.name] = get_emission_relation(
+          std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
+    }
   }
 
   return tschema;

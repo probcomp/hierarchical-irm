@@ -13,7 +13,7 @@
 // A class for quickly computing various properties of the schema.
 class PCleanSchemaHelper {
  public:
-  PCleanSchemaHelper(const PCleanSchema& s);
+  PCleanSchemaHelper(const PCleanSchema& s, bool _only_final_emissions = false);
 
   PCleanClass get_class_by_name(const std::string& name);
 
@@ -34,6 +34,7 @@ class PCleanSchemaHelper {
       std::string* path_prefix);
 
   PCleanSchema schema;
+  bool only_final_emissions;
   std::map<std::string, int> class_name_to_index;
   std::map<std::string, std::vector<std::string>> domains;
   std::map<std::string, std::vector<std::string>> annotated_domains;
