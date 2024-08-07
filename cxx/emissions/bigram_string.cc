@@ -109,8 +109,6 @@ double BigramStringEmission::log_prob_distance(const StrAlignment& alignment, do
 
 void BigramStringEmission::incorporate(
     const std::pair<std::string, std::string>& x, double weight) {
-  printf("In BigramStringEmission::incorporate, clean = %s dirty = %s\n",
-         x.first.c_str(), x.second.c_str());
   N += weight;
 
   std::vector<StrAlignment> alignments;
@@ -120,14 +118,12 @@ void BigramStringEmission::incorporate(
                     return log_prob_distance(a, old_cost);
                   },
                   &alignments);
-  printf("Debug: found alignments\n");
 
   double total_prob = 0.0;
   for (auto& a : alignments) {
     a.cost = exp(a.cost);  // Turn all costs into non-log probabilities
     total_prob += a.cost;
   }
-  printf("Debug: total_prob = %f\n", total_prob);
 
   for (const auto& a : alignments) {
     double w = weight * a.cost / total_prob;
@@ -174,7 +170,6 @@ void BigramStringEmission::incorporate(
       }
     }
   }
-  printf("Debug: done with BigramStringEmission::incorporate\n");
 }
 
 double BigramStringEmission::logp(

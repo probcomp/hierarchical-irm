@@ -44,7 +44,6 @@ IRM::~IRM() {
 
 void IRM::incorporate(std::mt19937* prng, const std::string& r,
                       const T_items& items, ObservationVariant value) {
-  printf("Debug: in IRM::incorporate for relation %s\n", r.c_str());
   std::visit(
       [&](auto rel) {
         auto v = std::get<
@@ -52,7 +51,6 @@ void IRM::incorporate(std::mt19937* prng, const std::string& r,
         rel->incorporate(prng, items, v);
       },
       relations.at(r));
-  printf("Done: IRM::incorporate for relation %s\n", r.c_str());
 }
 
 void IRM::unincorporate(const std::string& r, const T_items& items) {

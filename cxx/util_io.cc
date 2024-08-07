@@ -259,7 +259,6 @@ void incorporate_observations_relation(
     std::unordered_map<std::string, std::unordered_set<T_items, H_items>>&
         relation_items,
     std::unordered_set<std::string>& completed_relations) {
-  printf("Debug: in incorporate_observations_relation for %s\n", relation.c_str());
   RelationVariant rel_var =
       std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
   // base relations must be incorporated before noisy relations, so recursively
@@ -286,28 +285,20 @@ void incorporate_observations_relation(
                                       completed_relations);
   }
 
-  printf("Debug: done recursively incorporating all base relations.\n");
   ObservationVariant ov;
   if (observations.contains(relation)) {
-    printf("Debug: in first branch\n");
     // If this relation is observed, incorporate its observations.
     for (const auto& [items, value] : observations.at(relation)) {
-      printf("Debug: observation has value = %s\n", value.c_str());
       std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
-      printf("Converted it to ObservationVariant\n");
       std::visit([&](auto& m) {
         m->incorporate(prng, relation, items, ov);
       }, h_irm);
-      printf("Incorporated it into h_irm\n");
     }
-    printf("\n");
   } else {
-    printf("Debug: in second branch\n");
     // If this relation is not observed, incorporate samples from the prior.
     // This currently assumes a base relation's items are always a prefix of the
     // noisy relation's items.
     for (const auto& items : relation_items.at(relation)) {
-      printf(".");
       std::visit(
           [&](auto rel) {
             using T = typename std::remove_pointer_t<
@@ -324,10 +315,8 @@ void incorporate_observations_relation(
           },
           rel_var);
     }
-    printf("\n");
   }
   completed_relations.insert(relation);
-  printf("Debug: finished incorporate_observations_relation for %s\n", relation.c_str());
 }
 
 void incorporate_observations(std::mt19937* prng,
@@ -360,7 +349,6 @@ void incorporate_observations(std::mt19937* prng,
     }
   }
 
-  printf("Debug: done incorporating observations\n");
   std::unordered_map<std::string, std::string> noisy_to_base;
   std::unordered_map<std::string, std::vector<std::string>> base_to_noisy =
       std::visit([](const auto& m) { return m->base_to_noisy_relations; },
@@ -376,8 +364,6 @@ void incorporate_observations(std::mt19937* prng,
     }
   }
 
-  printf("Debug: done computing noisy_to_base\n");
-
   std::unordered_set<std::string> completed_relations;
   for (const std::string& relation : observed_relations) {
     if (!completed_relations.contains(relation)) {
@@ -386,9 +372,6 @@ void incorporate_observations(std::mt19937* prng,
                                         relation_items, completed_relations);
     }
   }
-
-  printf("Debug: done incorporate_observations_relation \n");
-
 }
 
 void to_txt(std::ostream& fp, const IRM& irm, const T_encoding& encoding) {

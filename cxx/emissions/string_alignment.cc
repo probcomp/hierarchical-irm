@@ -1,4 +1,3 @@
-#include <set>
 #include <utility>
 #include "emissions/string_alignment.hh"
 
@@ -6,7 +5,6 @@ void topk_alignments(int k, const std::string& s1, const std::string& s2,
                      CostFunction cost_function,
                      std::vector<StrAlignment>* alignments) {
   std::vector<StrAlignment> heap;
-  std::set<std::pair<size_t, size_t>> visited;
   StrAlignment empty_alignment;
   empty_alignment.cost = -0.0;  // We negate all costs on the heap so that
                                 // the front of the heap is the min cost
@@ -23,19 +21,8 @@ void topk_alignments(int k, const std::string& s1, const std::string& s2,
     std::pop_heap(heap.begin(), heap.end());
     heap.pop_back();
 
-    std::pair<size_t, size_t> here = std::make_pair(
-        heap_top.s1_position, heap_top.s2_position);
-    if (visited.contains(here)) {
-      continue;
-    }
-    visited.insert(here);
-
     // Does this alignment reach the end of both strings?  If so, ship it.
     double old_cost = -heap_top.cost;
-    /*
-    printf("In topk_alignments, heap.size = %ld old_cost = %f s1 pos = %ld s2 pos = %ld\n",
-           heap.size(), old_cost, heap_top.s1_position, heap_top.s2_position);
-    */
     if (std::cmp_equal(heap_top.s1_position, s1.length())
         && std::cmp_equal(heap_top.s2_position, s2.length())) {
       heap_top.cost = old_cost;
