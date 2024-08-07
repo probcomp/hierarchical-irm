@@ -81,3 +81,24 @@ BOOST_AUTO_TEST_CASE(test_custom_edit_distance) {
   BOOST_TEST(alignments[0].cost == 7);  // 2 deletions, 3 substitutions
 }
 
+double bad_edit_distance(const StrAlignment& alignment, double old_cost) {
+  const AlignPiece& p = alignment.align_pieces.back();
+  switch(p.index()) {
+    case 3: // Match
+      return old_cost + 3;
+    case 2: // Substitution
+      return old_cost + 2;
+    default: // Insertion or Deletion
+      return old_cost + 1;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_long_strings_and_bad_distance) {
+  std::vector<StrAlignment> alignments;
+  topk_alignments(
+      10,
+      "this is the theme to garry's show // the opening theme to garry's show",
+      "this is the music that you hear while they play the credits",
+      bad_edit_distance, &alignments);
+  BOOST_TEST(alignments.size() == 10);
+}
