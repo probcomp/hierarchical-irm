@@ -2,7 +2,8 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
 // Example usage:
-//   ./pclean --schema=xxx.schema --obs=xxx.obs
+//   ./pclean --schema=assets/flights.schema --obs=assets/flights_dirty.csv \
+//            --iters=5
 
 #include <iostream>
 #include <random>
@@ -24,7 +25,9 @@ int main(int argc, char** argv) {
   options.add_options()
       ("h,help", "Show help message")
       ("s,schema", "Filename of .schema input", cxxopts::value<std::string>())
-      ("o,obs", "Filename of observations input", cxxopts::value<std::string>())
+      ("obs", "Filename of observations input", cxxopts::value<std::string>())
+      ("output", "Filename of relation clusters output",
+       cxxopts::value<std::string>())
       ("i,iters", "Number of inference iterations",
        cxxopts::value<int>()->default_value("10"))
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
@@ -90,7 +93,10 @@ int main(int argc, char** argv) {
                  result["verbose"].as<bool>());
 
   // Save results
-  // TODO(thomaswc): This
+  if (result.count("output") > 0) {
+    std::string out_fn = result["output"].as<std::string>();
+    to_txt(out_fn, hirm, encoding);
+  }
 
   return 0;
 }
