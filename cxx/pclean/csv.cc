@@ -1,6 +1,7 @@
 #include "pclean/csv.hh"
 
 #include <cassert>
+#include <cctype>
 #include <fstream>
 #include <sstream>
 
@@ -45,6 +46,10 @@ DataFrame DataFrame::from_csv(
     // TODO(thomaswc): Handle quoted fields
     while (std::getline(ss, part, ',')) {
       if (first_line && column_names.empty()) {
+        // Erase white space from end of part
+        while (isspace(part.back())) {
+          part.pop_back();
+        }
         col_names.push_back(part);
         df.data[part] = {};
         continue;
@@ -53,7 +58,15 @@ DataFrame DataFrame::from_csv(
       df.data[col_names[i++]].push_back(part);
     }
     if (!first_line) {
-      assert(i == col_names.size());
+      if (line.back() == ',') {
+        // std::getline is broken and won't let the last field be empty.
+        df.data[col_names[i++]].push_back("");
+      }
+      if (i != col_names.size()) {
+        printf("Only found %ld out of %ld expected columns in line\n%s\n",
+               i, col_names.size(), line.c_str());
+        assert(false);
+      }
     }
     first_line = false;
   }

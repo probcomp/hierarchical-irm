@@ -43,7 +43,7 @@ observe
   hosp.loc.city as City
   hosp.loc.county.state as State
   hosp.zip as ZipCode
-  hosp.loc.county.county as County
+  hosp.loc.county.county as CountyName
   hosp.phone as PhoneNumber
   hosp.type.desc as HospitalType
   hosp.owner as HospitalOwner

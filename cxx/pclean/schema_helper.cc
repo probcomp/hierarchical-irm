@@ -122,8 +122,10 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
         domains[query_class.name],
         annotated_domains[query_class.name],
         path_prefix);
-    tschema[f.name] = get_emission_relation(
+    T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
+    tnr.is_observed = true;
+    tschema[f.name] = tnr;
   }
 
   return tschema;
