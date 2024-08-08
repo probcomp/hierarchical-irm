@@ -79,7 +79,7 @@ T_noisy_observations<ValueType> unincorporate_and_store_values(
   T_noisy_observations<ValueType> noisy_observations;
   for (auto [name, rel] : noisy_relations) {
     noisy_observations[name] = {};
-    for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
+    for (const T_items& items : rel->base_to_noisy_items[base_items]) {
       const ValueType& v = rel->get_value(items);
       rel->unincorporate_from_cluster(items);
       noisy_observations[name][items] = v;

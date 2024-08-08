@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "clean_relation.hh"
-#include "domain.hh"
 #include "distributions/get_distribution.hh"
+#include "domain.hh"
 
 namespace tt = boost::test_tools;
 
@@ -60,6 +60,13 @@ BOOST_AUTO_TEST_CASE(test_transition_latent_value) {
   BOOST_TEST(base_relation.get_data().size() == 3);
   BOOST_TEST(NR1.get_data().size() == 3);
   BOOST_TEST(NR2.get_data().size() == 2);
+
+  // Transitioning a latent value observed by only a subset of noisy relations
+  // is supported. In this case, the new latent value must be that of the only
+  // incorporated noisy observation.
+  transition_latent_value(&prng, {1, 3}, &base_relation,
+                          {{"NR1", &NR1}, {"NR2", &NR2}});
+  BOOST_TEST(base_relation.get_value({1, 3}) == 1.3);
 }
 
 BOOST_AUTO_TEST_CASE(test_transition_latent_value_noisy_base) {
