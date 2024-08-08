@@ -23,8 +23,6 @@ void PCleanSchemaHelper::compute_domains_cache() {
 void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
   std::vector<std::string> ds;
   std::vector<std::string> annotated_ds;
-  ds.push_back(name);
-  annotated_ds.push_back(name);
   PCleanClass c = get_class_by_name(name);
 
   for (const auto& v: c.vars) {
@@ -40,6 +38,10 @@ void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
       }
     }
   }
+
+  // Put the "primary" domain last, so that it survives reordering.
+  ds.push_back(name);
+  annotated_ds.push_back(name);
 
   domains[name] = ds;
   annotated_domains[name] = annotated_ds;
@@ -120,8 +122,10 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
         domains[query_class.name],
         annotated_domains[query_class.name],
         path_prefix);
-    tschema[f.name] = get_emission_relation(
+    T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
+    tnr.is_observed = true;
+    tschema[f.name] = tnr;
   }
 
   return tschema;

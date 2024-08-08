@@ -4,8 +4,16 @@
 #include "hirm.hh"
 
 HIRM::HIRM(const T_schema& schema, std::mt19937* prng) {
+  // Add the clean relations before the noisy relations.
   for (const auto& [name, relation] : schema) {
-    this->add_relation(prng, name, relation);
+    if (std::holds_alternative<T_clean_relation>(relation)) {
+      this->add_relation(prng, name, relation);
+    }
+  }
+  for (const auto& [name, relation] : schema) {
+    if (std::holds_alternative<T_noisy_relation>(relation)) {
+      this->add_relation(prng, name, relation);
+    }
   }
 }
 
