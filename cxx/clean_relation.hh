@@ -8,12 +8,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "distributions/get_distribution.hh"
 #include "domain.hh"
+#include "emissions/get_emission.hh"
 #include "relation.hh"
 #include "util_hash.hh"
 #include "util_math.hh"
-#include "distributions/get_distribution.hh"
-#include "emissions/get_emission.hh"
 
 // T_clean_relation is the text we get from reading a line of the schema
 // file; CleanRelation is the object that does the work.
@@ -83,9 +83,9 @@ class CleanRelation : public Relation<T> {
     return std::visit(spec_to_dist, prior_spec);
   }
 
-  void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
+  // Incorporates a new vector of items and returns their cluster assignments.
+  T_items incorporate_items(std::mt19937* prng, const T_items& items) {
     assert(!data.contains(items));
-    data[items] = value;
     for (int i = 0; i < std::ssize(domains); ++i) {
       domains[i]->incorporate(prng, items[i]);
       if (!data_r.at(domains[i]->name).contains(items[i])) {
@@ -98,6 +98,19 @@ class CleanRelation : public Relation<T> {
     if (!clusters.contains(z)) {
       clusters[z] = make_new_distribution(prng);
     }
+    return z;
+  }
+
+  void incorporate(std::mt19937* prng, const T_items& items, ValueType value) {
+    T_items z = incorporate_items(prng, items);
+    data[items] = value;
+    clusters.at(z)->incorporate(value);
+  }
+
+  void incorporate_sample(std::mt19937* prng, const T_items& items) {
+    T_items z = incorporate_items(prng, items);
+    ValueType value = sample_at_items(prng, items);
+    data[items] = value;
     clusters.at(z)->incorporate(value);
   }
 

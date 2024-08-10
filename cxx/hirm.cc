@@ -314,6 +314,34 @@ double HIRM::logp_score() const {
   return logp_score_crp + logp_score_irms;
 }
 
+void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+  std::map<std::string, CRP> domain_crps;
+  for (const auto& [r, spec] : schema) {
+    // If the relation is a leaf, sample n observations of it. Entities are
+    // sampled from CRPs except for the last item, which is assumed to be the
+    // primary key. The primary key domain should not appear in any other
+    // relation. Entities in base relations are sampled recursively.
+    if (!base_to_noisy_relations.contains(r)) {
+      const std::vector<std::string>& r_domains =
+          std::visit([](auto trel) { return trel.domains; }, spec);
+      for (int i = 0; i != n; ++i) {
+        std::vector<int> domain_entities;
+        domain_entities.reserve(r_domains.size());
+        for (auto it = r_domains.cbegin(); it != r_domains.cend() - 1; ++it) {
+          int entity = domain_crps[*it].sample(prng);
+          int crp_item = domain_crps[*it].assignments.size();
+          domain_crps[*it].incorporate(crp_item, entity);
+          domain_entities.push_back(entity);
+        }
+        domain_entities.push_back(i);
+        std::visit(
+            [&](auto rel) { rel->incorporate_sample(prng, domain_entities); },
+            get_relation(r));
+      }
+    }
+  }
+}
+
 HIRM::~HIRM() {
   for (const auto& [table, irm] : irms) {
     delete irm;
