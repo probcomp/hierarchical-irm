@@ -314,29 +314,57 @@ double HIRM::logp_score() const {
   return logp_score_crp + logp_score_irms;
 }
 
+void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
+                                           const std::string& r,
+                                           T_items& items) {
+  // If `r` is a noisy relation, first sample and incorporate to the base
+  // relation if necessary.
+  if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
+    std::visit(
+        [&](auto nr) {
+          using T = typename std::remove_pointer_t<decltype(nr)>::ValueType;
+          NoisyRelation<T>* noisy_rel = reinterpret_cast<NoisyRelation<T>*>(nr);
+          T_items base_items = noisy_rel->get_base_items(items);
+          if (!noisy_rel->base_relation->get_data().contains(base_items)) {
+            sample_and_incorporate_relation(prng, trel->base_relation,
+                                            base_items);
+          }
+        },
+        get_relation(r));
+  }
+  std::visit([&](auto rel) { rel->incorporate_sample(prng, items); },
+             get_relation(r));
+}
+
+// Samples `n` values from each leaf relation (i.e. each relation that is not
+// the base relation of a different relation). Recursively samples some number
+// of values from non-leaf relations as needed to get to `n` leaf samples.
+// Beware: since `n` unique values are sampled from CRPs, if `n` is too high
+// relative to the CRP `alpha`s, this function might take a very long time.
 void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   std::map<std::string, CRP> domain_crps;
   for (const auto& [r, spec] : schema) {
-    // If the relation is a leaf, sample n observations of it. Entities are
-    // sampled from CRPs except for the last item, which is assumed to be the
-    // primary key. The primary key domain should not appear in any other
-    // relation. Entities in base relations are sampled recursively.
+    // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
       const std::vector<std::string>& r_domains =
           std::visit([](auto trel) { return trel.domains; }, spec);
-      for (int i = 0; i != n; ++i) {
-        std::vector<int> domain_entities;
-        domain_entities.reserve(r_domains.size());
-        for (auto it = r_domains.cbegin(); it != r_domains.cend() - 1; ++it) {
+      int num_samples = 0;
+      while (num_samples < n) {
+        std::vector<int> entities;
+        entities.reserve(r_domains.size());
+        for (auto it = r_domains.cbegin(); it != r_domains.cend(); ++it) {
           int entity = domain_crps[*it].sample(prng);
           int crp_item = domain_crps[*it].assignments.size();
           domain_crps[*it].incorporate(crp_item, entity);
-          domain_entities.push_back(entity);
+          entities.push_back(entity);
         }
-        domain_entities.push_back(i);
-        std::visit(
-            [&](auto rel) { rel->incorporate_sample(prng, domain_entities); },
+        bool r_contains_items = std::visit(
+            [&](auto rel) { return rel->get_data().contains(entities); },
             get_relation(r));
+        if (!r_contains_items) {
+          sample_and_incorporate_relation(prng, r, entities);
+          ++num_samples;
+        }
       }
     }
   }

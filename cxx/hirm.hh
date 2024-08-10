@@ -67,6 +67,9 @@ class HIRM {
 
   void sample_and_incorporate(std::mt19937* prng, int n);
 
+  void sample_and_incorporate_relation(std::mt19937* prng, const std::string& r,
+                                       T_items& items);
+
   ~HIRM();
 
   // Disable copying.
