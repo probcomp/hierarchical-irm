@@ -8,6 +8,10 @@
 int StringCat::string_to_index(const std::string& s) const {
   auto it = std::find(strings.begin(), strings.end(), s);
   if (it == strings.end()) {
+    printf("Could not find string `%s` in list of strings:\n");
+    for (const auto& v : strings) {
+      printf("%s\n", v.c_str());
+    }
     assert(false);
   }
   return it - strings.begin();

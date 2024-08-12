@@ -4,6 +4,7 @@
 #pragma once
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -30,6 +31,7 @@ void transition_latent_value(
     std::mt19937* prng, T_items base_items, Relation<ValueType>* base_relation,
     std::unordered_map<std::string, NoisyRelation<ValueType>*>
         noisy_relations) {
+  printf("transition_latent_value1\n");
   // We incorporate to/unincorporate from clusters themselves rather than
   // relations. Empty clusters are not deleted, because observations will be
   // re-incorporated to them.
@@ -37,12 +39,14 @@ void transition_latent_value(
       unincorporate_and_store_values(base_items, base_relation,
                                      noisy_relations);
 
+  printf("transition_latent_value2\n");
   std::vector<ValueType> all_noisy_observations;
   for (const auto& [name, obs] : noisy_observations) {
     for (const auto& [items, v] : obs) {
       all_noisy_observations.push_back(v);
     }
   }
+  printf("transition_latent_value3\n");
 
   // Candidates for the next latent value are the clean proposals from each
   // cluster in each noisy relation.
@@ -55,14 +59,17 @@ void transition_latent_value(
           em->propose_clean(all_noisy_observations, prng));
     }
   }
+  printf("transition_latent_value4\n");
 
   std::vector<double> logpx = latent_values_incremental_logp(
       base_items, latent_value_candidates, noisy_observations, base_relation,
       noisy_relations);
+  printf("transition_latent_value5\n");
 
   choose_and_incorporate_value(prng, base_items, latent_value_candidates, logpx,
                                noisy_observations, base_relation,
                                noisy_relations);
+  printf("transition_latent_value6\n");
 }
 
 // This function leaves base_relation and noisy_relations in an invalid state,
@@ -99,23 +106,29 @@ std::vector<double> latent_values_incremental_logp(
     Relation<ValueType>* base_relation,
     std::unordered_map<std::string, NoisyRelation<ValueType>*>
         noisy_relations) {
+  printf("latent_values_incremental_logp1\n");
   // Compute logp_score of the noisy relations without the observations of
   // this attribute.
   double baseline_logp_score = 0.;
   for (auto [name, rel] : noisy_relations) {
     baseline_logp_score += rel->logp_score();
   }
+  printf("latent_values_incremental_logp2\n");
 
   std::vector<double> logpx;
   for (const ValueType& v : latent_values) {
+    std::cout << "In loop with latent value " << v << "\n";
     // Incorporate the latent/noisy values for this candidate.
     base_relation->incorporate_to_cluster(base_items, v);
+    std::cout << "after incorporate_to_cluster\n";
     for (auto& [name, rel] : noisy_relations) {
+      printf("considering noisy_relation %s\n", name.c_str());
       for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
         rel->incorporate_to_cluster(items,
                                     noisy_observations.at(name).at(items));
       }
     }
+    printf("after noisy relations loop\n");
 
     // Compute the incremental logp_score of the noisy relations.
     double candidate_logp_score = 0.;
@@ -123,15 +136,18 @@ std::vector<double> latent_values_incremental_logp(
       candidate_logp_score += rel->logp_score();
     }
     logpx.push_back(candidate_logp_score - baseline_logp_score);
+    printf("after logpx loop\n");
 
     // Unincorporate the latent/noisy values for this candidate.
     for (auto& [name, rel] : noisy_relations) {
+      printf("unincorporating from noisy_relation %s\n", name.c_str());
       for (const T_items& items : rel->base_to_noisy_items.at(base_items)) {
         rel->unincorporate_from_cluster(items);
       }
     }
     base_relation->unincorporate_from_cluster(base_items);
   }
+  printf("end of latent_values_incremental_logp\n");
   return logpx;
 }
 

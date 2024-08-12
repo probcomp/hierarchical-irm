@@ -45,6 +45,7 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
     CHECK_TIMEOUT(timeout, t_begin);
     // TRANSITION LATENT VALUES.
     for (const auto& [rel, nrels] : hirm->base_to_noisy_relations) {
+      printf("transitioning latent values for relation %s\n", rel.c_str());
       if (std::visit([](const auto& s) { return !s.is_observed; },
                      hirm->schema.at(rel))) {
         clock_t t = clock();
@@ -54,14 +55,17 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
     }
     // TRANSITION RELATIONS.
     for (const auto& [r, rc] : hirm->relation_to_code) {
+      printf("transitioning relation %s\n", r.c_str());
       clock_t t = clock();
       hirm->transition_cluster_assignment_relation(prng, r);
       REPORT_SCORE(verbose, t, t_total, hirm);
     }
     // TRANSITION IRMs.
     for (const auto& [t, irm] : hirm->irms) {
+      printf("transitioning irm #%d\n", t);
       single_step_irm_inference(prng, irm, t_total, verbose, 10, false);
     }
+    printf("done with iteration %d\n", i);
   }
 }
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -14,6 +15,16 @@
 #include "util_math.hh"
 #include "distributions/get_distribution.hh"
 #include "emissions/get_emission.hh"
+
+namespace std {
+template <typename T>
+std::ostream& operator << (std::ostream& out, const std::pair<T, T>& rhs )
+{
+    out << rhs.first << ", " << rhs.second;
+    return out;
+}
+
+}
 
 // T_clean_relation is the text we get from reading a line of the schema
 // file; CleanRelation is the object that does the work.
@@ -132,9 +143,29 @@ class CleanRelation : public Relation<T> {
   // Relation will be in an invalid state. See `transition_latent_value` for
   // usage/justification of this choice.
   void incorporate_to_cluster(const T_items& items, const ValueType& value) {
+    std::cout << "in incorporate_to_cluster with value " << value << "\n";
     T_items z = get_cluster_assignment(items);
+    printf("got cluster assignment\n");
     assert(clusters.contains(z));
+    printf("input items: ");
+    for (const auto& i : items) {
+      printf("%d ", i);
+    }
+    printf(" cluster: ");
+    for (const auto& i : z) {
+      printf("%d ", i);
+    }
+    printf("\n");
+    printf("Valid clusters are:\n");
+    for (const auto &c: clusters) {
+      for (const auto &i : c.first) {
+        printf("%d ", i);
+      }
+      printf("\n");
+    }
+    std::cout << "about to incorporate value " << value << "\n";
     clusters.at(z)->incorporate(value);
+    printf("after incorporate\n");
   }
 
   void unincorporate_from_cluster(const T_items& items) {
