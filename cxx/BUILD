@@ -106,6 +106,7 @@ cc_library(
 cc_library(
     name = "relation",
     hdrs = ["relation.hh"],
+    srcs = ["relation.cc"],
     visibility = [":__subpackages__"],
     deps = [
         ":domain",

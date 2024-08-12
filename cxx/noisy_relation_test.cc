@@ -1,6 +1,6 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#define BOOST_TEST_MODULE test Relation
+#define BOOST_TEST_MODULE test noisy_relation
 
 #include "noisy_relation.hh"
 

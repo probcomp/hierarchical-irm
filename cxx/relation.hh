@@ -71,3 +71,9 @@ class Relation {
   virtual ~Relation() = default;
 
 };
+
+
+// Overload from_string for ValueType=string because >> truncates at the first
+// space.
+template <>
+std::string Relation<std::string>::from_string(const std::string& s);
