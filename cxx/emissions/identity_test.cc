@@ -12,19 +12,19 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   BOOST_TEST(ie.logp_score() == 0.0);
   BOOST_TEST(ie.N == 0);
-  ie.incorporate(std::make_pair<bool, bool>(true, false));
+  ie.incorporate(std::make_pair<bool, bool>(true, true));
   BOOST_TEST(ie.logp_score() == 0.0);
   BOOST_TEST(ie.N == 1);
-  ie.unincorporate(std::make_pair<bool, bool>(true, false));
+  ie.unincorporate(std::make_pair<bool, bool>(true, true));
   BOOST_TEST(ie.logp_score() == 0.0);
   BOOST_TEST(ie.N == 0);
 
-  ie.incorporate(std::make_pair<bool, bool>(false, true));
-  ie.incorporate(std::make_pair<bool, bool>(false, true));
+  ie.incorporate(std::make_pair<bool, bool>(false, false));
+  ie.incorporate(std::make_pair<bool, bool>(false, false));
   BOOST_TEST(ie.logp_score() == 0.0);
   BOOST_TEST(ie.N == 2);
 
-  BOOST_TEST(ie.logp(std::make_pair<bool, bool>(true, false)) == 0.0);
+  BOOST_TEST(ie.logp(std::make_pair<bool, bool>(true, true)) == 0.0);
 
   std::mt19937 prng;
   BOOST_TEST(ie.propose_clean({true, true}, &prng));
