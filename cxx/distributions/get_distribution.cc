@@ -61,7 +61,8 @@ DistributionSpec::DistributionSpec(
     distribution = DistributionEnum::string_skellam;
     observation_type = ObservationEnum::string_type;
   } else {
-    assert(false && "Unsupported distribution name.");
+    printf("Unknown distribution name %s\n", dist_name.c_str());
+    std::exit(1);
   }
 }
 
@@ -104,6 +105,7 @@ DistributionVariant get_prior(const DistributionSpec& spec,
       return new DistributionAdapter<int>(s);
     }
     default:
-      assert(false && "Unsupported distribution enum value.");
+      printf("Unknown distribution enum value %d.\n", (int)(spec.distribution));
+      std::exit(1);
   }
 }

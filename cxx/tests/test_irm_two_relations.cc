@@ -81,12 +81,12 @@ int main(int argc, char** argv) {
     auto p0 =
         reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))
             ->logp({x1, x2}, false, &prng);
-    auto p0_irm = irm.logp({{"R1", {x1, x2}, false}}, &prng);
+    [[maybe_unused]] auto p0_irm = irm.logp({{"R1", {x1, x2}, false}}, &prng);
     assert(abs(p0 - p0_irm) < 1e-10);
     auto p1 =
         reinterpret_cast<T_r>(std::get<Relation<bool>*>(irm.relations.at("R1")))
             ->logp({x1, x2}, true, &prng);
-    auto Z = logsumexp({p0, p1});
+    [[maybe_unused]] auto Z = logsumexp({p0, p1});
     assert(abs(Z) < 1e-10);
     assert(abs(exp(p0) - expected_p0[x1].at(x2)) < .1);
   }
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
         irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, false}}, &prng);
     auto p11 =
         irm.logp({{"R1", {x1, x2}, true}, {"R1", {x1, x3}, true}}, &prng);
-    auto Z = logsumexp({p00, p01, p10, p11});
+    [[maybe_unused]] auto Z = logsumexp({p00, p01, p10, p11});
     assert(abs(Z) < 1e-10);
   }
 
@@ -134,8 +134,8 @@ int main(int argc, char** argv) {
   assert(abs(irx.logp_score() - irm.logp_score()) < 1e-8);
   // Check domains agree.
   for (const auto& d : {"D1", "D2"}) {
-    auto dm = irm.domains.at(d);
-    auto dx = irx.domains.at(d);
+    [[maybe_unused]] auto dm = irm.domains.at(d);
+    [[maybe_unused]] auto dx = irx.domains.at(d);
     assert(dm->items == dx->items);
     assert(dm->crp.assignments == dx->crp.assignments);
     assert(dm->crp.tables == dx->crp.tables);
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
     assert(rm->data_r == rx->data_r);
     assert(rm->clusters.size() == rx->clusters.size());
     for (const auto& [z, clusterm] : rm->clusters) {
-      auto clusterx = rx->clusters.at(z);
+      [[maybe_unused]] auto clusterx = rx->clusters.at(z);
       assert(clusterm->N == clusterx->N);
     }
   }

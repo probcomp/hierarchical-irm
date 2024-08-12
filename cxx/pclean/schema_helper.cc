@@ -74,6 +74,8 @@ PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
   printf("Error: could not find name %s in class %s\n",
          s.c_str(), base_class.name.c_str());
   assert(false);
+  PCleanVariable pcv;
+  return pcv;
 }
 
 std::vector<std::string> reorder_domains(

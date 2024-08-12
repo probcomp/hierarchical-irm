@@ -22,7 +22,7 @@ bool tokenize(std::string line, std::vector<Token>* tokens) {
       t.val += c;
     } else if ((c == '"') || (c == '\'')) {  // Strings
       t.type = TokenType::string;
-      char sc;
+      char sc = '$';
       while (i < line.length()) {
         sc = line[i++];
         if (sc == c) { // End of string

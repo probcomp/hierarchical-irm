@@ -392,7 +392,11 @@ class CleanRelation : public Relation<T> {
   void set_cluster_assignment_gibbs(const Domain& domain, const T_item& item,
                                     int table, std::mt19937* prng) {
     int table_current = domain.get_cluster_assignment(item);
-    assert(table != table_current);
+    if (table == table_current) {
+      printf("table %d == table_current in set_cluster_assignment_gibbs\n",
+             table);
+      assert(false);
+    }
     for (const T_items& items : data_r.at(domain.name).at(item)) {
       ValueType x = data.at(items);
       // Remove from current cluster.

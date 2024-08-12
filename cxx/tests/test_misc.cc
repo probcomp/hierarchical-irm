@@ -126,8 +126,8 @@ int main(int argc, char** argv) {
   irm4.domains.at("feature")->crp.alpha = irm3.domains.at("feature")->crp.alpha;
   assert(abs(irm3.logp_score() - irm4.logp_score()) < 1e-8);
   for (const auto& d : {"animal", "feature"}) {
-    auto d3 = irm3.domains.at(d);
-    auto d4 = irm4.domains.at(d);
+    [[maybe_unused]] auto d3 = irm3.domains.at(d);
+    [[maybe_unused]] auto d4 = irm4.domains.at(d);
     assert(d3->items == d4->items);
     assert(d3->crp.assignments == d4->crp.assignments);
     assert(d3->crp.tables == d4->crp.tables);
@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
     assert(r3->data_r == r4->data_r);
     assert(r3->clusters.size() == r4->clusters.size());
     for (const auto& [z, cluster3] : r3->clusters) {
-      auto cluster4 = r4->clusters.at(z);
+      [[maybe_unused]] auto cluster4 = r4->clusters.at(z);
       assert(cluster3->N == cluster4->N);
     }
   }

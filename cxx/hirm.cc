@@ -146,7 +146,9 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
   crp.incorporate(rc, choice);
   assert(irms.size() == crp.tables.size());
   for (const auto& [table, irm] : irms) {
-    assert(crp.tables.contains(table));
+    if (!crp.tables.contains(table)) {
+      assert(false);
+    }
   }
 
   // Update any parent relations to point to the new relation as a base
@@ -204,7 +206,9 @@ void HIRM::set_cluster_assignment_gibbs(std::mt19937* prng,
   update_base_relation(r);
   assert(irms.size() == crp.tables.size());
   for (const auto& [table, irm] : irms) {
-    assert(crp.tables.contains(table));
+    if (!crp.tables.contains(table)) {
+      assert(false);
+    }
   }
 }
 
