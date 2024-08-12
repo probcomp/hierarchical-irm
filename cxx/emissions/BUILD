@@ -78,6 +78,15 @@ cc_library(
 )
 
 cc_library(
+    name = "identity",
+    hdrs = ["identity.hh"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":base",
+    ],
+)
+
+cc_library(
     name = "simple_string",
     srcs = ["simple_string.hh"],
     visibility = ["//:__subpackages__"],
@@ -150,6 +159,16 @@ cc_test(
     srcs = ["gaussian_test.cc"],
     deps = [
         ":gaussian",
+        "@boost//:algorithm",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "identity_test",
+    srcs = ["identity_test.cc"],
+    deps = [
+        ":identity",
         "@boost//:algorithm",
         "@boost//:test",
     ],
