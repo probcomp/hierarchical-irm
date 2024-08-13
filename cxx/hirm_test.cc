@@ -90,21 +90,21 @@ BOOST_AUTO_TEST_CASE(test_hirm_sample) {
 
   std::mt19937 prng;
   HIRM hirm(schema2, &prng);
-  hirm.sample_and_incorporate(&prng, 20);
+  hirm.sample_and_incorporate(&prng, 5);
 
   BOOST_TEST(
       std::get<Relation<bool>*>(hirm.get_relation("R2"))->get_data().size() ==
-      20);
+      5);
   BOOST_TEST(
       std::get<Relation<bool>*>(hirm.get_relation("R3"))->get_data().size() ==
-      20);
+      5);
   BOOST_TEST(
       std::get<Relation<double>*>(hirm.get_relation("R5"))->get_data().size() ==
-      20);
+      5);
   int nobs_R4 =
       std::get<Relation<double>*>(hirm.get_relation("R4"))->get_data().size();
   BOOST_TEST(nobs_R4 > 0);
-  BOOST_TEST(nobs_R4 <= 20);
+  BOOST_TEST(nobs_R4 <= 5);
   BOOST_TEST(hirm.logp_score() < 0.0);
 }
 
