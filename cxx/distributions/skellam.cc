@@ -13,7 +13,7 @@ double lognormal_logp(double x, double mean, double stddev) {
 double Skellam::logp(const int&x) const {
   return -mu1 - mu2 + (x / 2.0) * std::log(mu1 / mu2)
       // TODO(thomaswc): Replace this with something more numerically stable.
-      + std::log(std::cyl_bessel_i(x, 2.0 * std::sqrt(mu1 * mu2)));
+      + std::log(std::cyl_bessel_i(std::abs(x), 2.0 * std::sqrt(mu1 * mu2)));
 }
 
 int Skellam::sample(std::mt19937* prng) {

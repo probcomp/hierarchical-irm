@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
   // Save results
   if (result.count("output") > 0) {
     std::string out_fn = result["output"].as<std::string>();
+    std::cout << "Savings results to " << out_fn << "\n";
     to_txt(out_fn, hirm, encoding);
   }
 
