@@ -9,12 +9,12 @@
 #include <vector>
 
 #include "clean_relation.hh"
+#include "distributions/get_distribution.hh"
 #include "domain.hh"
+#include "emissions/base.hh"
 #include "relation.hh"
 #include "util_hash.hh"
 #include "util_math.hh"
-#include "distributions/get_distribution.hh"
-#include "emissions/base.hh"
 
 // T_noisy_relation is the text we get from reading a line of the schema file;
 // NoisyRelation is the object that does the work.
@@ -66,6 +66,15 @@ class NoisyRelation : public Relation<T> {
     emission_relation.incorporate(prng, items, std::make_pair(base_val, value));
     data[items] = value;
     base_to_noisy_items[base_items].insert(items);
+  }
+
+  void incorporate_sample(std::mt19937* prng, const T_items& items) {
+    T_items z = emission_relation.incorporate_items(prng, items);
+    const ValueType& base_val = get_base_value(items);
+    ValueType value = sample_at_items(prng, items);
+    data[items] = value;
+    emission_relation.clusters.at(z)->incorporate(
+        std::make_pair(base_val, value));
   }
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
@@ -186,7 +195,6 @@ class NoisyRelation : public Relation<T> {
   }
 
   ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {
-    // TODO(emilyaf): Maybe take a sample if there is no base value.
     const ValueType& base_value = get_base_value(items);
     if (emission_relation.clusters.contains(items)) {
       return reinterpret_cast<Emission<ValueType>*>(

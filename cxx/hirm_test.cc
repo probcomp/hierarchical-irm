@@ -6,6 +6,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
+
 #include "distributions/get_distribution.hh"
 
 namespace tt = boost::test_tools;
@@ -69,6 +70,42 @@ BOOST_AUTO_TEST_CASE(test_hirm) {
   hirm.transition_latent_values_relation(&prng, "R2");
   Relation<double>* R2 = std::get<Relation<double>*>(hirm.get_relation("R2"));
   BOOST_TEST(R2->get_data().at({0, 3}) != 0.5);
+}
+
+BOOST_AUTO_TEST_CASE(test_hirm_sample) {
+  std::map<std::string, T_relation> schema2{
+      {"R2",
+       T_noisy_relation{
+           {"D1", "D1", "D2"}, true, EmissionSpec("sometimes_bitflip"), "R1"}},
+      {"R1",
+       T_clean_relation{{"D1", "D1"}, false, DistributionSpec("bernoulli")}},
+      {"R3",
+       T_noisy_relation{
+           {"D1", "D1", "D5"}, true, EmissionSpec("sometimes_bitflip"), "R1"}},
+      {"R4", T_clean_relation{{"D1", "D3"}, false, DistributionSpec("normal")}},
+      {"R5", T_noisy_relation{{"D1", "D3", "D4"},
+                              true,
+                              EmissionSpec("sometimes_gaussian"),
+                              "R4"}}};
+
+  std::mt19937 prng;
+  HIRM hirm(schema2, &prng);
+  hirm.sample_and_incorporate(&prng, 20);
+
+  BOOST_TEST(
+      std::get<Relation<bool>*>(hirm.get_relation("R2"))->get_data().size() ==
+      20);
+  BOOST_TEST(
+      std::get<Relation<bool>*>(hirm.get_relation("R3"))->get_data().size() ==
+      20);
+  BOOST_TEST(
+      std::get<Relation<double>*>(hirm.get_relation("R5"))->get_data().size() ==
+      20);
+  int nobs_R4 =
+      std::get<Relation<double>*>(hirm.get_relation("R4"))->get_data().size();
+  BOOST_TEST(nobs_R4 > 0);
+  BOOST_TEST(nobs_R4 <= 20);
+  BOOST_TEST(hirm.logp_score() < 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(test_hirm_relation_names) {
