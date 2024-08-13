@@ -32,6 +32,8 @@ void inference_irm(std::mt19937* prng, IRM* irm, int iters, int timeout,
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
+    printf("Starting iteration %d, model score = %f\n",
+           i+1, irm->logp_score());
     CHECK_TIMEOUT(timeout, t_begin);
     single_step_irm_inference(prng, irm, t_total, verbose, 10, true);
   }
@@ -42,6 +44,8 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
   clock_t t_begin = clock();
   double t_total = 0;
   for (int i = 0; i < iters; ++i) {
+    printf("Starting iteration %d, model score = %f\n",
+           i+1, hirm->logp_score());
     CHECK_TIMEOUT(timeout, t_begin);
     // TRANSITION LATENT VALUES.
     for (const auto& [rel, nrels] : hirm->base_to_noisy_relations) {
