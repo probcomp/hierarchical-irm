@@ -38,7 +38,8 @@ observe
   location.city.state as State
   from Record
 )""");
-    assert(read_schema(ss, &schema));
+    [[maybe_unused]] bool ok = read_schema(ss, &schema);
+    assert(ok);
   }
 
   ~SchemaTestFixture() {}
@@ -99,15 +100,19 @@ class Person
   home_city ~ City
 )""");
   PCleanSchema schema;
-  assert(read_schema(ss, &schema));
+  [[maybe_unused]] bool ok = read_schema(ss, &schema);
+  assert(ok);
   PCleanSchemaHelper schema_helper(schema);
 
   std::vector<std::string> expected_domains = {
     "City", "City", "Person"};
   std::vector<std::string> expected_annotated_domains = {
     "birth_city:City", "home_city:City", "Person"};
-  BOOST_TEST(schema_helper.domains["Person"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["Person"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.domains["Person"] == expected_domains,
+             tt::per_element());
+  BOOST_TEST(
+      schema_helper.annotated_domains["Person"] == expected_annotated_domains,
+      tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(test_domains_cache_diamond) {
@@ -126,7 +131,8 @@ class Physician
   school ~ School
 )""");
   PCleanSchema schema;
-  assert(read_schema(ss, &schema));
+  [[maybe_unused]] bool ok = read_schema(ss, &schema);
+  assert(ok);
   PCleanSchemaHelper schema_helper(schema);
 
   std::vector<std::string> expected_domains = {
@@ -134,8 +140,11 @@ class Physician
   std::vector<std::string> expected_annotated_domains = {
     "practice:location:City", "practice:Practice",
     "school:location:City", "school:School", "Physician"};
-  BOOST_TEST(schema_helper.domains["Physician"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["Physician"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.domains["Physician"] == expected_domains,
+             tt::per_element());
+  BOOST_TEST(
+      schema_helper.annotated_domains["Physician"] ==
+      expected_annotated_domains, tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
