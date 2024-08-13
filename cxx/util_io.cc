@@ -72,7 +72,8 @@ T_schema load_schema(const std::string& path) {
   std::vector<Token> tokens;
   while (std::getline(fp, line)) {
     tokens.clear();
-    assert(tokenize(line, &tokens));
+    [[maybe_unused]] bool ok = tokenize(line, &tokens);
+    assert(ok);
 
     if (tokens.empty()) {
       continue;
