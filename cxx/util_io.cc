@@ -358,7 +358,7 @@ void incorporate_observations(std::mt19937* prng,
       if (!base_to_noisy.contains(noisy_name)) {
         if (!observations.contains(noisy_name)) {
           printf("Relation %s has no observations and is not the base of a noisy relation.\n", noisy_name.c_str());
-          std::exit(false);
+          std::exit(1);
         }
       }
       noisy_to_base[noisy_name] = base_name;
