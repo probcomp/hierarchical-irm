@@ -65,8 +65,16 @@ class HIRM {
 
   double logp_score() const;
 
+  // Samples `n` values from each leaf relation (i.e. each relation that is not
+  // the base relation of a different relation). Recursively samples some number
+  // of values from non-leaf relations as needed to get to `n` leaf samples.
+  // Beware: since `n` unique values are sampled from CRPs, if `n` is too high
+  // relative to the CRP `alpha`s, this function might take a very long time.
   void sample_and_incorporate(std::mt19937* prng, int n);
 
+  // Incorporates a sample into relation `r`. If `r` is a noisy relation, this
+  // function recursively incorporates a sample into the base relation, if
+  // necessary.
   void sample_and_incorporate_relation(std::mt19937* prng, const std::string& r,
                                        T_items& items);
 

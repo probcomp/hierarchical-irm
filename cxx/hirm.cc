@@ -336,11 +336,6 @@ void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
              get_relation(r));
 }
 
-// Samples `n` values from each leaf relation (i.e. each relation that is not
-// the base relation of a different relation). Recursively samples some number
-// of values from non-leaf relations as needed to get to `n` leaf samples.
-// Beware: since `n` unique values are sampled from CRPs, if `n` is too high
-// relative to the CRP `alpha`s, this function might take a very long time.
 void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   std::map<std::string, CRP> domain_crps;
   for (const auto& [r, spec] : schema) {
