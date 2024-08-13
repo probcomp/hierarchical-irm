@@ -2,7 +2,7 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
 // Example usage:
-//   ./pclean --schema=assets/flights.schema --obs=assets/flights_dirty.csv \
+//   ./pclean --schema=assets/flights.schema --obs=assets/flights_dirty.csv
 //            --iters=5
 
 #include <iostream>

@@ -80,14 +80,16 @@ int main(int argc, char** argv) {
 
   // Marginally normalized.
   int persiancat = enc["animal"]["persiancat"];
-  auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}}, &prng);
-  auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}}, &prng);
+  [[maybe_unused]] auto p0_black_persiancat = hirm.logp({{"black", {persiancat}, false}}, &prng);
+  [[maybe_unused]] auto p1_black_persiancat = hirm.logp({{"black", {persiancat}, true}}, &prng);
   assert(abs(logsumexp({p0_black_persiancat, p1_black_persiancat})) < 1e-10);
 
   // Marginally normalized.
   int sheep = enc["animal"]["sheep"];
-  auto p0_solitary_sheep = hirm.logp({{"solitary", {sheep}, false}}, &prng);
-  auto p1_solitary_sheep = hirm.logp({{"solitary", {sheep}, true}}, &prng);
+  [[maybe_unused]] auto p0_solitary_sheep = hirm.logp(
+      {{"solitary", {sheep}, false}}, &prng);
+  [[maybe_unused]] auto p1_solitary_sheep = hirm.logp(
+      {{"solitary", {sheep}, true}}, &prng);
   assert(abs(logsumexp({p0_solitary_sheep, p1_solitary_sheep})) < 1e-10);
 
   // Jointly normalized.
@@ -99,7 +101,7 @@ int main(int argc, char** argv) {
       {{"black", {persiancat}, true}, {"solitary", {sheep}, false}}, &prng);
   auto p11_black_persiancat_solitary_sheep = hirm.logp(
       {{"black", {persiancat}, true}, {"solitary", {sheep}, true}}, &prng);
-  auto Z = logsumexp({
+  [[maybe_unused]] auto Z = logsumexp({
       p00_black_persiancat_solitary_sheep,
       p01_black_persiancat_solitary_sheep,
       p10_black_persiancat_solitary_sheep,
@@ -133,7 +135,7 @@ int main(int argc, char** argv) {
     assert(abs(irx->logp_score() - irm->logp_score()) < 1e-8);
     // Check domains agree.
     for (const auto& [d, dm] : irm->domains) {
-      auto dx = irx->domains.at(d);
+      [[maybe_unused]] auto dx = irx->domains.at(d);
       assert(dm->items == dx->items);
       assert(dm->crp.assignments == dx->crp.assignments);
       assert(dm->crp.tables == dx->crp.tables);
@@ -150,7 +152,7 @@ int main(int argc, char** argv) {
       assert(rm->data_r == rx->data_r);
       assert(rm->clusters.size() == rx->clusters.size());
       for (const auto& [z, clusterm] : rm->clusters) {
-        auto clusterx = rx->clusters.at(z);
+        [[maybe_unused]] auto clusterx = rx->clusters.at(z);
         assert(clusterm->N == clusterx->N);
       }
     }

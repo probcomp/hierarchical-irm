@@ -78,7 +78,7 @@ class Sometimes : public Emission<SampleType> {
     // BetaBernoulli instances for each choice of clean and picking the
     // clean with the highest combined logp_score().
     std::unordered_map<SampleType, int> counts;
-    SampleType mode;
+    SampleType mode = corrupted[0];
     int max_count = 0;
     for (const SampleType& c : corrupted) {
       ++counts[c];

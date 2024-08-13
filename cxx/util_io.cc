@@ -106,7 +106,7 @@ T_schema load_schema(const std::string& path) {
           printf("Error parsing schema line %s: expected ',' or ']' after parameter definition\n", line.c_str());
           printf("Got %s of type %d instead\n",
                  tokens[i].val.c_str(), (int)(tokens[i].type));
-          assert(false);
+          std::exit(1);
         }
 
       } while (tokens[i].val == ",");
@@ -134,7 +134,7 @@ T_schema load_schema(const std::string& path) {
         printf("Error parsing schema line %s: expected ',' or ')' after domain\n", line.c_str());
         printf("Got %s of type %d instead\n",
                tokens[i].val.c_str(), (int)(tokens[i].type));
-        assert(false);
+        std::exit(1);
       }
     } while (tokens[i++].val == ",");
 
@@ -187,7 +187,7 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 
     if (!schema.contains(relname)) {
       printf("Can not find %s in schema\n", relname.c_str());
-      assert(false);
+      std::exit(1);
     }
 
     std::string word;
@@ -358,7 +358,7 @@ void incorporate_observations(std::mt19937* prng,
       if (!base_to_noisy.contains(noisy_name)) {
         if (!observations.contains(noisy_name)) {
           printf("Relation %s has no observations and is not the base of a noisy relation.\n", noisy_name.c_str());
-          assert(false);
+          std::exit(1);
         }
       }
       noisy_to_base[noisy_name] = base_name;
@@ -577,7 +577,9 @@ load_clusters_hirm(const std::string& path) {
 
   assert(relations.size() == irms.size());
   for (const auto& [t, rs] : relations) {
-    assert(irms.count(t) == 1);
+    if (irms.count(t) != 1) {
+      assert(false);
+    }
   }
   fp.close();
   return std::make_pair(relations, irms);
