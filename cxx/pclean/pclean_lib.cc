@@ -1,6 +1,9 @@
 // Copyright 2024
 // Apache License, Version 2.0, refer to LICENSE.txt
 
+#include <cctype>
+#include <cstdlib>
+
 #include "irm.hh"
 #include "pclean/csv.hh"
 #include "pclean/pclean_lib.hh"
@@ -29,6 +32,15 @@ T_observations translate_observations(
         continue;
       }
 
+      // Don't allow non-printable characters in val.
+      for (const char c: val) {
+        if (!std::isprint(c)) {
+          printf("Found non-printable character with ascii value %d on line "
+                 "%ld of column %s in value `%s`.\n",
+                 (int)c, i+2, col_name.c_str(), val.c_str());
+          std::exit(1);
+        }
+      }
       std::vector<std::string> entities;
       for (size_t j = 0; j < num_domains; ++j) {
         // Give every row it's own universe of unique id's.
