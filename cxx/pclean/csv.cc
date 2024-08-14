@@ -45,11 +45,11 @@ DataFrame DataFrame::from_csv(
     size_t i = 0;
     // TODO(thomaswc): Handle quoted fields
     while (std::getline(ss, part, ',')) {
+      // Erase white space from end of part
+      while (isspace(part.back())) {
+        part.pop_back();
+      }
       if (first_line && column_names.empty()) {
-        // Erase white space from end of part
-        while (isspace(part.back())) {
-          part.pop_back();
-        }
         col_names.push_back(part);
         df.data[part] = {};
         continue;
