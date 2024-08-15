@@ -33,6 +33,9 @@ int main(int argc, char** argv) {
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
       ("only_final_emissions", "Only create one layer of emissions",
        cxxopts::value<bool>()->default_value("false"))
+      ("query_class_is_clean",
+       "If false, model queries of the query class with emissions noise.",
+       cxxopts::value<bool>()->default_value("true"))
       ("t,timeout", "Timeout in seconds for inference",
        cxxopts::value<int>()->default_value("0"))
       ("v,verbose", "Verbose output",
@@ -66,7 +69,9 @@ int main(int argc, char** argv) {
   // Translate schema
   std::cout << "Making schema helper ...\n";
   PCleanSchemaHelper schema_helper(
-      pclean_schema, result["only_final_emissions"].as<bool>());
+      pclean_schema,
+      result["only_final_emissions"].as<bool>(),
+      result["query_class_is_clean"].as<bool>());
   std::cout << "Translating schema ...\n";
   T_schema hirm_schema = schema_helper.make_hirm_schema();
 

@@ -13,7 +13,9 @@
 // A class for quickly computing various properties of the schema.
 class PCleanSchemaHelper {
  public:
-  PCleanSchemaHelper(const PCleanSchema& s, bool _only_final_emissions = false);
+  PCleanSchemaHelper(const PCleanSchema& s,
+                     bool _only_final_emissions = false,
+                     bool _query_class_is_clean = true);
 
   PCleanClass get_class_by_name(const std::string& name);
 
@@ -27,14 +29,13 @@ class PCleanSchemaHelper {
 
   void compute_domains_for(const std::string& name);
 
-  PCleanVariable get_scalarvar_from_path(
-      const PCleanClass& base_class,
-      std::vector<std::string>::const_iterator path_iterator,
-      std::string* final_class_name,
-      std::string* path_prefix);
+  void make_relations_for_queryfield(
+      const QueryField& f, const PCleanClass& c,
+      T_schema* schema);
 
   PCleanSchema schema;
   bool only_final_emissions;
+  bool query_class_is_clean;
   std::map<std::string, int> class_name_to_index;
   std::map<std::string, std::vector<std::string>> domains;
   std::map<std::string, std::vector<std::string>> annotated_domains;
