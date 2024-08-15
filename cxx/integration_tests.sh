@@ -19,9 +19,9 @@ startt2=$(date +%s)
 ./bazel-bin/hirm --iters=5 --load=assets/animals.unary.1.hirm assets/animals.unary
 endt2=$(date +%s)
 startt3=$(date +%s)
-#./bazel-bin/pclean/pclean --schema=assets/flights.schema --obs=assets/flights_dirty.100.csv --iters=5
+./bazel-bin/pclean/pclean --schema=assets/flights.schema --obs=assets/flights_dirty.10.csv --iters=5
 ./bazel-bin/pclean/pclean --schema=assets/hospitals.schema --obs=assets/hospital_dirty.10.csv --iters=5
-#./bazel-bin/pclean/pclean --schema=assets/rents.schema --obs=assets/rents_dirty.100.csv --iters=5
+./bazel-bin/pclean/pclean --schema=assets/rents.schema --obs=assets/rents_dirty.10.csv --iters=5
 endt3=$(date +%s)
 echo "Integration tests in /tests ran in $(($endt1-$startt1)) seconds"
 echo "hirm integration tests ran in $(($endt2-$startt2)) seconds"

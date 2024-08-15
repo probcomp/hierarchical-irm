@@ -3,30 +3,30 @@
 
 class County
   state ~ stringcat(strings="al ak az ar ca co ct de dc fl ga hi id il in ia ks ky la me md ma mi mn ms mo mt ne nv nh nj nm ny nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy")
-  county ~ string
+  county ~ string(maxlength=25)
 
 class Place
   county ~ County
-  city ~ string
+  city ~ string(maxlength=25)
 
 class Condition
-  desc ~ string
+  desc ~ string(maxlength=40)
 
 class Measure
   code ~ stringcat(strings="ami-1 ami-2 ami-3 ami-4 ami-5 ami-7a ami-8a ami-x amix1 amix2 amx-3 amx-4 axi-2 axi-4 cac-1 cac-2 cac-3 hf-1 hf-2 hf-3 hf-4 hf-x hfx1 hfx4 hx-1 hx-2 pn-2 pn-3b pn-4 pn-5c pn-6 pn-7 pn-x pnx5c pnx6 pn-xb px-4 px-5c scip-card-2 scip-inf-1 scip-inf-2 scip-inf-3 scip-inf-4 scip-inf-6 scip-inx-4 scip-vte-1 scip-vte-2 scip-vtx-1 scipxinfx1 scix-inf-2 scxp-xnf-3 sxip-vte-1 xax-1 xf-1")
-  name ~ string # TODO(thomaswc): Consider using stringcat instead.
+  name ~ string(maxlength=0) # TODO(thomaswc): Consider using stringcat instead
   condition ~ Condition
 
 class HospitalType
-  desc ~ string
+  desc ~ string(maxlength=40)
 
 class Hospital
   loc ~ Place
   type ~ HospitalType
   provider ~ typo_int
-  name ~ string
-  addr ~ string
-  phone ~ string
+  name ~ string(maxlength=50)
+  addr ~ string(maxlength=50)
+  phone ~ string(maxlength=15)
   owner ~ stringcat(strings="government - federal:government - hospital district or authority:government - local:government - state:government - federal:proprietary:voluntary non-profit - church:voluntary non-profit - other:voluntary non-profit - private", delim=":")
   zip ~ typo_int
   service ~ stringcat(strings="no yes")

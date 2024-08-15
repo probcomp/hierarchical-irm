@@ -71,8 +71,13 @@ DistributionVariant get_prior(const DistributionSpec& spec,
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;
-    case DistributionEnum::bigram:
-      return new Bigram;
+    case DistributionEnum::bigram: {
+      size_t max_length = 80;
+      if (spec.distribution_args.contains("maxlength")) {
+        max_length = std::stoul(spec.distribution_args.at("maxlength"));
+      }
+      return new Bigram(max_length);
+    }
     case DistributionEnum::categorical: {
       assert(spec.distribution_args.size() == 1);
       int num_categories = std::stoi(spec.distribution_args.at("k"));
