@@ -4,7 +4,9 @@
 #include "pclean/get_joint_relations.hh"
 
 PCleanSchemaHelper::PCleanSchemaHelper(
-    const PCleanSchema& s, bool _only_final_emissions):
+    const PCleanSchema& s,
+    bool _only_final_emissions,
+    bool _query_class_is_clean):
   schema(s), only_final_emissions(_only_final_emissions),
   query_class_is_clean(_query_class_is_clean) {
   compute_class_name_cache();
@@ -64,7 +66,7 @@ PCleanVariable find_variable_in_class(
     }
   }
   printf("Error: could not find a variable named %s in class %s!\n",
-         var_name.c_str(), c.c_str());
+         var_name.c_str(), c.name.c_str());
   std::exit(1);
 }
 
