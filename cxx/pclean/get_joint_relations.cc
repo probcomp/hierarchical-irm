@@ -17,6 +17,7 @@ std::map<std::string, std::pair<std::string, std::string>> JOINT_NAME_TO_PARTS =
   {"string", {"bigram", "bigram"}},
   {"stringcat", {"stringcat", "bigram"}},
   {"typo_int", {"string_skellam", "bigram"}},
+  {"typo_nat", {"string_nat", "bigram"}},
   {"typo_real", {"string_normal", "bigram"}},
   // TODO(thomaswc): Consider implementing an emission function to use with
   // stringcat where the corrupted value is still a valid, in-category string.

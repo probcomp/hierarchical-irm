@@ -23,6 +23,7 @@ enum class DistributionEnum {
   skellam,
   stringcat,
   string_skellam,
+  string_nat,
   string_normal
 };
 

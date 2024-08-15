@@ -9,16 +9,16 @@
 #include "distributions/base.hh"
 
 void Bigram::assert_valid_char(const char c) const {
-  assert(c >= ' ' && c <= '~');
+  assert(c >= min_char && c <= max_char);
 }
 
 size_t Bigram::char_to_index(const char c) const {
   assert_valid_char(c);
-  return c - ' ';
+  return c - min_char;
 }
 
 char Bigram::index_to_char(const size_t i) const {
-  const char c = i + ' ';
+  const char c = i + min_char;
   assert_valid_char(c);
   return c;
 }

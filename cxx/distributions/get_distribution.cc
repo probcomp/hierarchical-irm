@@ -14,6 +14,7 @@
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
 #include "distributions/stringcat.hh"
+#include "distributions/string_nat.hh"
 #include "util_observation.hh"
 
 DistributionSpec::DistributionSpec(
@@ -53,6 +54,9 @@ DistributionSpec::DistributionSpec(
     observation_type = ObservationEnum::int_type;
   } else if (dist_name == "stringcat") {
     distribution = DistributionEnum::stringcat;
+    observation_type = ObservationEnum::string_type;
+  } else if (dist_name == "string_nat") {
+    distribution = DistributionEnum::string_nat;
     observation_type = ObservationEnum::string_type;
   } else if (dist_name == "string_normal") {
     distribution = DistributionEnum::string_normal;
@@ -101,6 +105,13 @@ DistributionVariant get_prior(const DistributionSpec& spec,
       boost::split(strings, spec.distribution_args.at("strings"),
                    boost::is_any_of(delim));
       return new StringCat(strings);
+    }
+    case DistributionEnum::string_nat: {
+      size_t max_length = 20;
+      if (spec.distribution_args.contains("maxlength")) {
+        max_length = std::stoul(spec.distribution_args.at("maxlength"));
+      }
+      return new StringNat(max_length);
     }
     case DistributionEnum::string_normal:
       return new DistributionAdapter<double>(new Normal);
