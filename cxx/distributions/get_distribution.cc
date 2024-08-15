@@ -14,6 +14,7 @@
 #include "distributions/normal.hh"
 #include "distributions/skellam.hh"
 #include "distributions/stringcat.hh"
+#include "distributions/string_nat.hh"
 #include "util_observation.hh"
 
 DistributionSpec::DistributionSpec(
@@ -54,6 +55,9 @@ DistributionSpec::DistributionSpec(
   } else if (dist_name == "stringcat") {
     distribution = DistributionEnum::stringcat;
     observation_type = ObservationEnum::string_type;
+  } else if (dist_name == "string_nat") {
+    distribution = DistributionEnum::string_nat;
+    observation_type = ObservationEnum::string_type;
   } else if (dist_name == "string_normal") {
     distribution = DistributionEnum::string_normal;
     observation_type = ObservationEnum::string_type;
@@ -61,7 +65,8 @@ DistributionSpec::DistributionSpec(
     distribution = DistributionEnum::string_skellam;
     observation_type = ObservationEnum::string_type;
   } else {
-    assert(false && "Unsupported distribution name.");
+    printf("Unknown distribution name %s\n", dist_name.c_str());
+    std::exit(1);
   }
 }
 
@@ -70,8 +75,13 @@ DistributionVariant get_prior(const DistributionSpec& spec,
   switch (spec.distribution) {
     case DistributionEnum::bernoulli:
       return new BetaBernoulli;
-    case DistributionEnum::bigram:
-      return new Bigram;
+    case DistributionEnum::bigram: {
+      size_t max_length = 80;
+      if (spec.distribution_args.contains("maxlength")) {
+        max_length = std::stoul(spec.distribution_args.at("maxlength"));
+      }
+      return new Bigram(max_length);
+    }
     case DistributionEnum::categorical: {
       assert(spec.distribution_args.size() == 1);
       int num_categories = std::stoi(spec.distribution_args.at("k"));
@@ -96,6 +106,13 @@ DistributionVariant get_prior(const DistributionSpec& spec,
                    boost::is_any_of(delim));
       return new StringCat(strings);
     }
+    case DistributionEnum::string_nat: {
+      size_t max_length = 20;
+      if (spec.distribution_args.contains("maxlength")) {
+        max_length = std::stoul(spec.distribution_args.at("maxlength"));
+      }
+      return new StringNat(max_length);
+    }
     case DistributionEnum::string_normal:
       return new DistributionAdapter<double>(new Normal);
     case DistributionEnum::string_skellam: {
@@ -104,6 +121,7 @@ DistributionVariant get_prior(const DistributionSpec& spec,
       return new DistributionAdapter<int>(s);
     }
     default:
-      assert(false && "Unsupported distribution enum value.");
+      printf("Unknown distribution enum value %d.\n", (int)(spec.distribution));
+      std::exit(1);
   }
 }

@@ -166,7 +166,7 @@ class SimpleStringEmission : public Emission<std::string> {
     while (true) {
       std::unordered_map<char, int> counts;
       int max_count = 0;
-      char mode;
+      char mode = '\0';
       for (const std::string& s : corrupted) {
         char c;
         if (i < s.length()) {

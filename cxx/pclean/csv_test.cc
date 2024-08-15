@@ -40,3 +40,9 @@ M. Grady,Physical Therapy,PT,Other,3491 Merchants Blvd,Abingdon,MD,21009
   BOOST_TEST(df.data["School"][2] == "UMD");
   BOOST_TEST(df.data["Address"][3] == "3491 Merchants Blvd");
 }
+
+BOOST_AUTO_TEST_CASE(test_carriage_ret_at_end_of_line) {
+  std::stringstream ss("A,B,C\r\na,b,c\r\n");
+  DataFrame df = DataFrame::from_csv(ss);
+  BOOST_TEST(df.data["C"][0] == "c");
+}

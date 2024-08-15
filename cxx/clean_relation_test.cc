@@ -1,6 +1,6 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
-#define BOOST_TEST_MODULE test Relation
+#define BOOST_TEST_MODULE test clean_relation
 
 #include "clean_relation.hh"
 
@@ -176,4 +176,32 @@ BOOST_AUTO_TEST_CASE(test_cluster_logp_sample) {
   double sample = R1.sample_at_items(&prng, {0, 2});
   double lp = R1.cluster_or_prior_logp(&prng, {0, 2}, sample);
   BOOST_TEST(lp < 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(test_from_string) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  double d = R1.from_string("3.14159");
+  BOOST_TEST(d == 3.14159);
+
+  DistributionSpec spec2("bigram");
+  CleanRelation<std::string> R2("R2", spec2, {&D1, &D2});
+  std::string s = R2.from_string("hello world");
+  BOOST_TEST(s == "hello world");
+}
+
+BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  R1.incorporate_sample(&prng, {0, 1});
+  R1.incorporate_sample(&prng, {0, 2});
+  R1.incorporate_sample(&prng, {5, 2});
+
+  BOOST_TEST(R1.data.size() == 3);
 }

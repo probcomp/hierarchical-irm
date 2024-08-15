@@ -50,7 +50,7 @@ class CategoricalEmission : public Emission<int> {
   int propose_clean(const std::vector<int>& corrupted,
                      std::mt19937* unused_prng) {
     // Brute force; compute log prob over all possible clean states.
-    int best_clean;
+    int best_clean = 0;
     double best_clean_logp = std::numeric_limits<double>::lowest();
     for (size_t i = 0; i < emission_dists.size(); ++i) {
       double lp = 0.0;

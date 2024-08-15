@@ -5,6 +5,14 @@
 #include "emissions/bigram_string.hh"
 #include "emissions/string_alignment.hh"
 
+// Increasing this value theoretically increases the quality of the evidence
+// of the underlying categorical distributions that we use to model
+// insertions and substitutions.  But in practice it makes very little
+// difference, and the cost of incorporating a <clean, dirty> string pair
+// is directly proporitional to this value.  10 was observed to be too slow,
+// so trying 2 for now.
+int NUMBER_OF_STRING_ALIGNMENTS_TO_CONSIDER_WHEN_INCORPORATING = 2;
+
 BigramStringEmission::BigramStringEmission() {
   // We need a context for [lowest_char, highest_char] inclusive, plus one
   // for the empty context at the start of a string.
@@ -113,7 +121,8 @@ void BigramStringEmission::incorporate(
 
   std::vector<StrAlignment> alignments;
 
-  topk_alignments(10, x.first, x.second,
+  topk_alignments(NUMBER_OF_STRING_ALIGNMENTS_TO_CONSIDER_WHEN_INCORPORATING,
+                  x.first, x.second,
                   [&](const StrAlignment &a, double old_cost) {
                     return log_prob_distance(a, old_cost);
                   },

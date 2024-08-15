@@ -15,6 +15,7 @@ cc_library(
         ":normal",
         ":skellam",
         ":stringcat",
+        ":string_nat",
         "//:util_observation",
         "@boost//:algorithm",
     ],
@@ -116,6 +117,14 @@ cc_library(
     deps = [
         ":base",
         ":dirichlet_categorical",
+    ],
+)
+
+cc_library(
+    name = "string_nat",
+    hdrs = ["string_nat.hh"],
+    deps = [
+        ":bigram",
     ],
 )
 

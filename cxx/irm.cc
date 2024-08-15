@@ -4,6 +4,7 @@
 #include "irm.hh"
 
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <functional>
 #include <variant>
@@ -21,7 +22,9 @@ RelationVariant clean_relation_from_spec(const std::string& name,
     case ObservationEnum::string_type:
       return new CleanRelation<std::string>(name, spec, doms);
     default:
-      assert(false && "Unsupported observation type.");
+      printf("Unknown observation type %d for relation %s\n",
+             (int)(spec.observation_type), name.c_str());
+      std::exit(1);
   }
 }
 

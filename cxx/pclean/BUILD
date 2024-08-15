@@ -59,12 +59,35 @@ cc_binary(
     name = "pclean",
     srcs = ["pclean.cc"],
     deps = [
+        ":csv",
         ":io",
+        ":pclean_lib",
         ":schema",
         ":schema_helper",
         "//:cxxopts",
         "//:hirm_lib",
         "//:inference",
+        "//:util_io",
+    ],
+)
+
+cc_library(
+    name = "pclean_lib",
+    hdrs = ["pclean_lib.hh"],
+    srcs = ["pclean_lib.cc"],
+    deps = [
+        ":csv",
+        "//:hirm_lib",
+        "//:util_io",
+    ],
+)
+
+cc_test(
+    name = "pclean_lib_test",
+    srcs = ["pclean_lib_test.cc"],
+    deps = [
+        ":pclean_lib",
+        "@boost//:test",
     ],
 )
 

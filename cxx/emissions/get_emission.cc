@@ -4,6 +4,7 @@
 #include "emissions/get_emission.hh"
 
 #include <cassert>
+#include <cstdlib>
 #include <random>
 #include <string>
 
@@ -37,7 +38,8 @@ EmissionSpec::EmissionSpec(
     emission = EmissionEnum::sometimes_gaussian;
     observation_type = ObservationEnum::double_type;
   } else {
-    assert(false && "Unsupported emission name.");
+    printf("Unknown Emission name %s\n", emission_str.c_str());
+    std::exit(1);
   }
 }
 
@@ -59,6 +61,7 @@ EmissionVariant get_prior(const EmissionSpec& spec, std::mt19937* prng) {
     case EmissionEnum::sometimes_gaussian:
       return new Sometimes<double>(new GaussianEmission());
     default:
-      assert(false && "Unsupported emission enum value.");
+      printf("Unknown Emission enum value %d.\n", (int)(spec.emission));
+      std::exit(1);
   }
 }

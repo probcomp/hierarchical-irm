@@ -146,7 +146,9 @@ void HIRM::transition_cluster_assignment_relation(std::mt19937* prng,
   crp.incorporate(rc, choice);
   assert(irms.size() == crp.tables.size());
   for (const auto& [table, irm] : irms) {
-    assert(crp.tables.contains(table));
+    if (!crp.tables.contains(table)) {
+      assert(false);
+    }
   }
 
   // Update any parent relations to point to the new relation as a base
@@ -204,7 +206,9 @@ void HIRM::set_cluster_assignment_gibbs(std::mt19937* prng,
   update_base_relation(r);
   assert(irms.size() == crp.tables.size());
   for (const auto& [table, irm] : irms) {
-    assert(crp.tables.contains(table));
+    if (!crp.tables.contains(table)) {
+      assert(false);
+    }
   }
 }
 
@@ -308,6 +312,57 @@ double HIRM::logp_score() const {
     logp_score_irms += irm->logp_score();
   }
   return logp_score_crp + logp_score_irms;
+}
+
+void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
+                                           const std::string& r,
+                                           T_items& items) {
+  // If `r` is a noisy relation, first sample and incorporate to the base
+  // relation if necessary.
+  if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
+    std::visit(
+        [&](auto nr) {
+          using T = typename std::remove_pointer_t<decltype(nr)>::ValueType;
+          NoisyRelation<T>* noisy_rel = reinterpret_cast<NoisyRelation<T>*>(nr);
+          T_items base_items = noisy_rel->get_base_items(items);
+          if (!noisy_rel->base_relation->get_data().contains(base_items)) {
+            sample_and_incorporate_relation(prng, trel->base_relation,
+                                            base_items);
+          }
+        },
+        get_relation(r));
+  }
+  std::visit([&](auto rel) { rel->incorporate_sample(prng, items); },
+             get_relation(r));
+}
+
+void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+  std::map<std::string, CRP> domain_crps;
+  for (const auto& [r, spec] : schema) {
+    // If the relation is a leaf, sample n observations of it.
+    if (!base_to_noisy_relations.contains(r)) {
+      const std::vector<std::string>& r_domains =
+          std::visit([](auto trel) { return trel.domains; }, spec);
+      int num_samples = 0;
+      while (num_samples < n) {
+        std::vector<int> entities;
+        entities.reserve(r_domains.size());
+        for (auto it = r_domains.cbegin(); it != r_domains.cend(); ++it) {
+          int entity = domain_crps[*it].sample(prng);
+          int crp_item = domain_crps[*it].assignments.size();
+          domain_crps[*it].incorporate(crp_item, entity);
+          entities.push_back(entity);
+        }
+        bool r_contains_items = std::visit(
+            [&](auto rel) { return rel->get_data().contains(entities); },
+            get_relation(r));
+        if (!r_contains_items) {
+          sample_and_incorporate_relation(prng, r, entities);
+          ++num_samples;
+        }
+      }
+    }
+  }
 }
 
 HIRM::~HIRM() {

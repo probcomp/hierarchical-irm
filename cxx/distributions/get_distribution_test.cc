@@ -21,6 +21,11 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((dbg.distribution == DistributionEnum::bigram));
   BOOST_TEST(dbg.distribution_args.empty());
 
+  DistributionSpec dbg2 = DistributionSpec("bigram(maxlength=10)");
+  BOOST_TEST((dbg2.distribution == DistributionEnum::bigram));
+  BOOST_TEST((dbg2.distribution_args.size() == 1));
+  BOOST_TEST(dbg2.distribution_args.at("maxlength") == "10");
+
   DistributionSpec dn = DistributionSpec("normal");
   BOOST_TEST((dn.distribution == DistributionEnum::normal));
   BOOST_TEST(dn.distribution_args.empty());
@@ -52,9 +57,14 @@ BOOST_AUTO_TEST_CASE(test_distribution_spec) {
   BOOST_TEST((dsc2.distribution_args.size() == 2));
   BOOST_CHECK_EQUAL(dsc2.distribution_args.at("strings"), "yes:no");
 
-  DistributionSpec dsn = DistributionSpec("string_normal");
-  BOOST_TEST((dsn.distribution == DistributionEnum::string_normal));
-  BOOST_TEST(dsn.distribution_args.empty());
+  DistributionSpec dsn = DistributionSpec("string_nat(maxlength=10)");
+  BOOST_TEST((dsn.distribution == DistributionEnum::string_nat));
+  BOOST_TEST((dsn.distribution_args.size() == 1));
+  BOOST_TEST(dsn.distribution_args.at("maxlength") == "10");
+
+  DistributionSpec dsno = DistributionSpec("string_normal");
+  BOOST_TEST((dsno.distribution == DistributionEnum::string_normal));
+  BOOST_TEST(dsno.distribution_args.empty());
 
   DistributionSpec dss = DistributionSpec("string_skellam");
   BOOST_TEST((dss.distribution == DistributionEnum::string_skellam));
@@ -77,6 +87,21 @@ BOOST_AUTO_TEST_CASE(test_get_prior_bigram) {
   Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
   std::string name = typeid(*d).name();
   BOOST_TEST(name.find("Bigram") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_bigram2) {
+  std::mt19937 prng;
+
+  DistributionVariant dv = get_prior(DistributionSpec("bigram(maxlength=2)"),
+                                     &prng);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("Bigram") != std::string::npos);
+
+  for (int i = 0; i < 10; i++) {
+    std::string s = d->sample(&prng);
+    BOOST_TEST(s.length() <= 2);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(test_get_prior_categorical) {
@@ -117,6 +142,16 @@ BOOST_AUTO_TEST_CASE(test_get_prior_stringcat) {
   Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
   std::string name = typeid(*d).name();
   BOOST_TEST(name.find("StringCat") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_get_prior_string_nat) {
+  std::mt19937 prng;
+
+  DistributionSpec ds("string_nat");
+  DistributionVariant dv = get_prior(ds, &prng);
+  Distribution<std::string> *d = std::get<Distribution<std::string>*>(dv);
+  std::string name = typeid(*d).name();
+  BOOST_TEST(name.find("StringNat") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_prior_string_normal) {

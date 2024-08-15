@@ -4,20 +4,21 @@
 #include "distributions/bigram.hh"
 
 #include <cassert>
+#include <cstdlib>
 
 #include "distributions/base.hh"
 
 void Bigram::assert_valid_char(const char c) const {
-  assert(c >= ' ' && c <= '~');
+  assert(c >= min_char && c <= max_char);
 }
 
 size_t Bigram::char_to_index(const char c) const {
   assert_valid_char(c);
-  return c - ' ';
+  return c - min_char;
 }
 
 char Bigram::index_to_char(const size_t i) const {
-  const char c = i + ' ';
+  const char c = i + min_char;
   assert_valid_char(c);
   return c;
 }
@@ -34,6 +35,11 @@ std::vector<size_t> Bigram::string_to_indices(const std::string& str) const {
 }
 
 void Bigram::incorporate(const std::string& x, double weight) {
+  if ((max_length > 0) && (x.length() > max_length)) {
+    printf("String %s has length %ld, but max length is %ld.\n",
+           x.c_str(), x.length(), max_length);
+    std::exit(1);
+  }
   const std::vector<size_t> indices = string_to_indices(x);
   for (size_t i = 0; i != indices.size() - 1; ++i) {
     transition_dists[indices[i]].incorporate(indices[i + 1], weight);
@@ -66,9 +72,11 @@ double Bigram::logp_score() const {
 
 std::string Bigram::sample(std::mt19937* prng) {
   std::string sampled_string;
-  // TODO(emilyaf): Reconsider the reserved length and maybe enforce a
-  // max length.
-  sampled_string.reserve(30);
+  if (max_length > 0) {
+    sampled_string.reserve(max_length);
+  } else {
+    sampled_string.reserve(2 * num_chars);
+  }
   // Sample the first character conditioned on the stop/start symbol.
   size_t current_ind = num_chars;
   size_t next_ind = transition_dists[current_ind].sample(prng);
@@ -80,6 +88,9 @@ std::string Bigram::sample(std::mt19937* prng) {
   // subsequent samples are conditioned on its observation.
   while (current_ind != num_chars) {
     sampled_string += index_to_char(current_ind);
+    if (sampled_string.length() == max_length) {
+      break;
+    }
     next_ind = transition_dists[current_ind].sample(prng);
     transition_dists[current_ind].incorporate(next_ind);
     current_ind = next_ind;
