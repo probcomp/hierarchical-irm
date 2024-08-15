@@ -23,12 +23,12 @@ class HospitalType
 class Hospital
   loc ~ Place
   type ~ HospitalType
-  provider ~ typo_int
+  provider ~ typo_nat(maxlength=6)
   name ~ string(maxlength=50)
   addr ~ string(maxlength=50)
   phone ~ string(maxlength=15)
   owner ~ stringcat(strings="government - federal:government - hospital district or authority:government - local:government - state:government - federal:proprietary:voluntary non-profit - church:voluntary non-profit - other:voluntary non-profit - private", delim=":")
-  zip ~ typo_int
+  zip ~ typo_nat(maxlength=5)
   service ~ stringcat(strings="no yes")
 
 class Record

@@ -104,6 +104,23 @@ BOOST_AUTO_TEST_CASE(test_typo_int) {
   BOOST_TEST((nr.emission_spec.emission == EmissionEnum::bigram_string));
   BOOST_TEST(nr.base_relation == "R4");
 }
+
+BOOST_AUTO_TEST_CASE(test_typo_nat) {
+  ScalarVar sv;
+  sv.joint_name = "typo_nat";
+  T_clean_relation cr = get_distribution_relation(sv, {"Publisher", "City"});
+  BOOST_TEST(!cr.is_observed);
+  std::vector<std::string> expected_domains = {"Publisher", "City"};
+  BOOST_TEST(cr.domains == expected_domains);
+  BOOST_TEST((cr.distribution_spec.distribution == DistributionEnum::string_nat));
+
+  T_noisy_relation nr = get_emission_relation(sv, {"Publisher", "City"}, "R4");
+  BOOST_TEST(!nr.is_observed);
+  BOOST_TEST(nr.domains == expected_domains);
+  BOOST_TEST((nr.emission_spec.emission == EmissionEnum::bigram_string));
+  BOOST_TEST(nr.base_relation == "R4");
+}
+
 BOOST_AUTO_TEST_CASE(test_typo_real) {
   ScalarVar sv;
   sv.joint_name = "typo_real";
