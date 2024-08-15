@@ -20,8 +20,9 @@ class Bigram : public Distribution<std::string> {
   double alpha = 1;  // hyperparameter for all transition distributions.
   size_t num_chars = '~' - ' ' + 1;  // printable ASCII without DEL.
   mutable std::vector<DirichletCategorical> transition_dists;
+  size_t max_length = 0;  // 0 means no maximum length
 
-  Bigram() {
+  Bigram(size_t _max_length = 80): max_length(_max_length) {
     const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
 
     // The distribution at index `i` represents `p(X_{j+1} | X_j == char_i)`.

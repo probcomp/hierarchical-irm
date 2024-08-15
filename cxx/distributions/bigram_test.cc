@@ -2,6 +2,7 @@
 
 #define BOOST_TEST_MODULE test Bigram
 
+#include <algorithm>
 #include "distributions/bigram.hh"
 
 #include <boost/test/included/unit_test.hpp>
@@ -24,6 +25,26 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   bg.incorporate("fractions", 1.23);
   BOOST_TEST(bg.N == 2.23);
+}
+
+BOOST_AUTO_TEST_CASE(test_max_length) {
+  std::mt19937 prng;
+  Bigram bg(5);
+
+  for (int i = 0; i < 10; ++i) {
+    BOOST_TEST(bg.sample(&prng).length() <= 5);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_max_length0) {
+  std::mt19937 prng;
+  Bigram bg(0);
+
+  size_t ml = 0;
+  for (int i = 0; i < 10; ++i) {
+    ml = std::max(ml, bg.sample(&prng).length());
+  }
+  BOOST_TEST(ml > bg.num_chars);
 }
 
 BOOST_AUTO_TEST_CASE(test_set_alpha) {
