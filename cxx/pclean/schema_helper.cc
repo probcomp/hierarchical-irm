@@ -59,7 +59,7 @@ PCleanClass PCleanSchemaHelper::get_class_by_name(const std::string& name) {
 }
 
 PCleanVariable find_variable_in_class(
-    std::string& var_name, const PCleanClass& c) {
+    const std::string& var_name, const PCleanClass& c) {
   for (const PCleanVariable& v: c.vars) {
     if (v.name == var_name) {
       return v;
@@ -73,38 +73,40 @@ PCleanVariable find_variable_in_class(
 std::string make_prefix_path(
     std::vector<std::string>& var_names, size_t index) {
   std::string s;
-  for (int i = index; i < var_names.length(); ++i) {
+  for (size_t i = index; i < var_names.size(); ++i) {
     s += var_names[i] + ":";
   }
   return s;
 }
 
-void make_relations_for_queryfield(
+void PCleanSchemaHelper::make_relations_for_queryfield(
     const QueryField& f, const PCleanClass& query_class, T_schema* tschema) {
   // First, find all the vars and classes specified in f.class_path.
   std::vector<std::string> var_names;
+  std::vector<std::string> class_names;
   PCleanVariable last_var;
-  std::vector<PCleanClass&> classes;
-  classes.push_back(query_class);
+  PCleanClass last_class = query_class;
+  class_names.push_back(query_class.name);
   for (size_t i = 0; i < f.class_path.size(); ++i) {
     const PCleanVariable& v = find_variable_in_class(
-        f.class_path[i], classes.back());
+        f.class_path[i], last_class);
     last_var = v;
     var_names.push_back(v.name);
     if (i < f.class_path.size() - 1) {
-      classes.push_back(get_class_by_name(
-          std::get<ClassVar>(v.spec).class_name));
+      class_names.push_back(std::get<ClassVar>(v.spec).class_name);
+      last_class = get_class_by_name(class_names.back());
     }
   }
 
   // Get the base relation from the last class and variable name.
-  std::string base_relation_name = classes.back().name + ":" + last_var.name;
+  std::string base_relation_name = class_names.back() + ":" + last_var.name;
 
   // Handle queries of the record class specially.
-  if (class_path.size() == 1) {
+  if (f.class_path.size() == 1) {
     if (query_class_is_clean) {
       // Just rename the existing clean relation and set it to be observed.
-      T_clean_relation cr = tschema->at(base_relation_name);
+      T_clean_relation cr = std::get<T_clean_relation>(
+          tschema->at(base_relation_name));
       cr.is_observed = true;
       (*tschema)[f.name] = cr;
       tschema->erase(base_relation_name);
@@ -146,8 +148,8 @@ void make_relations_for_queryfield(
   for (size_t i = f.class_path.size() - 2; i >= 0; --i) {
     std::string path_prefix = make_prefix_path(var_names, i);
     std::vector<std::string> reordered_domains = reorder_domains(
-          domains[classes[i].name],
-          annotated_domains[classes[i].name],
+          domains[class_names[i]],
+          annotated_domains[class_names[i]],
           path_prefix);
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
@@ -160,9 +162,10 @@ void make_relations_for_queryfield(
     } else {
       // Intermediate emissions have a name of the form
       // "[Observing Class]:[Observing Variable Name]::[Base Relation Name]"
-      rel_name = classes[i].name + ":" + f.class_path[i] + "::" + base_relation_name;
+      rel_name = class_names[i] + ":" + f.class_path[i] + "::" + base_relation_name;
       tnr.is_observed = false;
     }
+    // It is possible that some other query field already created this relation.
     if (!tschema->contains(rel_name)) {
       (*tschema)[rel_name] = tnr;
     }
