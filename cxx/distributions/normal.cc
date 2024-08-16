@@ -91,9 +91,13 @@ void Normal::transition_hyperparameters(std::mt19937* prng) {
     }
   }
 
-  int i = sample_from_logps(logps, prng);
-  r = std::get<0>(hypers[i]);
-  v = std::get<1>(hypers[i]);
-  m = std::get<2>(hypers[i]);
-  s = std::get<3>(hypers[i]);
+  if (logps.empty()) {
+    printf("Warning!  All hyperparameters for Normal give nans!\n");
+  } else {
+    int i = sample_from_logps(logps, prng);
+    r = std::get<0>(hypers[i]);
+    v = std::get<1>(hypers[i]);
+    m = std::get<2>(hypers[i]);
+    s = std::get<3>(hypers[i]);
+  }
 }

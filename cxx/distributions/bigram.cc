@@ -118,6 +118,10 @@ void Bigram::transition_hyperparameters(std::mt19937* prng) {
       alphas.push_back(alphat);
     }
   }
-  int i = sample_from_logps(logps, prng);
-  set_alpha(alphas[i]);
+  if (logps.empty()) {
+    printf("Warning!  All hyperparameters for Bigram give nans!\n");
+  } else {
+    int i = sample_from_logps(logps, prng);
+    set_alpha(alphas[i]);
+  }
 }

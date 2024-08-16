@@ -73,7 +73,11 @@ void ZeroMeanNormal::transition_hyperparameters(std::mt19937* prng) {
     }
   }
 
-  int i = sample_from_logps(logps, prng);
-  alpha = std::get<0>(hypers[i]);
-  beta = std::get<1>(hypers[i]);
+  if (logps.empty()) {
+    printf("Warning!  All hyperparameters for ZeroMeanNormal gave nans!\n");
+  } else {
+    int i = sample_from_logps(logps, prng);
+    alpha = std::get<0>(hypers[i]);
+    beta = std::get<1>(hypers[i]);
+  }
 }

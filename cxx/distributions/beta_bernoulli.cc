@@ -49,7 +49,11 @@ void BetaBernoulli::transition_hyperparameters(std::mt19937* prng) {
       }
     }
   }
-  int i = sample_from_logps(logps, prng);
-  alpha = hypers[i].first;
-  beta = hypers[i].second;
+  if (logps.empty()) {
+    printf("Warning! All hyperparamters for BetaBernoulli give nans!\n");
+  } else {
+    int i = sample_from_logps(logps, prng);
+    alpha = hypers[i].first;
+    beta = hypers[i].second;
+  }
 }
