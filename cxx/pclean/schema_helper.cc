@@ -70,16 +70,27 @@ PCleanVariable find_variable_in_class(
   std::exit(1);
 }
 
+std::string make_prefix_path(
+    std::vector<std::string>& var_names, size_t index) {
+  std::string s;
+  for (int i = index; i < var_names.length(); ++i) {
+    s += var_names[i] + ":";
+  }
+  return s;
+}
+
 void make_relations_for_queryfield(
     const QueryField& f, const PCleanClass& query_class, T_schema* tschema) {
   // First, find all the vars and classes specified in f.class_path.
-  std::vector<PCleanVariable> vars;
+  std::vector<std::string> var_names;
+  PCleanVariable last_var;
   std::vector<PCleanClass&> classes;
   classes.push_back(query_class);
   for (size_t i = 0; i < f.class_path.size(); ++i) {
     const PCleanVariable& v = find_variable_in_class(
         f.class_path[i], classes.back());
-    vars.push_back(v);
+    last_var = v;
+    var_names.push_back(v.name);
     if (i < f.class_path.size() - 1) {
       classes.push_back(get_class_by_name(
           std::get<ClassVar>(v.spec).class_name));
@@ -87,7 +98,7 @@ void make_relations_for_queryfield(
   }
 
   // Get the base relation from the last class and variable name.
-  std::string base_relation_name = classes.back().name + ":" + vars.back().name;
+  std::string base_relation_name = classes.back().name + ":" + last_var.name;
 
   // Handle queries of the record class specially.
   if (class_path.size() == 1) {
@@ -99,7 +110,7 @@ void make_relations_for_queryfield(
       tschema->erase(base_relation_name);
     } else {
       T_noisy_relation tnr = get_emission_relation(
-          std::get<ScalarVar>(vars.back().spec),
+          std::get<ScalarVar>(last_var.spec),
           domains[query_class.name],
           base_relation_name);
       tnr.is_observed = true;
@@ -116,13 +127,13 @@ void make_relations_for_queryfield(
     // with the path_prefix constructed above, and we use the fact that the
     // domains and annotated_domains are in one-to-one correspondence to
     // move the base relation's domains to the front.
-    std::string path_prefix = "XXX";
+    std::string path_prefix = make_prefix_path(var_names, 0);
     std::vector<std::string> reordered_domains = reorder_domains(
           domains[query_class.name],
           annotated_domains[query_class.name],
           path_prefix);
     T_noisy_relation tnr = get_emission_relation(
-        std::get<ScalarVar>(vars.back().spec),
+        std::get<ScalarVar>(last_var.spec),
         reordered_domains,
         base_relation_name);
     tnr.is_observed = true;
@@ -133,13 +144,13 @@ void make_relations_for_queryfield(
   // Handle only_final_emissions == false.
   std::string& previous_relation = base_relation_name;
   for (size_t i = f.class_path.size() - 2; i >= 0; --i) {
-    std::string path_prefix = "XXX";
+    std::string path_prefix = make_prefix_path(var_names, i);
     std::vector<std::string> reordered_domains = reorder_domains(
           domains[classes[i].name],
           annotated_domains[classes[i].name],
           path_prefix);
     T_noisy_relation tnr = get_emission_relation(
-        std::get<ScalarVar>(vars.back().spec),
+        std::get<ScalarVar>(last_var.spec),
         reordered_domains,
         previous_relation);
     std::string rel_name;
