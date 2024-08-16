@@ -147,8 +147,114 @@ class Physician
       expected_annotated_domains, tt::per_element());
 }
 
+BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
+  PCleanSchemaHelper schema_helper(schema);
+  T_schema tschema;
+
+  PCleanClass query_class = schema_helper.get_class_by_name(
+      schema.query.record_class);
+  schema_helper.make_relations_for_queryfield(
+      schema.query.fields[1], query_class, &tschema);
+
+  BOOST_TEST(tschema.size() == 2);
+  BOOST_TEST(tschema.contains("School"));
+  BOOST_TEST(tschema.contains("Physician:school::School:name"));
+  BOOST_TEST(std::get<T_noisy_relation>(tschema["School"]).is_observed);
+  BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician:school::School:name"]).is_observed);
+}
+
+BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
+  PCleanSchemaHelper schema_helper(schema, true);
+  T_schema tschema;
+
+  PCleanClass query_class = schema_helper.get_class_by_name(
+      schema.query.record_class);
+  schema_helper.make_relations_for_queryfield(
+      schema.query.fields[1], query_class, &tschema);
+
+  BOOST_TEST(tschema.size() == 1);
+  BOOST_TEST(tschema.contains("School"));
+}
+
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
+  T_schema tschema = schema_helper.make_hirm_schema();
+
+  BOOST_TEST(tschema.contains("School:name"));
+  T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
+  BOOST_TEST(!cr.is_observed);
+  BOOST_TEST((cr.distribution_spec.distribution == DistributionEnum::bigram));
+  std::vector<std::string> expected_domains = {"School"};
+  BOOST_TEST(cr.domains == expected_domains);
+
+  BOOST_TEST(tschema.contains("School:degree_dist"));
+  T_clean_relation cr2 = std::get<T_clean_relation>(tschema["School:degree_dist"]);
+  BOOST_TEST((cr2.distribution_spec.distribution == DistributionEnum::categorical));
+  BOOST_TEST(cr2.distribution_spec.distribution_args.contains("k"));
+  BOOST_TEST(cr2.domains == expected_domains);
+
+  BOOST_TEST(tschema.contains("Physician:degree"));
+  T_clean_relation cr3 = std::get<T_clean_relation>(tschema["Physician:degree"]);
+  BOOST_TEST((cr3.distribution_spec.distribution == DistributionEnum::stringcat));
+  std::vector<std::string> expected_domains2 = {"School", "Physician"};
+  BOOST_TEST(cr3.domains == expected_domains2);
+
+  BOOST_TEST(tschema.contains("Physician:specialty"));
+
+  BOOST_TEST(tschema.contains("City:name"));
+  T_clean_relation cr4 = std::get<T_clean_relation>(tschema["City:name"]);
+  std::vector<std::string> expected_domains3 = {"City"};
+  BOOST_TEST(cr4.domains == expected_domains3);
+
+  BOOST_TEST(tschema.contains("City:state"));
+
+  BOOST_TEST(tschema.contains("Specialty"));
+  T_noisy_relation nr1 = std::get<T_noisy_relation>(tschema["Specialty"]);
+  BOOST_TEST(nr1.is_observed);
+  BOOST_TEST((nr1.emission_spec.emission == EmissionEnum::bigram_string));
+  // "School", "Physician"  moved to the front of the list.
+  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  BOOST_TEST(nr1.domains == expected_domains, tt::per_element());
+
+  BOOST_TEST(tschema.contains("School"));
+  T_noisy_relation nr2 = std::get<T_noisy_relation>(tschema["School"]);
+  BOOST_TEST(nr2.is_observed);
+  BOOST_TEST((nr2.emission_spec.emission == EmissionEnum::bigram_string));
+  // "School" moved to the front of the list.
+  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  BOOST_TEST(nr2.domains == expected_domains, tt::per_element());
+
+  BOOST_TEST(tschema.contains("Degree"));
+  T_noisy_relation nr3 = std::get<T_noisy_relation>(tschema["Degree"]);
+  BOOST_TEST(nr3.is_observed);
+  BOOST_TEST((nr3.emission_spec.emission == EmissionEnum::bigram_string));
+  // "School", "Physician" moved to the front of the list.
+  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  BOOST_TEST(nr3.domains == expected_domains, tt::per_element());
+
+  BOOST_TEST(tschema.contains("City"));
+  T_noisy_relation nr4 = std::get<T_noisy_relation>(tschema["City"]);
+  BOOST_TEST(nr4.is_observed);
+  BOOST_TEST((nr4.emission_spec.emission == EmissionEnum::bigram_string));
+  // "City" moved to the front of the list.
+  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  BOOST_TEST(nr4.domains == expected_domains, tt::per_element());
+
+  BOOST_TEST(tschema.contains("State"));
+  T_noisy_relation nr5 = std::get<T_noisy_relation>(tschema["State"]);
+  BOOST_TEST(nr5.is_observed);
+  BOOST_TEST((nr5.emission_spec.emission == EmissionEnum::bigram_string));
+  // "City" moved to the front of the list.
+  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
+
+  BOOST_TEST(tschema.contains("Physician:school::School:name"));
+  BOOST_TEST(tschema.contains("Practice:city::City:name"));
+  BOOST_TEST(tschema.contains("Practice:city::City:state"));
+}
+
+BOOST_AUTO_TEST_CASE(test_make_hirm_schmea_only_final_emissions) {
+  PCleanSchemaHelper schema_helper(schema, true);
   T_schema tschema = schema_helper.make_hirm_schema();
 
   BOOST_TEST(tschema.contains("School:name"));

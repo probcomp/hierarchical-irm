@@ -97,6 +97,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
       last_class = get_class_by_name(class_names.back());
     }
   }
+  // Remove the last var_name because it isn't used in making the path_prefix.
+  var_names.pop_back();
 
   // Get the base relation from the last class and variable name.
   std::string base_relation_name = class_names.back() + ":" + last_var.name;
@@ -145,7 +147,7 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
 
   // Handle only_final_emissions == false.
   std::string& previous_relation = base_relation_name;
-  for (size_t i = f.class_path.size() - 2; i >= 0; --i) {
+  for (int i = f.class_path.size() - 2; i >= 0; --i) {
     std::string path_prefix = make_prefix_path(var_names, i);
     std::vector<std::string> reordered_domains = reorder_domains(
           domains[class_names[i]],
