@@ -343,4 +343,52 @@ BOOST_AUTO_TEST_CASE(test_reorder_domains) {
   BOOST_TEST(reorder_domains(origs, annotated, "ireland:uk:") == expected);
 }
 
+BOOST_AUTO_TEST_CASE(test_record_class_is_clean) {
+  std::stringstream ss2(R"""(
+class Record
+  rent ~ real
+
+observe
+  rent as "Rent"
+  from Record
+)""");
+  PCleanSchema schema2;
+  [[maybe_unused]] bool ok = read_schema(ss2, &schema2);
+  assert(ok);
+
+  PCleanSchemaHelper schema_helper(schema2, false, true);
+  T_schema tschema = schema_helper.make_hirm_schema();
+
+  BOOST_TEST(!tschema.contains("Record:rent"));
+  BOOST_TEST(tschema.contains("Rent"));
+
+  T_clean_relation cr = std::get<T_clean_relation>(tschema["Rent"]);
+  BOOST_TEST(cr.is_observed);
+}
+
+BOOST_AUTO_TEST_CASE(test_record_class_is_dirty) {
+  std::stringstream ss2(R"""(
+class Record
+  rent ~ real
+
+observe
+  rent as "Rent"
+  from Record
+)""");
+  PCleanSchema schema2;
+  [[maybe_unused]] bool ok = read_schema(ss2, &schema2);
+  assert(ok);
+
+  PCleanSchemaHelper schema_helper(schema2, false, false);
+  T_schema tschema = schema_helper.make_hirm_schema();
+
+  BOOST_TEST(tschema.contains("Record:rent"));
+  BOOST_TEST(tschema.contains("Rent"));
+
+  T_clean_relation cr = std::get<T_clean_relation>(tschema["Record:rent"]);
+  BOOST_TEST(!cr.is_observed);
+  T_noisy_relation nr = std::get<T_noisy_relation>(tschema["Rent"]);
+  BOOST_TEST(nr.is_observed);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
