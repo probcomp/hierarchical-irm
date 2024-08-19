@@ -17,8 +17,6 @@ class PCleanSchemaHelper {
                      bool _only_final_emissions = false,
                      bool _record_class_is_clean = true);
 
-  PCleanClass get_class_by_name(const std::string& name);
-
   T_schema make_hirm_schema();
 
   // The rest of these methods are conceptually private, but actually

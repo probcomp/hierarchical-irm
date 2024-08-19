@@ -49,12 +49,6 @@ observe
 
 BOOST_FIXTURE_TEST_SUITE(schema_test_suite, SchemaTestFixture)
 
-BOOST_AUTO_TEST_CASE(test_get_class_by_name) {
-  PCleanSchemaHelper schema_helper(schema);
-  PCleanClass c = schema_helper.get_class_by_name("Practice");
-  BOOST_TEST(c.name == "Practice");
-}
-
 BOOST_AUTO_TEST_CASE(test_domains_cache) {
   PCleanSchemaHelper schema_helper(schema);
 
@@ -151,8 +145,7 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
   PCleanSchemaHelper schema_helper(schema);
   T_schema tschema;
 
-  PCleanClass query_class = schema_helper.get_class_by_name(
-      schema.query.record_class);
+  PCleanClass query_class = schema.classes[schema.query.record_class];
   schema_helper.make_relations_for_queryfield(
       schema.query.fields[1], query_class, &tschema);
 
@@ -167,8 +160,7 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
   PCleanSchemaHelper schema_helper(schema, true);
   T_schema tschema;
 
-  PCleanClass query_class = schema_helper.get_class_by_name(
-      schema.query.record_class);
+  PCleanClass query_class = schema.classes[schema.query.record_class];
   schema_helper.make_relations_for_queryfield(
       schema.query.fields[1], query_class, &tschema);
 
