@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(test_domains_cache) {
   BOOST_TEST(schema_helper.annotated_domains["Practice"] == expected_annotated_domains);
 
   expected_domains = {
-    "School", "Physician", "City", "Practice", "Record"};
+    "City", "Practice", "School", "Physician", "Record"};
   expected_annotated_domains = {
-    "physician:school:School", "physician:Physician",
-    "location:city:City", "location:Practice", "Record"};
+    "location:city:City", "location:Practice",
+    "physician:school:School", "physician:Physician", "Record"};
   BOOST_TEST(schema_helper.domains["Record"] == expected_domains,
              tt::per_element());
   BOOST_TEST(
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(nr2.is_observed);
   BOOST_TEST((nr2.emission_spec.emission == EmissionEnum::bigram_string));
   // "School" moved to the front of the list.
-  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  expected_domains = {"School", "City", "Practice", "Physician", "Record"};
   BOOST_TEST(nr2.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Degree"));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(nr4.is_observed);
   BOOST_TEST((nr4.emission_spec.emission == EmissionEnum::bigram_string));
   // "City" moved to the front of the list.
-  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
   BOOST_TEST(nr4.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("State"));
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(nr5.is_observed);
   BOOST_TEST((nr5.emission_spec.emission == EmissionEnum::bigram_string));
   // "City" moved to the front of the list.
-  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Physician:school::School:name"));
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST(nr2.is_observed);
   BOOST_TEST((nr2.emission_spec.emission == EmissionEnum::bigram_string));
   // "School" moved to the front of the list.
-  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  expected_domains = {"School", "City", "Practice", "Physician", "Record"};
   BOOST_TEST(nr2.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Degree"));
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST(nr4.is_observed);
   BOOST_TEST((nr4.emission_spec.emission == EmissionEnum::bigram_string));
   // "City" moved to the front of the list.
-  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
   BOOST_TEST(nr4.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("State"));
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST(nr5.is_observed);
   BOOST_TEST((nr5.emission_spec.emission == EmissionEnum::bigram_string));
   // "City" moved to the front of the list.
-  expected_domains = {"City", "School", "Physician", "Practice", "Record"};
+  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 }
 
