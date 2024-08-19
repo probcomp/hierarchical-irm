@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(tschema.contains("Practice:city::City:state"));
 }
 
-BOOST_AUTO_TEST_CASE(test_make_hirm_schmea_only_final_emissions) {
+BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   PCleanSchemaHelper schema_helper(schema, true);
   T_schema tschema = schema_helper.make_hirm_schema();
 

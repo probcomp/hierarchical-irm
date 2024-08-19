@@ -26,7 +26,8 @@ struct PCleanVariable {
 
 struct PCleanClass {
   std::string name;
-  std::vector<PCleanVariable> vars;
+  // Map from variable name to variable.
+  std::map<std::string, PCleanVariable> vars;
   // TODO(thomaswc): Figure out how to handle class level configurations.
 };
 
@@ -43,6 +44,7 @@ struct PCleanQuery {
 };
 
 struct PCleanSchema {
-  std::vector<PCleanClass> classes;
+  // Map from class name to class.
+  std::map<std::string, PCleanClass> classes;
   PCleanQuery query;
 };

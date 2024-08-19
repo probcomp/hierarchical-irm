@@ -15,7 +15,7 @@ class PCleanSchemaHelper {
  public:
   PCleanSchemaHelper(const PCleanSchema& s,
                      bool _only_final_emissions = false,
-                     bool _query_class_is_clean = true);
+                     bool _record_class_is_clean = true);
 
   PCleanClass get_class_by_name(const std::string& name);
 
@@ -24,7 +24,6 @@ class PCleanSchemaHelper {
   // The rest of these methods are conceptually private, but actually
   // public for testing.
 
-  void compute_class_name_cache();
   void compute_domains_cache();
 
   void compute_domains_for(const std::string& name);
@@ -35,8 +34,7 @@ class PCleanSchemaHelper {
 
   PCleanSchema schema;
   bool only_final_emissions;
-  bool query_class_is_clean;
-  std::map<std::string, int> class_name_to_index;
+  bool record_class_is_clean;
   std::map<std::string, std::vector<std::string>> domains;
   std::map<std::string, std::vector<std::string>> annotated_domains;
 };
