@@ -3,6 +3,7 @@
 
 #include "normal.hh"
 
+#include <cassert>
 #include <cmath>
 #include <numbers>
 

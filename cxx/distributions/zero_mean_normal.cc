@@ -3,6 +3,7 @@
 
 #include "zero_mean_normal.hh"
 
+#include <cassert>
 #include <cmath>
 #include <numbers>
 
