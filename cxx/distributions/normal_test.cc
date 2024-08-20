@@ -203,3 +203,37 @@ BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
   nd.transition_hyperparameters(&prng);
   BOOST_TEST(nd.m > 0.0);
 }
+
+double two_sided_ks_test(std::vector<double>& samples1, std::vector<double>& samples2) {
+  // Sort the samples to get CDFs.
+  std::sort(samples1.begin(), samples1.end());
+  std::sort(samples2.begin(), samples2.end());
+  // Compute the sup of the empirical CDFs.
+}
+
+BOOST_AUTO_TEST_CASE(sample_and_log_prob) {
+  std::mt19937 prng;
+  Normal nd;
+
+  for (int i = 0; i < 17; i+=2) {
+    nd.incorporate(i);
+  }
+
+  for (int i = 0; i >= -31; i-=3) {
+    nd.incorporate(i);
+  }
+
+  std::vector<double> samples;
+  const int num_samples = 100000;
+  for (int i = 0; i < num_samples; ++i) {
+    samples.emplace_back(nd.sample(&prng));
+  }
+
+  std::sort(samples.begin(), samples.end());
+
+  // Compute the true CDF of the normal distribution.
+
+  // Compute the arti
+
+
+}
