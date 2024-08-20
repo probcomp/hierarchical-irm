@@ -9,10 +9,10 @@ NUM_SAMPLES = 100
 def write_out_dataset(filename, dataset):
   f = open(filename, 'w')
   for i in range(NUM_SAMPLES):
-    f.write(f"{dataset[i, 0]},col0,{i}\n")
-    f.write(f"{dataset[i, 1]},col1,{i}\n")
-    f.write(f"{dataset[i, 2]},col2,{i}\n")
-    f.write(f"{dataset[i, 3]},col3,{i}\n")
+    f.write(f"{dataset[i, 0]},col1,{i}\n")
+    f.write(f"{dataset[i, 1]},col2,{i}\n")
+    f.write(f"{dataset[i, 2]},col3,{i}\n")
+    f.write(f"{dataset[i, 3]},col4,{i}\n")
   f.close()
 
 def main():
