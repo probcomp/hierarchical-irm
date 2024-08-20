@@ -204,8 +204,149 @@ Here is an example usage of the pclean binary:
 
     $ cd cxx
     $ bazel build -c opt pclean:pclean
-    $ ./bazel-bin/pclean/pclean --schema=assets/flights.schema --obs=assets/flights_dirty.10.csv --iters=5
+    $ ./bazel-bin/pclean/pclean --schema=assets/flights.schema --obs=assets/flights_dirty.10.csv --iters=5 --output=/tmp/flights.out
+    Setting seed to 10
+    Reading plcean schema ...
+    Reading schema file from assets/flights.schema
+    Making schema helper ...
+    Translating schema ...
+    Reading observations ...
+    Reading observations file from assets/flights_dirty.10.csv
+    Creating hirm ...
+    Translating observations ...
+    Schema does not contain tuple_id, skipping ...
+    Encoding observations ...
+    Incorporating observations ...
+    Running inference ...
+    Starting iteration 1, model score = inf
+    Starting iteration 2, model score = -30344.088796
+    Starting iteration 3, model score = -37593.201854
+    Starting iteration 4, model score = -37557.513713
+    Starting iteration 5, model score = -35773.000439
 
+Again, we have two input files, a schema and an observation file.
+Let's look at the schema file:
+
+```
+$ cat assets/flights.schema
+class TrackingWebsite
+  name ~ stringcat(strings="aa airtravelcenter allegiantair boston businesstravellogue CO den dfw flightarrival flightaware flightexplorer flights flightstats flightview flightwise flylouisville flytecomm foxbusiness gofox helloflight iad ifly mco mia myrateplan mytripandmore orbitz ord panynj phl quicktrip sfo src travelocity ua usatoday weather world-flight-tracker wunderground")
+
+class Time
+  time ~ string(maxlength=40)
+
+class Flight
+  flight_id ~ string(maxlength=20)
+  # These are all abbreviations for "scheduled/actual arrival/depature time"
+  sdt ~ Time
+  sat ~ Time
+  adt ~ Time
+  aat ~ Time
+
+class Obs
+  flight ~ Flight
+  src ~ TrackingWebsite
+
+observe
+  src.name as src
+  flight.flight_id as flight
+  flight.sdt.time as sched_dep_time
+  flight.sat.time as sched_arr_time
+  flight.adt.time as act_dep_time
+  flight.aat.time as act_arr_time
+  from Obs
+```
+
+A pclean schema consists of one or more classes (separated by blank lines)
+followed by an observe block.  Within a class, one or more variables can be
+declared.  Variables come in two types:  class variables and scalar variables.
+Class variables have the name of a class on the right of the `~`, and all
+class names must start with an uppercase character.
+
+Scalar variables have the name of an attribute on the right of the `~`, and
+the attribute can optionally take parameters (like `maxlength`) inside of
+parentheses.  Currently the following attribute names are supported:
+
+* bool (boolean data)
+* categorical (integer data)
+* real (floating point data)
+* string (string data)
+* stringcat (string data)
+* typo\_int (integer data possibly corrupted by typos)
+* typo\_nat (natural number data possibly corrupted by typos)
+* typo\_real (floating point data possibly corrupted by typos)
+
+The observe block consists of one or more queries.  Each query starts with a
+period-delimitted path specifier.  The final component of the path specifier
+should be a scalar variable and all the other components must be class
+variables.  The path specifier is interpreted relative to the class given
+in the `from` clause of the observe block.
+
+After the path specifier comes the word "as" followed by the name of the
+query.  This name should match the name of a column in the CSV file of
+observations, which looks like this:
+
+```
+$ cat assets/flights_dirty.10.csv
+tuple_id,src,flight,sched_dep_time,act_dep_time,sched_arr_time,act_arr_time
+1,aa,AA-3859-IAH-ORD,7:10 a.m.,7:16 a.m.,9:40 a.m.,9:32 a.m.
+2,aa,AA-1733-ORD-PHX,7:45 p.m.,7:58 p.m.,10:30 p.m.,
+3,aa,AA-1640-MIA-MCO,6:30 p.m.,,7:25 p.m.,
+4,aa,AA-518-MIA-JFK,6:40 a.m.,6:54 a.m.,9:25 a.m.,9:28 a.m.
+5,aa,AA-3756-ORD-SLC,12:15 p.m.,12:41 p.m.,2:45 p.m.,2:50 p.m.
+6,aa,AA-204-LAX-MCO,11:25 p.m.,,12/02/2011 6:55 a.m.,
+7,aa,AA-3468-CVG-MIA,7:00 a.m.,7:25 a.m.,9:55 a.m.,9:45 a.m.
+8,aa,AA-484-DFW-MIA,4:15 p.m.,4:29 p.m.,7:55 p.m.,7:39 p.m.
+9,aa,AA-446-DFW-PHL,11:50 a.m.,12:12 p.m.,3:50 p.m.,4:09 p.m.
+```
+
+It is okay if the CSV file has columns that don't correspond to queries
+(like `tuple_id` in this example), but currently we don't support schemas
+with queries that don't appear as columns.
+
+Finally, the output of `pclean` is in the same format as `hirm`.  If we look
+at it
+
+```
+$ head /tmp/flights.out
+3 Time:time src
+4 TrackingWebsite:name
+6 Flight:flight_id
+9 sched_dep_time
+10 act_dep_time flight act_arr_time
+12 sched_arr_time
+
+```
+
+we can see that it clustered the relations into six clusters.  If we look
+at the cluster named `10` in the output file:
+
+```
+irm=10
+TrackingWebsite 1 1 3 6 7 8
+TrackingWebsite 2 0 2 4 5
+Obs 1 0 1 3 4 5 6 7 8
+Obs 2 2
+Flight 0 0 2 3 4 6 7 8
+Flight 1 1 5
+Time 0 0 1 2 3 4 5 6 7 8
+```
+
+we can see that it clustered the underlying entities into three clusters
+(named 0, 1, and 2).  All of the rows of the CSV file (which correspond
+to the `Obs` domain, because of the `from Obs` in the schema) were put
+into cluster 1 except for the line
+
+```
+3,aa,AA-1640-MIA-MCO,6:30 p.m.,,7:25 p.m.,
+```
+
+which was put into cluster 2, probably because it was missing two fields.
+All of the flights were put into cluster 0, except for "AA-1733-ORD-PHX"
+and "AA-204-LAX-MCO", which were put into cluster 1.
+
+Run `./bazel-bin/pclean/pclean --help` for more information about the
+other options that it supports.
 
 ## License
 
