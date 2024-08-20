@@ -1,0 +1,4 @@
+col1 ~ stringcat[strings="a:b:c:d",delim=:](id)
+col2 ~ stringcat[strings="first:second",delim=:](id)
+col3 ~ stringcat[strings="1:2:3:4",delim=:](id)
+col4 ~ stringcat[strings="odd:even",delim=:](id)
