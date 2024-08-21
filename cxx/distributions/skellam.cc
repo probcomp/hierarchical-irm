@@ -38,11 +38,17 @@ void Skellam::transition_hyperparameters(std::mt19937* prng) {
       }
     }
   }
-  int i = sample_from_logps(logps, prng);
-  mean1 = std::get<0>(hypers[i]);
-  stddev1 = std::get<1>(hypers[i]);
-  mean2 = std::get<2>(hypers[i]);
-  stddev2 = std::get<3>(hypers[i]);
+
+  if (logps.empty()) {
+    printf("Warning!  All hyperparameters for Skellam gave nans!\n");
+    assert(false);
+  } else {
+    int i = sample_from_logps(logps, prng);
+    mean1 = std::get<0>(hypers[i]);
+    stddev1 = std::get<1>(hypers[i]);
+    mean2 = std::get<2>(hypers[i]);
+    stddev2 = std::get<3>(hypers[i]);
+  }
 }
 
 void Skellam::init_theta(std::mt19937* prng) {

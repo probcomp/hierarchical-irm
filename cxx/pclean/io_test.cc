@@ -54,16 +54,15 @@ observe
              tt::per_element());
 
   BOOST_TEST(schema.classes.size() == 5);
-  BOOST_TEST(schema.classes[0].name == "School");
-  BOOST_TEST(schema.classes[0].vars.size() == 2);
-  BOOST_TEST(schema.classes[0].vars[0].name == "name");
-  BOOST_TEST(std::get<ScalarVar>(schema.classes[0].vars[0].spec).joint_name == "bigram");
-  BOOST_TEST(schema.classes[0].vars[1].name == "degree_dist");
-  BOOST_TEST(std::get<ScalarVar>(schema.classes[0].vars[1].spec).joint_name == "categorical");
-  BOOST_TEST(std::get<ScalarVar>(schema.classes[0].vars[1].spec).params["num_classes"] == "100");
+  BOOST_TEST(schema.classes["School"].vars.size() == 2);
+  BOOST_TEST(schema.classes["School"].vars.contains("name"));
+  BOOST_TEST(std::get<ScalarVar>(schema.classes["School"].vars["name"].spec).joint_name == "bigram");
+  BOOST_TEST(schema.classes["School"].vars.contains("degree_dist"));
+  BOOST_TEST(std::get<ScalarVar>(schema.classes["School"].vars["degree_dist"].spec).joint_name == "categorical");
+  BOOST_TEST(std::get<ScalarVar>(schema.classes["School"].vars["degree_dist"].spec).params["num_classes"] == "100");
 
-  BOOST_TEST(schema.classes[1].name == "Physician");
-  BOOST_TEST(schema.classes[1].vars.size() == 3);
-  BOOST_TEST(schema.classes[1].vars[0].name == "school");
-  BOOST_TEST(std::get<ClassVar>(schema.classes[1].vars[0].spec).class_name == "School");
+  BOOST_TEST(schema.classes.contains("Physician"));
+  BOOST_TEST(schema.classes["Physician"].vars.size() == 3);
+  BOOST_TEST(schema.classes["Physician"].vars.contains("school"));
+  BOOST_TEST(std::get<ClassVar>(schema.classes["Physician"].vars["school"].spec).class_name == "School");
 }

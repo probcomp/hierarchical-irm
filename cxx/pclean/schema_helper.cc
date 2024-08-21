@@ -1,21 +1,21 @@
+#include <cstdlib>
+
 #include "pclean/schema_helper.hh"
 #include "pclean/get_joint_relations.hh"
 
-PCleanSchemaHelper::PCleanSchemaHelper(const PCleanSchema& s): schema(s) {
-  compute_class_name_cache();
+PCleanSchemaHelper::PCleanSchemaHelper(
+    const PCleanSchema& s,
+    bool _only_final_emissions,
+    bool _record_class_is_clean):
+  schema(s), only_final_emissions(_only_final_emissions),
+  record_class_is_clean(_record_class_is_clean) {
   compute_domains_cache();
-}
-
-void PCleanSchemaHelper::compute_class_name_cache() {
-  for (size_t i = 0; i < schema.classes.size(); ++i) {
-    class_name_to_index[schema.classes[i].name] = i;
-  }
 }
 
 void PCleanSchemaHelper::compute_domains_cache() {
   for (const auto& c: schema.classes) {
-    if (!domains.contains(c.name)) {
-      compute_domains_for(c.name);
+    if (!domains.contains(c.first)) {
+      compute_domains_for(c.first);
     }
   }
 }
@@ -23,10 +23,10 @@ void PCleanSchemaHelper::compute_domains_cache() {
 void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
   std::vector<std::string> ds;
   std::vector<std::string> annotated_ds;
-  PCleanClass c = get_class_by_name(name);
+  PCleanClass c = schema.classes[name];
 
   for (const auto& v: c.vars) {
-    if (const ClassVar* cv = std::get_if<ClassVar>(&(v.spec))) {
+    if (const ClassVar* cv = std::get_if<ClassVar>(&(v.second.spec))) {
       if (!domains.contains(cv->class_name)) {
         compute_domains_for(cv->class_name);
       }
@@ -34,7 +34,7 @@ void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
         ds.push_back(s);
       }
       for (const std::string& s : annotated_domains[cv->class_name]) {
-        annotated_ds.push_back(v.name + ':' + s);
+        annotated_ds.push_back(v.first + ':' + s);
       }
     }
   }
@@ -47,35 +47,108 @@ void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
   annotated_domains[name] = annotated_ds;
 }
 
-PCleanClass PCleanSchemaHelper::get_class_by_name(const std::string& name) {
-  return schema.classes[class_name_to_index[name]];
+std::string make_prefix_path(
+    std::vector<std::string>& var_names, size_t index) {
+  std::string s;
+  for (size_t i = index; i < var_names.size(); ++i) {
+    s += var_names[i] + ":";
+  }
+  return s;
 }
 
-PCleanVariable PCleanSchemaHelper::get_scalarvar_from_path(
-    const PCleanClass& base_class,
-    std::vector<std::string>::const_iterator path_iterator,
-    std::string* final_class_name,
-    std::string* path_prefix) {
-  const std::string& s = *path_iterator;
-  for (const PCleanVariable& v : base_class.vars) {
-    if (v.name == s) {
-      if (std::holds_alternative<ScalarVar>(v.spec)) {
-        *final_class_name = base_class.name;
-        return v;
-      }
-      path_prefix->append(v.name + ":");
-      const PCleanClass& next_class = get_class_by_name(
-          std::get<ClassVar>(v.spec).class_name);
-      PCleanVariable sv = get_scalarvar_from_path(
-          next_class, ++path_iterator, final_class_name, path_prefix);
-      return sv;
+void PCleanSchemaHelper::make_relations_for_queryfield(
+    const QueryField& f, const PCleanClass& record_class, T_schema* tschema) {
+  // First, find all the vars and classes specified in f.class_path.
+  std::vector<std::string> var_names;
+  std::vector<std::string> class_names;
+  PCleanVariable last_var;
+  PCleanClass last_class = record_class;
+  class_names.push_back(record_class.name);
+  for (size_t i = 0; i < f.class_path.size(); ++i) {
+    const PCleanVariable& v = last_class.vars[f.class_path[i]];
+    last_var = v;
+    var_names.push_back(v.name);
+    if (i < f.class_path.size() - 1) {
+      class_names.push_back(std::get<ClassVar>(v.spec).class_name);
+      last_class = schema.classes[class_names.back()];
     }
   }
-  printf("Error: could not find name %s in class %s\n",
-         s.c_str(), base_class.name.c_str());
-  assert(false);
-  PCleanVariable pcv;
-  return pcv;
+  // Remove the last var_name because it isn't used in making the path_prefix.
+  var_names.pop_back();
+
+  // Get the base relation from the last class and variable name.
+  std::string base_relation_name = class_names.back() + ":" + last_var.name;
+
+  // Handle queries of the record class specially.
+  if (f.class_path.size() == 1) {
+    if (record_class_is_clean) {
+      // Just rename the existing clean relation and set it to be observed.
+      T_clean_relation cr = std::get<T_clean_relation>(
+          tschema->at(base_relation_name));
+      cr.is_observed = true;
+      (*tschema)[f.name] = cr;
+      tschema->erase(base_relation_name);
+    } else {
+      T_noisy_relation tnr = get_emission_relation(
+          std::get<ScalarVar>(last_var.spec),
+          domains[record_class.name],
+          base_relation_name);
+      tnr.is_observed = true;
+      (*tschema)[f.name] = tnr;
+    }
+    return;
+  }
+
+  // Handle only_final_emissions == true.
+  if (only_final_emissions) {
+    // If the base relation has n domains, we need the first n domains
+    // of this emission relation to be exactly the same (including order).
+    // The base relation's annotated_domains are exactly those that start
+    // with the path_prefix constructed above, and we use the fact that the
+    // domains and annotated_domains are in one-to-one correspondence to
+    // move the base relation's domains to the front.
+    std::string path_prefix = make_prefix_path(var_names, 0);
+    std::vector<std::string> reordered_domains = reorder_domains(
+          domains[record_class.name],
+          annotated_domains[record_class.name],
+          path_prefix);
+    T_noisy_relation tnr = get_emission_relation(
+        std::get<ScalarVar>(last_var.spec),
+        reordered_domains,
+        base_relation_name);
+    tnr.is_observed = true;
+    (*tschema)[f.name] = tnr;
+    return;
+  }
+
+  // Handle only_final_emissions == false.
+  std::string& previous_relation = base_relation_name;
+  for (int i = f.class_path.size() - 2; i >= 0; --i) {
+    std::string path_prefix = make_prefix_path(var_names, i);
+    std::vector<std::string> reordered_domains = reorder_domains(
+          domains[class_names[i]],
+          annotated_domains[class_names[i]],
+          path_prefix);
+    T_noisy_relation tnr = get_emission_relation(
+        std::get<ScalarVar>(last_var.spec),
+        reordered_domains,
+        previous_relation);
+    std::string rel_name;
+    if (i == 0) {
+      rel_name = f.name;
+      tnr.is_observed = true;
+    } else {
+      // Intermediate emissions have a name of the form
+      // "[Observing Class]:[Observing Variable Name]::[Base Relation Name]"
+      rel_name = class_names[i] + ":" + f.class_path[i] + "::" + base_relation_name;
+      tnr.is_observed = false;
+    }
+    // It is possible that some other query field already created this relation.
+    if (!tschema->contains(rel_name)) {
+      (*tschema)[rel_name] = tnr;
+    }
+    previous_relation = rel_name;
+  }
 }
 
 std::vector<std::string> reorder_domains(
@@ -98,36 +171,24 @@ std::vector<std::string> reorder_domains(
 
 T_schema PCleanSchemaHelper::make_hirm_schema() {
   T_schema tschema;
+
+  // For every scalar variable, make a clean relation with the name
+  // "[ClassName]:[VariableName]".
   for (const auto& c : schema.classes) {
-    for (const auto& v : c.vars) {
-      std::string rel_name = c.name + ':' + v.name;
-      if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.spec))) {
-        tschema[rel_name] = get_distribution_relation(*dv, domains[c.name]);
+    for (const auto& v : c.second.vars) {
+      std::string rel_name = c.first + ':' + v.first;
+      if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.second.spec))) {
+        tschema[rel_name] = get_distribution_relation(*dv, domains[c.first]);
       }
     }
   }
 
-  const PCleanClass query_class = get_class_by_name(schema.query.record_class);
-  for (const auto& f : schema.query.fields) {
-    std::string final_class_name;
-    std::string path_prefix;
-    const PCleanVariable sv = get_scalarvar_from_path(
-        query_class, f.class_path.cbegin(), &final_class_name, &path_prefix);
-    std::string base_relation = final_class_name + ':' + sv.name;
-    // If the base relation has n domains, we need the first n domains
-    // of this emission relation to be exactly the same (including order).
-    // The base relation's annotated_domains are exactly those that start
-    // with the path_prefix constructed above, and we use the fact that the
-    // domains and annotated_domains are in one-to-one correspondence to
-    // move the base relation's domains to the front.
-    std::vector<std::string> reordered_domains = reorder_domains(
-        domains[query_class.name],
-        annotated_domains[query_class.name],
-        path_prefix);
-    T_noisy_relation tnr = get_emission_relation(
-        std::get<ScalarVar>(sv.spec), reordered_domains, base_relation);
-    tnr.is_observed = true;
-    tschema[f.name] = tnr;
+  // For every query field, make one or more relations by walking up
+  // the class_path.  At least one of those relations will have name equal
+  // to the name of the QueryField.
+  const PCleanClass record_class = schema.classes[schema.query.record_class];
+  for (const QueryField& f : schema.query.fields) {
+    make_relations_for_queryfield(f, record_class, &tschema);
   }
 
   return tschema;

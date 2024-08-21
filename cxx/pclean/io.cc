@@ -98,7 +98,7 @@ bool read_class(std::istream& is, PCleanClass* pclass) {
       return false;
     }
 
-    pclass->vars.push_back(v);
+    pclass->vars[v.name] = v;
   }
   return true;
 }
@@ -204,7 +204,7 @@ bool read_schema(std::istream& is, PCleanSchema* schema) {
       if (!success) {
         return false;
       }
-      schema->classes.push_back(pcc);
+      schema->classes[pcc.name] = pcc;
       continue;
     }
 

@@ -51,6 +51,11 @@ void DirichletCategorical::transition_hyperparameters(std::mt19937* prng) {
       alphas.push_back(alpha);
     }
   }
-  int i = sample_from_logps(logps, prng);
-  alpha = alphas[i];
+  if (alphas.empty()) {
+    printf("Warning: all Dirichlet hyperparameters give nans!\n");
+    assert(false);
+  } else {
+    int i = sample_from_logps(logps, prng);
+    alpha = alphas[i];
+  }
 }
