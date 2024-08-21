@@ -1,0 +1,4 @@
+col1 ~ bernoulli(id)
+col2 ~ bernoulli(id)
+col3 ~ bernoulli(id)
+col4 ~ bernoulli(id)

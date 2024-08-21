@@ -1,0 +1,4 @@
+col1 ~ normal(id)
+col2 ~ normal(id)
+col3 ~ normal(id)
+col4 ~ normal(id)

@@ -1,0 +1,4 @@
+col1 ~ bigram(id)
+col2 ~ bigram(id)
+col3 ~ bigram(id)
+col4 ~ bigram(id)
