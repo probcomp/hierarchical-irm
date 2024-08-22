@@ -397,7 +397,7 @@ void to_txt(std::ostream& fp, const IRM& irm, const T_encoding& encoding) {
           fp << " ";
         }
       }
-      fp << "\n\n";
+      fp << "\n";
     }
   }
 }
@@ -418,7 +418,7 @@ void to_txt(std::ostream& fp, const HIRM& hirm, const T_encoding& encoding) {
     }
     fp << "\n";
   }
-  fp << "\n\n";
+  fp << "\n";
   // Write the IRMs.
   int j = 0;
   for (const auto& [table, rcs] : tables) {
