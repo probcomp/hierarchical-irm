@@ -11,6 +11,25 @@
 #include "irm.hh"
 #include "util_io.hh"
 
+double logp(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
+            const T_encoding& encoding,
+            const T_observations& observations) {
+  T_encoded_observations encoded_obs = encode_observations(
+      observations, encoding, h_irm);
+  std::vector<std::tuple<std::string, T_items, ObservationVariant>> logp_obs;
+  for (const auto& [relation, obs_for_rel]: encoded_obs) {
+    RelationVariant rel_var =
+      std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
+    for (const auto& [items, value]: obs_for_rel) {
+      ObservationVariant ov;
+      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
+      logp_obs.push_back(make_tuple(relation, items, ov));
+    }
+  }
+  return std::visit(
+      [&](const auto& m) { return m->logp(logp_obs, prng); }, h_irm);
+}
+
 int main(int argc, char** argv) {
   cxxopts::Options options("hirm",
                            "Run a hierarchical infinite relational model.");
@@ -70,12 +89,13 @@ int main(int argc, char** argv) {
 
   std::cout << "loading observations from " << path_obs << std::endl;
   T_observations observations = load_observations(path_obs, schema);
-  T_encoding encoding = encode_observations(schema, observations);
+  T_encoding encoding = calculate_encoding(schema, observations);
 
   std::string held_out = result["heldout"].as<std::string>();
+  T_observations heldout_obs;
   if (!held_out.empty()) {
     std::cout << "loading held out observations from " << held_out << std::endl;
-    T_observations heldout_obs = load_observations(held_out, schema);
+    heldout_obs = load_observations(held_out, schema);
     T_observations all_observations;
     for (const auto &it : observations) {
       all_observations[it.first] = it.second;
@@ -85,7 +105,7 @@ int main(int argc, char** argv) {
           all_observations[it.first].end(),
           it.second.begin(), it.second.end());
     }
-    encoding = encode_observations(schema, all_observations);
+    encoding = calculate_encoding(schema, all_observations);
   }
 
   if (mode == "irm") {
@@ -111,7 +131,7 @@ int main(int argc, char** argv) {
     to_txt(path_save, *irm, encoding);
 
     if (!held_out.empty()) {
-      double lp = irm.logp(heldout_obs, &prng);
+      double lp = logp(&prng, irm, encoding, heldout_obs);
       std::cout << "Log likelihood of held out data is " << lp << std::endl;
     }
 
@@ -143,7 +163,7 @@ int main(int argc, char** argv) {
     to_txt(path_save, *hirm, encoding);
 
     if (!held_out.empty()) {
-      double lp = hirm.logp(heldout_obs, &prng);
+      double lp = logp(&prng, hirm, encoding, heldout_obs);
       std::cout << "Log likelihood of held out data is " << lp << std::endl;
     }
 

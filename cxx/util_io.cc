@@ -210,8 +210,8 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 }
 
 // Assumes that T_item is integer.
-T_encoding encode_observations(const T_schema& schema,
-                               const T_observations& observations) {
+T_encoding calculate_encoding(
+    const T_schema& schema, const T_observations& observations) {
   // Counter and encoding maps.
   std::map<std::string, int> domain_item_counter;
   T_encoding_f item_to_code;
@@ -249,6 +249,31 @@ T_encoding encode_observations(const T_schema& schema,
   return std::make_pair(item_to_code, code_to_item);
 }
 
+T_encoded_observations encode_observations(
+    const T_observations& observations, const T_encoding& encoding,
+    std::variant<IRM*, HIRM*> h_irm) {
+  T_encoding_f item_to_code = std::get<0>(encoding);
+  T_encoded_observations encoded_observations;
+  T_encoding_f item_to_code = std::get<0>(encoding);
+
+  for (const auto& [relation, obs] : observations) {
+    T_relation trel = std::visit(
+        [&](const auto& m) { return m->schema.at(relation); }, h_irm);
+    std::vector<std::string> domains =
+        std::visit([&](const auto& tr) { return tr.domains; }, trel);
+    for (const auto& [items, value] : obs) {
+      T_items items_e;
+      for (int i = 0; i < items.size(); ++i) {
+        int code = item_to_code.at(domains[i]).at(items[i]);
+        items_e.push_back(code);
+      }
+      encoded_observations[relation].push_back(std::make_pair(items_e, value));
+    }
+  }
+
+  return encoded_observations
+}
+
 // Incorporates the observations of a single relation. If the relation is noisy,
 // this function recursively incorporates observations of the base relation. If
 // the relation is latent and not observed, initial latent values are sampled
@@ -257,7 +282,6 @@ void incorporate_observations_relation(
     std::mt19937* prng, const std::string& relation,
     std::variant<IRM*, HIRM*> h_irm, const T_encoded_observations& observations,
     std::unordered_map<std::string, std::string>& noisy_to_base,
-    std::unordered_map<std::string, std::unordered_set<T_items, H_items>>&
         relation_items,
     std::unordered_set<std::string>& completed_relations) {
   RelationVariant rel_var =
@@ -324,31 +348,8 @@ void incorporate_observations(std::mt19937* prng,
                               std::variant<IRM*, HIRM*> h_irm,
                               const T_encoding& encoding,
                               const T_observations& observations) {
-  T_encoding_f item_to_code = std::get<0>(encoding);
-  std::vector<std::string> observed_relations;
-  T_encoded_observations encoded_observations;
-  std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
-      relation_items;
-  for (const auto& [relation, obs] : observations) {
-    observed_relations.push_back(relation);
-
-    T_relation trel = std::visit(
-        [&](const auto& m) { return m->schema.at(relation); }, h_irm);
-    std::vector<std::string> domains =
-        std::visit([&](const auto& tr) { return tr.domains; }, trel);
-    for (const auto& [items, value] : obs) {
-      int counter = 0;
-      T_items items_e;
-      for (const std::string& item : items) {
-        std::string domain = domains[counter];
-        counter += 1;
-        int code = item_to_code.at(domain).at(item);
-        items_e.push_back(code);
-      }
-      relation_items[relation].insert(items_e);
-      encoded_observations[relation].push_back(std::make_pair(items_e, value));
-    }
-  }
+  T_encoded_observations encoded_observations =
+      encode_observations(observations, encoding, h_irm);
 
   std::unordered_map<std::string, std::string> noisy_to_base;
   std::unordered_map<std::string, std::vector<std::string>> base_to_noisy =
@@ -366,8 +367,16 @@ void incorporate_observations(std::mt19937* prng,
     }
   }
 
+  std::unordered_map<std::string, std::unordered_set<T_items, H_items>>
+      relation_items;
+  for (const auto& [relation, obs_for_rel] : encoded_observations) {
+    for (const auto& [items, unused_value] : obs_for_rel) {
+      relation_items[relation].insert(items);
+    }
+  }
+
   std::unordered_set<std::string> completed_relations;
-  for (const std::string& relation : observed_relations) {
+  for (const auto& [relation, unused] : encoded_observations) {
     if (!completed_relations.contains(relation)) {
       incorporate_observations_relation(prng, relation, h_irm,
                                         encoded_observations, noisy_to_base,
@@ -592,7 +601,7 @@ void from_txt(std::mt19937* prng, IRM* const irm,
   // Load the data.
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs, schema);
-  T_encoding encoding = encode_observations(schema, observations);
+  T_encoding encoding = calculate_encoding(schema, observations);
   auto clusters = load_clusters_irm(path_clusters);
   // Add the relations.
   assert(irm->schema.empty());
@@ -623,7 +632,7 @@ void from_txt(std::mt19937* prng, HIRM* const hirm,
               const std::string& path_clusters) {
   T_schema schema = load_schema(path_schema);
   T_observations observations = load_observations(path_obs, schema);
-  T_encoding encoding = encode_observations(schema, observations);
+  T_encoding encoding = calculate_encoding(schema, observations);
   auto [relations, irms] = load_clusters_hirm(path_clusters);
   // Add the relations.
   assert(hirm->schema.empty());

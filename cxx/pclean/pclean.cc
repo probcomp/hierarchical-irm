@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   std::cout << "Translating observations ...\n";
   T_observations observations = translate_observations(df, hirm_schema);
   std::cout << "Encoding observations ...\n";
-  T_encoding encoding = encode_observations(hirm_schema, observations);
+  T_encoding encoding = calculate_encoding(hirm_schema, observations);
   std::cout << "Incorporating observations ...\n";
   incorporate_observations(&prng, &hirm, encoding, observations);
 
