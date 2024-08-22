@@ -27,6 +27,8 @@ int main(int argc, char** argv) {
       "load", "path to .[h]irm file with initial clusters",
       cxxopts::value<std::string>()->default_value(""))(
       "path", "base name of the .schema file", cxxopts::value<std::string>())(
+      "heldout", "filename of held-out observations",
+      cxxopts::value<std::string>())(
       "rest", "rest",
       cxxopts::value<std::vector<std::string>>()->default_value({}));
   options.parse_positional({"path", "rest"});
@@ -70,6 +72,22 @@ int main(int argc, char** argv) {
   T_observations observations = load_observations(path_obs, schema);
   T_encoding encoding = encode_observations(schema, observations);
 
+  std::string held_out = result["heldout"].as<std::string>();
+  if (!held_out.empty()) {
+    std::cout << "loading held out observations from " << held_out << std::endl;
+    T_observations heldout_obs = load_observations(held_out, schema);
+    T_observations all_observations;
+    for (const auto &it : observations) {
+      all_observations[it.first] = it.second;
+    }
+    for (const auto &it : heldout_obs) {
+      all_observations[it.first].insert(
+          all_observations[it.first].end(),
+          it.second.begin(), it.second.end());
+    }
+    encoding = encode_observations(schema, all_observations);
+  }
+
   if (mode == "irm") {
     std::cout << "selected model is IRM" << std::endl;
     IRM* irm;
@@ -91,6 +109,12 @@ int main(int argc, char** argv) {
     path_save += ".irm";
     std::cout << "saving to " << path_save << std::endl;
     to_txt(path_save, *irm, encoding);
+
+    if (!held_out.empty()) {
+      double lp = irm.logp(heldout_obs, &prng);
+      std::cout << "Log likelihood of held out data is " << lp << std::endl;
+    }
+
     // Free
     free(irm);
     return 0;
@@ -117,6 +141,12 @@ int main(int argc, char** argv) {
     path_save += ".hirm";
     std::cout << "saving to " << path_save << std::endl;
     to_txt(path_save, *hirm, encoding);
+
+    if (!held_out.empty()) {
+      double lp = hirm.logp(heldout_obs, &prng);
+      std::cout << "Log likelihood of held out data is " << lp << std::endl;
+    }
+
     // Free
     free(hirm);
     return 0;
