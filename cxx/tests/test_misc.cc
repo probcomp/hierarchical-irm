@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
   IRM irm3(schema);
   auto observations = load_observations("assets/animals.binary.obs", schema);
-  auto encoding = encode_observations(schema, observations);
+  auto encoding = calculate_encoding(schema, observations);
   auto item_to_code = std::get<0>(encoding);
   for (const auto& [relation, obs] : observations) {
     for (const auto& [items, value] : obs) {

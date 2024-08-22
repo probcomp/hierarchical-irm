@@ -252,7 +252,6 @@ T_encoding calculate_encoding(
 T_encoded_observations encode_observations(
     const T_observations& observations, const T_encoding& encoding,
     std::variant<IRM*, HIRM*> h_irm) {
-  T_encoding_f item_to_code = std::get<0>(encoding);
   T_encoded_observations encoded_observations;
   T_encoding_f item_to_code = std::get<0>(encoding);
 
@@ -263,7 +262,7 @@ T_encoded_observations encode_observations(
         std::visit([&](const auto& tr) { return tr.domains; }, trel);
     for (const auto& [items, value] : obs) {
       T_items items_e;
-      for (int i = 0; i < items.size(); ++i) {
+      for (size_t i = 0; i < items.size(); ++i) {
         int code = item_to_code.at(domains[i]).at(items[i]);
         items_e.push_back(code);
       }
@@ -271,7 +270,7 @@ T_encoded_observations encode_observations(
     }
   }
 
-  return encoded_observations
+  return encoded_observations;
 }
 
 // Incorporates the observations of a single relation. If the relation is noisy,
