@@ -510,23 +510,14 @@ load_clusters_hirm(const std::string& path) {
 
   std::string line;
   int irmc = 0;
-  // Only reset the IRM cluster when we see two newlines in a row.
-  bool start_of_irm_separator = false;
 
   while (std::getline(fp, line)) {
     std::istringstream stream(line);
-    // Skip a newline.
     if (line.size() == 0) {
-      if (start_of_irm_separator) {
-        irmc = -1;
-        start_of_irm_separator = false;
-      } else {
-        start_of_irm_separator = true;
-      }
+      // Start of new IRM
+      irmc = -1;
       continue;
     }
-
-    start_of_irm_separator = false;
 
     std::string first;
     stream >> first;
