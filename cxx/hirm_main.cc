@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
       cxxopts::value<std::string>()->default_value(""))(
       "path", "base name of the .schema file", cxxopts::value<std::string>())(
       "heldout", "filename of held-out observations",
-      cxxopts::value<std::string>())(
+      cxxopts::value<std::string>()->default_value(""))(
       "rest", "rest",
       cxxopts::value<std::vector<std::string>>()->default_value({}));
   options.parse_positional({"path", "rest"});
