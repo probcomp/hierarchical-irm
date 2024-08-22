@@ -281,6 +281,7 @@ void incorporate_observations_relation(
     std::mt19937* prng, const std::string& relation,
     std::variant<IRM*, HIRM*> h_irm, const T_encoded_observations& observations,
     std::unordered_map<std::string, std::string>& noisy_to_base,
+    std::unordered_map<std::string, std::unordered_set<T_items, H_items>>&
         relation_items,
     std::unordered_set<std::string>& completed_relations) {
   RelationVariant rel_var =
