@@ -17,7 +17,12 @@ class PCleanSchemaHelper {
                      bool _only_final_emissions = false,
                      bool _record_class_is_clean = true);
 
-  T_schema make_hirm_schema();
+  // Translate the PCleanSchema into an HIRM T_schema.
+  // Also, fill annotated_domains_for_relation[r] with the vector of
+  // annotated domains for the relation r.
+  T_schema make_hirm_schema(
+      std::map<std::string, std::vector<std::string>>
+      *annotated_domains_for_relation);
 
   // The rest of these methods are conceptually private, but actually
   // public for testing.

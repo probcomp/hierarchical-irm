@@ -9,7 +9,9 @@
 #include "pclean/pclean_lib.hh"
 
 T_observations translate_observations(
-    const DataFrame& df, const T_schema &schema) {
+    const DataFrame& df, const T_schema &schema,
+    const std::map<std::string, std::vector<std::string>>
+    &annotated_domains_for_relations) {
   T_observations obs;
 
   for (const auto& col : df.data) {
@@ -44,12 +46,11 @@ T_observations translate_observations(
       std::vector<std::string> entities;
       for (size_t j = 0; j < num_domains; ++j) {
         // Give every row it's own universe of unique id's.
-        // TODO(thomaswc): Correctly handle the case when a row makes
-        // references to two or more different entities of the same type.
         // TODO(thomaswc): Discuss other options for handling this, such
         // as sampling the non-index domains from a CRP prior or specifying
         // additional CSV columns to use as foreign keys.
-        entities.push_back(std::to_string(i));
+        entities.push_back(annotated_domains_for_relations[col_name][j]
+                           + ":" + std::to_string(i));
       }
       obs[col_name].push_back(std::make_tuple(entities, val));
     }

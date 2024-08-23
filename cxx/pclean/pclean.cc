@@ -73,7 +73,9 @@ int main(int argc, char** argv) {
       result["only_final_emissions"].as<bool>(),
       result["record_class_is_clean"].as<bool>());
   std::cout << "Translating schema ...\n";
-  T_schema hirm_schema = schema_helper.make_hirm_schema();
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relations;
+  T_schema hirm_schema = schema_helper.make_hirm_schema(
+      &annotated_domains_for_relation);
 
   // Read observations
   std::cout << "Reading observations ...\n";
@@ -87,7 +89,8 @@ int main(int argc, char** argv) {
 
   // Incorporate observations.
   std::cout << "Translating observations ...\n";
-  T_observations observations = translate_observations(df, hirm_schema);
+  T_observations observations = translate_observations(
+      df, hirm_schema, annotated_domains_for_relation);
   std::cout << "Encoding observations ...\n";
   T_encoding encoding = encode_observations(hirm_schema, observations);
   std::cout << "Incorporating observations ...\n";
