@@ -57,7 +57,9 @@ std::string make_prefix_path(
 }
 
 void PCleanSchemaHelper::make_relations_for_queryfield(
-    const QueryField& f, const PCleanClass& record_class, T_schema* tschema) {
+    const QueryField& f, const PCleanClass& record_class, T_schema* tschema,
+    std::map<std::string, std::vector<std::string>>
+    *annotated_domains_for_relation) {
   // First, find all the vars and classes specified in f.class_path.
   std::vector<std::string> var_names;
   std::vector<std::string> class_names;
@@ -88,6 +90,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
       cr.is_observed = true;
       (*tschema)[f.name] = cr;
       tschema->erase(base_relation_name);
+      (*annotated_domains_for_relation)[f.name] = annotated_domains[
+          record_class.name];
     } else {
       T_noisy_relation tnr = get_emission_relation(
           std::get<ScalarVar>(last_var.spec),
@@ -95,6 +99,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
           base_relation_name);
       tnr.is_observed = true;
       (*tschema)[f.name] = tnr;
+      (*annotated_domains_for_relation)[f.name] = annotated_domains[
+          record_class.name];
     }
     return;
   }
@@ -118,6 +124,11 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
         base_relation_name);
     tnr.is_observed = true;
     (*tschema)[f.name] = tnr;
+    std::vector<std::string> reordered_annotated_domains = reorder_domains(
+          annotated_domains[record_class.name],
+          annotated_domains[record_class.name],
+          path_prefix);
+    (*annotated_domains_for_relation)[f.name] = reordered_annotated_domains;
     return;
   }
 
@@ -148,6 +159,11 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
       (*tschema)[rel_name] = tnr;
     }
     previous_relation = rel_name;
+    std::vector<std::string> reordered_annotated_domains = reorder_domains(
+          annotated_domains[class_names[i]],
+          annotated_domains[class_names[i]],
+          path_prefix);
+    (*annotated_domains_for_relation)[rel_name] = reordered_annotated_domains;
   }
 }
 
@@ -169,7 +185,9 @@ std::vector<std::string> reorder_domains(
   return output_domains;
 }
 
-T_schema PCleanSchemaHelper::make_hirm_schema() {
+T_schema PCleanSchemaHelper::make_hirm_schema(
+    std::map<std::string, std::vector<std::string>>
+    *annotated_domains_for_relation) {
   T_schema tschema;
 
   // For every scalar variable, make a clean relation with the name
@@ -179,6 +197,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
       std::string rel_name = c.first + ':' + v.first;
       if (const ScalarVar* dv = std::get_if<ScalarVar>(&(v.second.spec))) {
         tschema[rel_name] = get_distribution_relation(*dv, domains[c.first]);
+        (*annotated_domains_for_relation)[rel_name] = annotated_domains[c.first];
       }
     }
   }
@@ -188,7 +207,8 @@ T_schema PCleanSchemaHelper::make_hirm_schema() {
   // to the name of the QueryField.
   const PCleanClass record_class = schema.classes[schema.query.record_class];
   for (const QueryField& f : schema.query.fields) {
-    make_relations_for_queryfield(f, record_class, &tschema);
+    make_relations_for_queryfield(f, record_class, &tschema,
+                                  annotated_domains_for_relation);
   }
 
   return tschema;

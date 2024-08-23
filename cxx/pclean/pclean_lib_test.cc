@@ -31,7 +31,14 @@ BOOST_AUTO_TEST_CASE(test_translate_observations) {
     {"State",
       T_noisy_relation{{"dCounty", "dObs"}, true, EmissionSpec("bigram"), "County:state"}}};
 
-  T_observations obs = translate_observations(df, schema);
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relations;
+  annotated_domains_for_relations["Room Type"] = {"county:County", "Obs"};
+  annotated_domains_for_relations["Monthly Rent"] = {"county:County", "Obs"};
+  annotated_domains_for_relations["County"] = {"county:County", "Obs"};
+  annotated_domains_for_relations["State"] = {"county:County", "Obs"};
+
+  T_observations obs = translate_observations(
+      df, schema, annotated_domains_for_relations);
 
   // Relations not corresponding to columns should be un-observed.
   BOOST_TEST(!obs.contains("County:name"));
