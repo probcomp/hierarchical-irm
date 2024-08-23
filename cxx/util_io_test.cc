@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_irm) {
                                       {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
-  T_encoding encoding = encode_observations(schema, observations);
+  T_encoding encoding = calculate_encoding(schema, observations);
   IRM* irm = new IRM(schema);
   std::mt19937 prng;
   incorporate_observations(&prng, irm, encoding, observations);
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_observations_hirm) {
                                       {{"banana", "cat", "rhombus"}, "1.1"},
                                   }}};
 
-  T_encoding encoding = encode_observations(schema, observations);
+  T_encoding encoding = calculate_encoding(schema, observations);
   std::mt19937 prng;
   HIRM* hirm = new HIRM(schema, &prng);
   incorporate_observations(&prng, hirm, encoding, observations);

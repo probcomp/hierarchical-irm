@@ -14,12 +14,23 @@ typedef std::unordered_map<std::string, std::vector<T_observation>> T_observatio
 typedef std::tuple<std::vector<int>, std::string> T_encoded_observation;
 typedef std::unordered_map<std::string, std::vector<T_encoded_observation>> T_encoded_observations;
 
-// disk IO
+// Load the schema file from path.  Exits if the schema file can't be parsed.
 T_schema load_schema(const std::string& path);
-T_observations load_observations(const std::string& path,
-                                 T_schema& schema);
-T_encoding encode_observations(const T_schema& schema,
-                               const T_observations& observations);
+
+// Load the observations from the CSV file at path.  Also marks all observed
+// relations in schema as is_observed = true.
+T_observations load_observations(const std::string& path, T_schema& schema);
+
+// Calculates an encoding for the observations: in the input T_observations,
+// domain values are denoted by strings, and the encoding maps those to/from
+// integers.
+T_encoding calculate_encoding(
+    const T_schema& schema, const T_observations& observations);
+
+// Returns the encoded version of the input observations.
+T_encoded_observations encode_observations(
+    const T_observations& observations, const T_encoding& encoding,
+    std::variant<IRM*, HIRM*> h_irm);
 
 void incorporate_observations_relation(
     std::mt19937* prng, const std::string& relation,

@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   printf("--- loaded schema --- \n");
   auto observations_unary = load_observations(path_obs, schema_unary);
   printf("--- loaded observations --- \n");
-  auto encoding_unary = encode_observations(schema_unary, observations_unary);
+  auto encoding_unary = calculate_encoding(schema_unary, observations_unary);
   printf("--- encoded observations --- \n");
 
   HIRM hirm(schema_unary, &prng);
