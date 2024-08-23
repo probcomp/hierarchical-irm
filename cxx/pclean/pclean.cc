@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   std::cout << "Translating schema ...\n";
   std::map<std::string, std::vector<std::string>> annotated_domains_for_relations;
   T_schema hirm_schema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relation);
+      &annotated_domains_for_relations);
 
   // Read observations
   std::cout << "Reading observations ...\n";
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
   // Incorporate observations.
   std::cout << "Translating observations ...\n";
   T_observations observations = translate_observations(
-      df, hirm_schema, annotated_domains_for_relation);
+      df, hirm_schema, annotated_domains_for_relations);
   std::cout << "Encoding observations ...\n";
   T_encoding encoding = encode_observations(hirm_schema, observations);
   std::cout << "Incorporating observations ...\n";

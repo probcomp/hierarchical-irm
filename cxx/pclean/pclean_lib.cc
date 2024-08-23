@@ -49,7 +49,7 @@ T_observations translate_observations(
         // TODO(thomaswc): Discuss other options for handling this, such
         // as sampling the non-index domains from a CRP prior or specifying
         // additional CSV columns to use as foreign keys.
-        entities.push_back(annotated_domains_for_relations[col_name][j]
+        entities.push_back(annotated_domains_for_relations.at(col_name)[j]
                            + ":" + std::to_string(i));
       }
       obs[col_name].push_back(std::make_tuple(entities, val));

@@ -146,14 +146,22 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
   T_schema tschema;
 
   PCleanClass query_class = schema.classes[schema.query.record_class];
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
   schema_helper.make_relations_for_queryfield(
-      schema.query.fields[1], query_class, &tschema);
+      schema.query.fields[1], query_class, &tschema,
+      &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 2);
   BOOST_TEST(tschema.contains("School"));
   BOOST_TEST(tschema.contains("Physician:school::School:name"));
   BOOST_TEST(std::get<T_noisy_relation>(tschema["School"]).is_observed);
   BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician:school::School:name"]).is_observed);
+
+  std::vector<std::string> expected_adfr = {
+    "physician:school:School", "location:city:City",
+    "location:Practice", "physician:Physician", "Record"};
+  BOOST_TEST(annotated_domains_for_relation["School"] == expected_adfr,
+             tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
@@ -161,8 +169,10 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
   T_schema tschema;
 
   PCleanClass query_class = schema.classes[schema.query.record_class];
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
   schema_helper.make_relations_for_queryfield(
-      schema.query.fields[1], query_class, &tschema);
+      schema.query.fields[1], query_class, &tschema,
+      &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 1);
   BOOST_TEST(tschema.contains("School"));
@@ -170,7 +180,9 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
-  T_schema tschema = schema_helper.make_hirm_schema();
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
+  T_schema tschema = schema_helper.make_hirm_schema(
+      &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("School:name"));
   T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
@@ -247,7 +259,9 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   PCleanSchemaHelper schema_helper(schema, true);
-  T_schema tschema = schema_helper.make_hirm_schema();
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
+  T_schema tschema = schema_helper.make_hirm_schema(
+      &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("School:name"));
   T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
@@ -357,7 +371,9 @@ observe
   assert(ok);
 
   PCleanSchemaHelper schema_helper(schema2, false, true);
-  T_schema tschema = schema_helper.make_hirm_schema();
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
+  T_schema tschema = schema_helper.make_hirm_schema(
+      &annotated_domains_for_relation);
 
   BOOST_TEST(!tschema.contains("Record:rent"));
   BOOST_TEST(tschema.contains("Rent"));
@@ -380,7 +396,9 @@ observe
   assert(ok);
 
   PCleanSchemaHelper schema_helper(schema2, false, false);
-  T_schema tschema = schema_helper.make_hirm_schema();
+  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
+  T_schema tschema = schema_helper.make_hirm_schema(
+      &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("Record:rent"));
   BOOST_TEST(tschema.contains("Rent"));
@@ -389,6 +407,9 @@ observe
   BOOST_TEST(!cr.is_observed);
   T_noisy_relation nr = std::get<T_noisy_relation>(tschema["Rent"]);
   BOOST_TEST(nr.is_observed);
+
+  std::vector<std::string> expected_adfr = {"Record"};
+  BOOST_TEST(annotated_domains_for_relation["Rent"] == expected_adfr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

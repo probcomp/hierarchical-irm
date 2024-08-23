@@ -7,7 +7,6 @@
 #include "util_io.hh"
 #include "pclean/csv.hh"
 #include "pclean/pclean_lib.hh"
-#include "pclean/schema_helper.hh"
 
 // For each non-missing value in the DataFrame df, create an
 // observation in the returned T_observations.  The column name of the value

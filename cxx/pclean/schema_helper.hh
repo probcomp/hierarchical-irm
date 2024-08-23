@@ -32,8 +32,11 @@ class PCleanSchemaHelper {
   void compute_domains_for(const std::string& name);
 
   void make_relations_for_queryfield(
-      const QueryField& f, const PCleanClass& c,
-      T_schema* schema);
+      const QueryField& f,
+      const PCleanClass& c,
+      T_schema* schema,
+      std::map<std::string, std::vector<std::string>>
+      *annotated_domains_for_relation);
 
   PCleanSchema schema;
   bool only_final_emissions;
