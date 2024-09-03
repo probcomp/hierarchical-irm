@@ -100,15 +100,15 @@ int main(int argc, char** argv) {
   if (heldout_fn.empty()) {
     encoding_observations = observations;
   } else {
-    std::cout << "Loading held out observations from " << held_out << std::endl;
+    std::cout << "Loading held out observations from " << heldout_fn << std::endl;
     DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
     heldout_obs = translate_observations(
         heldout_df, hirm_schema, annotated_domains_for_relations);
-    encoding_observations = merge_obserations(observations, heldout_obs);
+    encoding_observations = merge_observations(observations, heldout_obs);
   }
 
   std::cout << "Encoding observations ...\n";
-  T_encoding encoding = calculate_encoding(schema, encoding_observations);
+  T_encoding encoding = calculate_encoding(hirm_schema, encoding_observations);
 
   std::cout << "Incorporating observations ...\n";
   incorporate_observations(&prng, &hirm, encoding, observations);
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
   }
 
   if (!heldout_fn.empty()) {
-    double lp = logp(&prng, hirm, encoding, heldout_obs);
+    double lp = logp(&prng, &hirm, encoding, heldout_obs);
     std::cout << "Log likelihood of held out data is " << lp << std::endl;
   }
 

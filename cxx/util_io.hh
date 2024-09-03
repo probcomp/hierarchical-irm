@@ -74,3 +74,9 @@ void from_txt(std::mt19937* prng, HIRM* const irm,
 
 T_observations merge_observations(const T_observations& obs1,
                                   const T_observations& obs2);
+
+// Return the log probability of the observations given the model h_irm.
+double logp(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
+            const T_encoding& encoding,
+            const T_observations& observations);
+

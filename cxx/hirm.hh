@@ -84,3 +84,4 @@ class HIRM {
   HIRM& operator=(const HIRM&) = delete;
   HIRM(const HIRM&) = delete;
 };
+

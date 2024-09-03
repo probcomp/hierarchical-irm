@@ -11,25 +11,6 @@
 #include "irm.hh"
 #include "util_io.hh"
 
-double logp(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
-            const T_encoding& encoding,
-            const T_observations& observations) {
-  T_encoded_observations encoded_obs = encode_observations(
-      observations, encoding, h_irm);
-  std::vector<std::tuple<std::string, T_items, ObservationVariant>> logp_obs;
-  for (const auto& [relation, obs_for_rel]: encoded_obs) {
-    RelationVariant rel_var =
-      std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
-    for (const auto& [items, value]: obs_for_rel) {
-      ObservationVariant ov;
-      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
-      logp_obs.push_back(make_tuple(relation, items, ov));
-    }
-  }
-  return std::visit(
-      [&](const auto& m) { return m->logp(logp_obs, prng); }, h_irm);
-}
-
 int main(int argc, char** argv) {
   cxxopts::Options options("hirm",
                            "Run a hierarchical infinite relational model.");
