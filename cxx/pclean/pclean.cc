@@ -28,6 +28,8 @@ int main(int argc, char** argv) {
       ("obs", "Filename of observations input", cxxopts::value<std::string>())
       ("output", "Filename of relation clusters output",
        cxxopts::value<std::string>())
+      ("heldout", "Filename of heldout observations",
+       cxxopts::value<std::string>())
       ("i,iters", "Number of inference iterations",
        cxxopts::value<int>()->default_value("10"))
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
@@ -91,8 +93,23 @@ int main(int argc, char** argv) {
   std::cout << "Translating observations ...\n";
   T_observations observations = translate_observations(
       df, hirm_schema, annotated_domains_for_relations);
+
+  std::string heldout_fn = result["heldout"].as<std::string>();
+  T_observations heldout_obs;
+  T_observations encoding_observations;
+  if (heldout_fn.empty()) {
+    encoding_observations = observations;
+  } else {
+    std::cout << "Loading held out observations from " << held_out << std::endl;
+    DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
+    heldout_obs = translate_observations(
+        heldout_df, hirm_schema, annotated_domains_for_relations);
+    encoding_observations = merge_obserations(observations, heldout_obs);
+  }
+
   std::cout << "Encoding observations ...\n";
-  T_encoding encoding = calculate_encoding(hirm_schema, observations);
+  T_encoding encoding = calculate_encoding(schema, encoding_observations);
+
   std::cout << "Incorporating observations ...\n";
   incorporate_observations(&prng, &hirm, encoding, observations);
 
@@ -108,6 +125,11 @@ int main(int argc, char** argv) {
     std::string out_fn = result["output"].as<std::string>();
     std::cout << "Savings results to " << out_fn << "\n";
     to_txt(out_fn, hirm, encoding);
+  }
+
+  if (!heldout_fn.empty()) {
+    double lp = logp(&prng, hirm, encoding, heldout_obs);
+    std::cout << "Log likelihood of held out data is " << lp << std::endl;
   }
 
   return 0;

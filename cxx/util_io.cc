@@ -668,3 +668,16 @@ void from_txt(std::mt19937* prng, HIRM* const hirm,
   // Add the observations.
   incorporate_observations(prng, hirm, encoding, observations);
 }
+
+T_observations merge_observations(const T_observations& obs1,
+                                  const T_observations& obs2) {
+  T_observations merged;
+  for (const auto &it : obs1) {
+    merged[it.first] = it.second;
+  }
+  for (const auto &it : obs2) {
+    merged[it.first].insert(merged[it.first].end(),
+                            it.second.begin(), it.second.end());
+  }
+  return merged;
+}
