@@ -238,5 +238,10 @@ BOOST_AUTO_TEST_CASE(sample_agrees) {
   // Check that mean and stddev agree with a normal inverse gamma model.
   double mprime, sprime;
   nd.posterior_hypers(&mprime, &sprime);
+  double scale_factor = nd.r + nd.N;
+  double actual_stddev = sqrt(
+          (sprime / 2.) / (((nd.v + nd.N) / 2. - 1.) *
+              scale_factor / (scale_factor + 1)));
   BOOST_TEST(mean == mprime, tt::tolerance(4e-3));
+  BOOST_TEST(stddev == actual_stddev, tt::tolerance(4e-3));
 }

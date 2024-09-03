@@ -66,3 +66,43 @@ BOOST_AUTO_TEST_CASE(transition_theta) {
 
   BOOST_TEST(sd.mu1 > sd.mu2);
 }
+
+// Enable when Bessel function is better behaved.
+// BOOST_AUTO_TEST_CASE(test_sample_and_log_prob) {
+//   std::mt19937 prng;
+//   Skellam sd;
+//   for (int i = 0; i < 100; ++i) {
+//     sd.incorporate(5);
+//     sd.incorporate(6);
+//     sd.incorporate(6);
+//     sd.incorporate(7);
+//   }
+// 
+//   for (int i = 0; i < 100; ++i) {
+//     sd.transition_theta(&prng);
+//   }
+// 
+//   std::map<int, int> counts;
+//   const int num_samples = 100000;
+//   for (int i = 0; i < num_samples; ++i) {
+//     double sample = sd.sample(&prng);
+//     if (counts.contains(sample)) {
+//       ++counts[sd.sample(&prng)];
+//     }
+//     else {
+//       counts[sd.sample(&prng)] = 1;
+//     }
+//   }
+// 
+//   std::map<int, double> probs;
+//   for (const auto& kv : counts) {
+//     probs[kv.first] = exp(sd.logp(kv.first));
+//   }
+//   double stddev = sqrt(sd.mu1 + sd.mu2);
+// 
+//   // Check that we are within 3 standard deviations
+//   for (const auto& kv : counts) {
+//     double approx_p = kv.second / num_samples;
+//     BOOST_TEST(abs(probs[kv.first] - approx_p) <= 3 * stddev);
+//   }
+// }
