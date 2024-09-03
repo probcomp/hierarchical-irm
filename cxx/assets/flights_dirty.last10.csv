@@ -1,0 +1,11 @@
+tuple_id,src,flight,sched_dep_time,act_dep_time,sched_arr_time,act_arr_time
+2367,world-flight-tracker,AA-4277-CVG-JFK,12:10 p.m.,12:10 p.m.,2:15 p.m.,1:43 p.m.
+2368,world-flight-tracker,AA-789-ORD-DEN,1:05 p.m.,1:19 p.m.,2:35 p.m.,3:13 p.m.
+2369,world-flight-tracker,AA-85-JFK-SFO,3:05 p.m.,3:36 p.m.,6:30 p.m.,6:43 p.m.
+2370,world-flight-tracker,AA-3786-IAH-ORD,4:00 p.m.,4:12 p.m.,6:40 p.m.,6:15 p.m.
+2371,world-flight-tracker,AA-222-LAX-BOS,7:10 a.m.,7:31 a.m.,3:30 p.m.,3:14 p.m.
+2372,world-flight-tracker,UA-3099-PHX-PHL,11:55 a.m.,11:43 a.m.,6:17 p.m.,5:38 p.m.
+2373,world-flight-tracker,AA-4198-ORD-CLE,10:40 a.m.,10:54 a.m.,12:55 p.m.,12:50 p.m.
+2374,world-flight-tracker,CO-45-EWR-MIA,4:00 p.m.,3:58 p.m.,7:05 p.m.,6:36 p.m.
+2375,world-flight-tracker,AA-3809-PHX-LAX,6:00 a.m.,6:10 a.m.,6:40 a.m.,6:19 a.m.
+2376,world-flight-tracker,AA-59-JFK-SFO,7:10 a.m.,7:39 a.m.,10:45 a.m.,11:12 a.m.
