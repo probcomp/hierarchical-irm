@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_product) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_sample_from_logps) {
+BOOST_AUTO_TEST_CASE(test_sample_from_logps_single) {
   // One of these entries isn't like the others, ...
   std::vector<double> logps = {-1.0, -2.0, 20.0, -3.0};
   std::mt19937 prng;
@@ -129,4 +129,24 @@ BOOST_AUTO_TEST_CASE(test_sample_from_logps_all_small) {
   std::vector<double> logps = {-10.0, -20.0, -30.0, -40.0, -50.0};
   std::mt19937 prng;
   BOOST_TEST(0 == sample_from_logps(logps, &prng));
+}
+
+BOOST_AUTO_TEST_CASE(test_sample_from_logps) {
+  std::vector<double> probs = {0.3, 0.1, 0.05, 0.1, 0.24, 0.11, 0., 0.1};
+  std::vector<double> logps;
+  for (int i = 0; i < std::ssize(probs); ++i) {
+    // Ensure these are not normalized.
+    logps.emplace_back(log(probs[i]) - 2.);
+  }
+  std::mt19937 prng;
+  int num_samples = 100000;
+  std::vector<int> counts{0, 0, 0, 0, 0, 0, 0, 0};
+  for (int i = 0; i < num_samples; ++i) {
+    ++counts[sample_from_logps(logps, &prng)];
+  }
+  for (int i = 0; i < std::ssize(logps); ++i) {
+    double approx_p = (1. * counts[i]) / num_samples;
+    double stddev = sqrt(probs[i] * (1 - probs[i]) / num_samples);
+    BOOST_TEST(abs(probs[i] - approx_p) <= 3 * stddev);
+  }
 }
