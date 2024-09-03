@@ -204,14 +204,7 @@ BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
   BOOST_TEST(nd.m > 0.0);
 }
 
-double two_sided_ks_test(std::vector<double>& samples1, std::vector<double>& samples2) {
-  // Sort the samples to get CDFs.
-  std::sort(samples1.begin(), samples1.end());
-  std::sort(samples2.begin(), samples2.end());
-  // Compute the sup of the empirical CDFs.
-}
-
-BOOST_AUTO_TEST_CASE(sample_and_log_prob) {
+BOOST_AUTO_TEST_CASE(sample_agrees) {
   std::mt19937 prng;
   Normal nd;
 
@@ -224,16 +217,26 @@ BOOST_AUTO_TEST_CASE(sample_and_log_prob) {
   }
 
   std::vector<double> samples;
+
   const int num_samples = 100000;
   for (int i = 0; i < num_samples; ++i) {
     samples.emplace_back(nd.sample(&prng));
   }
 
-  std::sort(samples.begin(), samples.end());
+  double sum = std::accumulate(samples.begin(), samples.end(), 0.);
+  double mean = sum / samples.size();
 
-  // Compute the true CDF of the normal distribution.
+  std::vector<double> diff(samples.size());
+  std::transform(
+          samples.begin(),
+          samples.end(),
+          diff.begin(),
+          [mean](double x) { return x - mean;});
+  double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.);
+  double stddev = std::sqrt(sq_sum / samples.size());
 
-  // Compute the arti
-
-
+  // Check that mean and stddev agree with a normal inverse gamma model.
+  double mprime, sprime;
+  nd.posterior_hypers(&mprime, &sprime);
+  BOOST_TEST(mean == mprime, tt::tolerance(4e-3));
 }
