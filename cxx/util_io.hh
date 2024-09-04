@@ -71,3 +71,12 @@ void from_txt(std::mt19937* prng, IRM* const irm,
 void from_txt(std::mt19937* prng, HIRM* const irm,
               const std::string& path_schema, const std::string& path_obs,
               const std::string& path_clusters);
+
+T_observations merge_observations(const T_observations& obs1,
+                                  const T_observations& obs2);
+
+// Return the log probability of the observations given the model h_irm.
+double logp(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
+            const T_encoding& encoding,
+            const T_observations& observations);
+
