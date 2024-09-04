@@ -104,6 +104,12 @@ cc_library(
 )
 
 cc_library(
+    name = "observations",
+    hdrs = ["observations.hh"],
+    deps = [],
+)
+
+cc_library(
     name = "relation",
     hdrs = ["relation.hh"],
     srcs = ["relation.cc"],
@@ -131,6 +137,7 @@ cc_library(
     ],
     deps = [
         ":hirm_lib",
+        ":observations",
         ":util_parse",
     ],
 )

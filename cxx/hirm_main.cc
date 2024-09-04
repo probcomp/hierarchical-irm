@@ -24,6 +24,8 @@ int main(int argc, char** argv) {
       cxxopts::value<bool>()->default_value("false"))(
       "timeout", "number of seconds of inference",
       cxxopts::value<int>()->default_value("0"))(
+      "samples", "number of samples to write to disk",
+      cxxopts::value<int>()->default_value("0"))(
       "load", "path to .[h]irm file with initial clusters",
       cxxopts::value<std::string>()->default_value(""))(
       "path", "base name of the .schema file", cxxopts::value<std::string>())(
@@ -49,6 +51,7 @@ int main(int argc, char** argv) {
   int iters = result["iters"].as<int>();
   int timeout = result["timeout"].as<int>();
   bool verbose = result["verbose"].as<bool>();
+  int num_samples = result["samples"].as<int>();
   std::string path_clusters = result["load"].as<std::string>();
   std::string mode = result["mode"].as<std::string>();
 
@@ -112,6 +115,10 @@ int main(int argc, char** argv) {
       std::cout << "Log likelihood of held out data is " << lp << std::endl;
     }
 
+    if (num_samples > 0) {
+      std::cout << "Sorry, IRM does not currently support generating samples\n";
+    }
+
     // Free
     free(irm);
     return 0;
@@ -142,6 +149,14 @@ int main(int argc, char** argv) {
     if (!held_out.empty()) {
       double lp = logp(&prng, hirm, encoding, heldout_obs);
       std::cout << "Log likelihood of held out data is " << lp << std::endl;
+    }
+
+    if (num_samples > 0) {
+      std::cout << "Generating " << num_samples << " samples\n";
+      T_encoded_observations sampled_obs = hirm->sample_and_incorporate(
+          &prng, num_samples);
+      std::cout << "Writing samples ...\n";
+      write_observations(path_save + ".samples", sampled_obs, encoding, hirm);
     }
 
     // Free

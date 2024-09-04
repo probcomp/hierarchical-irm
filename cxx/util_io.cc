@@ -209,6 +209,34 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
   return observations;
 }
 
+void write_observations(
+    std::ostream& fp, const T_encoded_observations& observations,
+    const& T_encoding encoding, std::variant<IRM*, HIRM*> h_irm) {
+  const T_encoding_r& reverse_encoding = encoding.second;
+  for (const auto& [rel, obs_for_rel]: observations) {
+    T_relation trel = std::visit(
+        [&](const auto& m) { return m->schema.at(relation); }, h_irm);
+    std::vector<std::string> domains =
+        std::visit([&](const auto& tr) { return tr.domains; }, trel);
+    for (const auto& [entities, value_str]: obs_for_rel) {
+      fp << value_str << "," << rel;
+      for (size_t i = 0; i < entities.size(); ++i) {
+        fp << "," << reverse_encoding.at(domains[i]).at(entities[i]);
+      }
+      fp << "\n";
+    }
+  }
+}
+
+void write_observations(
+    const std::string& path, const T_encoded_observations& observations,
+    const& T_encoding encoding, std::variant<IRM*, HIRM*> h_irm) {
+  std::ofstream fp(path);
+  assert(fp.good());
+  write_observations(fp, observations, encoding, h_irm);
+  fp.close();
+}
+
 // Assumes that T_item is integer.
 T_encoding calculate_encoding(
     const T_schema& schema, const T_observations& observations) {

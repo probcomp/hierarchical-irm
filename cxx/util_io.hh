@@ -4,15 +4,11 @@
 #pragma once
 
 #include "hirm.hh"
+#include "observations.hh"
 
 typedef std::map<std::string, std::map<std::string, T_item>> T_encoding_f;
 typedef std::map<std::string, std::map<T_item, std::string>> T_encoding_r;
 typedef std::tuple<T_encoding_f, T_encoding_r> T_encoding;
-
-typedef std::tuple<std::vector<std::string>, std::string> T_observation;
-typedef std::unordered_map<std::string, std::vector<T_observation>> T_observations;
-typedef std::tuple<std::vector<int>, std::string> T_encoded_observation;
-typedef std::unordered_map<std::string, std::vector<T_encoded_observation>> T_encoded_observations;
 
 // Load the schema file from path.  Exits if the schema file can't be parsed.
 T_schema load_schema(const std::string& path);
@@ -20,6 +16,11 @@ T_schema load_schema(const std::string& path);
 // Load the observations from the CSV file at path.  Also marks all observed
 // relations in schema as is_observed = true.
 T_observations load_observations(const std::string& path, T_schema& schema);
+
+// Write the observations to path.
+void write_observations(
+    const std::string& path, const T_encoded_observations& observations,
+    const& T_encoding encoding);
 
 // Calculates an encoding for the observations: in the input T_observations,
 // domain values are denoted by strings, and the encoding maps those to/from

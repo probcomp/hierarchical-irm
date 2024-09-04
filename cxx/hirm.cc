@@ -314,9 +314,8 @@ double HIRM::logp_score() const {
   return logp_score_crp + logp_score_irms;
 }
 
-void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
-                                           const std::string& r,
-                                           T_items& items) {
+std::string HIRM::sample_and_incorporate_relation(
+    std::mt19937* prng, const std::string& r, T_items& items) {
   // If `r` is a noisy relation, first sample and incorporate to the base
   // relation if necessary.
   if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
@@ -332,11 +331,14 @@ void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
         },
         get_relation(r));
   }
-  std::visit([&](auto rel) { rel->incorporate_sample(prng, items); },
+  std::string value;
+  std::visit([&](auto rel) { value = rel->incorporate_sample(prng, items); },
              get_relation(r));
+  return value;
 }
 
-void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+  T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
   for (const auto& [r, spec] : schema) {
     // If the relation is a leaf, sample n observations of it.
@@ -357,12 +359,14 @@ void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
             [&](auto rel) { return rel->get_data().contains(entities); },
             get_relation(r));
         if (!r_contains_items) {
-          sample_and_incorporate_relation(prng, r, entities);
+          value = sample_and_incorporate_relation(prng, r, entities);
           ++num_samples;
+          obs[r].push_back(std::make_tuple(entities, value));
         }
       }
     }
   }
+  return obs;
 }
 
 HIRM::~HIRM() {

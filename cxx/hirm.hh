@@ -10,6 +10,7 @@
 
 #include "distributions/get_distribution.hh"
 #include "irm.hh"
+#include "observations.hh"
 #include "relation.hh"
 #include "transition_latent_value.hh"
 
@@ -70,13 +71,14 @@ class HIRM {
   // of values from non-leaf relations as needed to get to `n` leaf samples.
   // Beware: since `n` unique values are sampled from CRPs, if `n` is too high
   // relative to the CRP `alpha`s, this function might take a very long time.
-  void sample_and_incorporate(std::mt19937* prng, int n);
+  // Returns the sampled relations.
+  T_encoded_observations sample_and_incorporate(std::mt19937* prng, int n);
 
   // Incorporates a sample into relation `r`. If `r` is a noisy relation, this
   // function recursively incorporates a sample into the base relation, if
-  // necessary.
-  void sample_and_incorporate_relation(std::mt19937* prng, const std::string& r,
-                                       T_items& items);
+  // necessary.  Returns the sample value as a string.
+  std::string sample_and_incorporate_relation(
+      std::mt19937* prng, const std::string& r, T_items& items);
 
   ~HIRM();
 
