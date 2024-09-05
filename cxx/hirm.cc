@@ -340,6 +340,18 @@ std::string HIRM::sample_and_incorporate_relation(
 T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
+  // Initialize the domain_crps from all the data across all the IRM's.
+  // If sample_and_incorporate ends up being used a lot more, we should
+  // move the domain_crps into the HIRM and maintain them when incorporating
+  // rather than recalculating them here.
+  for (const auto& [unused_cluster_id, irm] : irms) {
+    for (const auto& [domain_name, domain] : irm->domains) {
+      for (const auto& [item, table] : domain->crp.assignments) {
+        domain_crps[domain_name].incorporate(item, table);
+        printf("Debug: added (%d, %d) to domain %s\n", item, table, domain_name.c_str());
+      }
+    }
+  }
   for (const auto& [r, spec] : schema) {
     printf("Generating samples for relation %s\n", r.c_str());
     // If the relation is a leaf, sample n observations of it.
@@ -351,11 +363,14 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
         printf("Trying to generate sample #%d\n", num_samples);
         std::vector<int> entities;
         entities.reserve(r_domains.size());
+        std::vector<std::pair<std::string, int>> domain_and_crps;
+        domain_and_crps.reserve(r_domains.size());
         for (auto it = r_domains.cbegin(); it != r_domains.cend(); ++it) {
           int entity = domain_crps[*it].sample(prng);
           int crp_item = domain_crps[*it].assignments.size();
           domain_crps[*it].incorporate(crp_item, entity);
           entities.push_back(entity);
+          domain_and_crps.push_back(std::make_pair(*it, crp_item));
         }
         bool r_contains_items = std::visit(
             [&](auto rel) { return rel->get_data().contains(entities); },
@@ -365,11 +380,13 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
           ++num_samples;
           obs[r].push_back(std::make_tuple(entities, value));
         } else {
-          printf("Already contains entities (");
-          for (const auto &e : entities) {
-            printf("%d ", e);
+          // Un-incorporate the entities from the domain_crps.
+          for (size_t i = 0; i < entities.size(); ++i) {
+            domain_crps[domain_and_crps[i].first].unincorporate(
+                domain_and_crps[i].second);
+            printf("Debug: removed %s: %d \n", domain_and_crps[i].first.c_str(), domain_and_crps[i].second);
           }
-          printf(")\n");
+          std::exit(-1);
         }
       }
     }
