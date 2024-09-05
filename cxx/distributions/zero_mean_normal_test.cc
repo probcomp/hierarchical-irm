@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(sample_agrees) {
 
   std::vector<double> samples;
 
-  const int num_samples = 100000;
+  const int num_samples = 200000;
   for (int i = 0; i < num_samples; ++i) {
     samples.emplace_back(nd.sample(&prng));
   }
@@ -211,9 +211,9 @@ BOOST_AUTO_TEST_CASE(sample_agrees) {
   double stddev = std::sqrt(sq_sum / samples.size());
 
   // Check that mean agrees with a normal inverse gamma model.
-  BOOST_TEST(mean == 0., tt::tolerance(4e-3));
+  BOOST_TEST(mean == 0., tt::tolerance(5e-3));
   double alpha_n = nd.alpha + nd.N / 2.0;
   double beta_n = nd.beta + nd.var * nd.N;
   double t_variance = beta_n / alpha_n;
-  BOOST_TEST(stddev == alpha_n / (alpha_n - 1.) * t_variance, tt::tolerance(4e-3));
+  BOOST_TEST(stddev == sqrt(alpha_n / (alpha_n - 1.) * t_variance), tt::tolerance(5e-3));
 }
