@@ -212,10 +212,10 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 void write_observations(
     std::ostream& fp, const T_encoded_observations& observations,
     const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm) {
-  const T_encoding_r& reverse_encoding = encoding.second;
+  const T_encoding_r& reverse_encoding = std::get<1>(encoding);
   for (const auto& [rel, obs_for_rel]: observations) {
     T_relation trel = std::visit(
-        [&](const auto& m) { return m->schema.at(relation); }, h_irm);
+        [&](const auto& m) { return m->schema.at(rel); }, h_irm);
     std::vector<std::string> domains =
         std::visit([&](const auto& tr) { return tr.domains; }, trel);
     for (const auto& [entities, value_str]: obs_for_rel) {

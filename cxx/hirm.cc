@@ -334,7 +334,7 @@ std::string HIRM::sample_and_incorporate_relation(
   std::ostringstream ss;
   std::visit([&](auto rel) { ss << rel->incorporate_sample(prng, items); },
              get_relation(r));
-  return ss.ostr();
+  return ss.str();
 }
 
 T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
@@ -359,7 +359,7 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
             [&](auto rel) { return rel->get_data().contains(entities); },
             get_relation(r));
         if (!r_contains_items) {
-          value = sample_and_incorporate_relation(prng, r, entities);
+          std::string value = sample_and_incorporate_relation(prng, r, entities);
           ++num_samples;
           obs[r].push_back(std::make_tuple(entities, value));
         }
