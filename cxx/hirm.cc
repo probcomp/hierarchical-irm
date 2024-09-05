@@ -331,10 +331,10 @@ std::string HIRM::sample_and_incorporate_relation(
         },
         get_relation(r));
   }
-  std::string value;
-  std::visit([&](auto rel) { value = rel->incorporate_sample(prng, items); },
+  std::ostringstream ss;
+  std::visit([&](auto rel) { ss << rel->incorporate_sample(prng, items); },
              get_relation(r));
-  return value;
+  return ss.ostr();
 }
 
 T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {

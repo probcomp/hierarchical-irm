@@ -20,7 +20,7 @@ T_observations load_observations(const std::string& path, T_schema& schema);
 // Write the observations to path.
 void write_observations(
     const std::string& path, const T_encoded_observations& observations,
-    const& T_encoding encoding);
+    const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm);
 
 // Calculates an encoding for the observations: in the input T_observations,
 // domain values are denoted by strings, and the encoding maps those to/from

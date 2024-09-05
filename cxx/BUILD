@@ -61,6 +61,7 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         ":irm",
+        ":observations",
     ],
 )
 

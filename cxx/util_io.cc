@@ -211,7 +211,7 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
 
 void write_observations(
     std::ostream& fp, const T_encoded_observations& observations,
-    const& T_encoding encoding, std::variant<IRM*, HIRM*> h_irm) {
+    const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm) {
   const T_encoding_r& reverse_encoding = encoding.second;
   for (const auto& [rel, obs_for_rel]: observations) {
     T_relation trel = std::visit(
@@ -230,7 +230,7 @@ void write_observations(
 
 void write_observations(
     const std::string& path, const T_encoded_observations& observations,
-    const& T_encoding encoding, std::variant<IRM*, HIRM*> h_irm) {
+    const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm) {
   std::ofstream fp(path);
   assert(fp.good());
   write_observations(fp, observations, encoding, h_irm);

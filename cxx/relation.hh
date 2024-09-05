@@ -38,7 +38,9 @@ class Relation {
                                     const T_items& items) const = 0;
 
   // Takes a sample from the cluster containing `items` and incorporates it.
-  virtual void incorporate_sample(std::mt19937* prng, const T_items& items) = 0;
+  // Returns the sampled value.
+  virtual ValueType incorporate_sample(
+      std::mt19937* prng, const T_items& items) = 0;
 
   virtual void incorporate_to_cluster(const T_items& items,
                                       const ValueType& value) = 0;
