@@ -341,12 +341,14 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
   for (const auto& [r, spec] : schema) {
+    printf("Generating samples for relation %s\n", r.c_str());
     // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
       const std::vector<std::string>& r_domains =
           std::visit([](auto trel) { return trel.domains; }, spec);
       int num_samples = 0;
       while (num_samples < n) {
+        printf("Trying to generate sample #%d\n", num_samples);
         std::vector<int> entities;
         entities.reserve(r_domains.size());
         for (auto it = r_domains.cbegin(); it != r_domains.cend(); ++it) {
@@ -362,6 +364,12 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
           std::string value = sample_and_incorporate_relation(prng, r, entities);
           ++num_samples;
           obs[r].push_back(std::make_tuple(entities, value));
+        } else {
+          printf("Already contains entities (");
+          for (const auto &e : entities) {
+            printf("%d ", e);
+          }
+          printf(")\n");
         }
       }
     }
