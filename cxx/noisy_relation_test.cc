@@ -203,9 +203,12 @@ BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
   EmissionSpec em_spec("sometimes_gaussian");
   NoisyRelation<double> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
 
-  NR1.incorporate_sample(&prng, {0, 1, 1});
-  NR1.incorporate_sample(&prng, {0, 1, 5});
-  NR1.incorporate_sample(&prng, {0, 1, 2});
+  double s = NR1.incorporate_sample(&prng, {0, 1, 1});
+  BOOST_TEST(s < 100.0);
+  s = NR1.incorporate_sample(&prng, {0, 1, 5});
+  BOOST_TEST(s < 100.0);
+  s = NR1.incorporate_sample(&prng, {0, 1, 2});
+  BOOST_TEST(s < 100.0);
 
   BOOST_TEST(NR1.data.size() == 3);
   BOOST_TEST(R1.data.size() == 1);
