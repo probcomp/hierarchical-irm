@@ -132,3 +132,33 @@ BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   dc.transition_hyperparameters(&prng);
   BOOST_TEST(dc.alpha > 1.0);
 }
+
+BOOST_AUTO_TEST_CASE(test_sample_and_log_prob) {
+  std::mt19937 prng;
+  DirichletCategorical dc(5);
+  std::vector<double> primes {2, 3, 5, 7, 11};
+
+  for (int i = 0; i < 5; ++i) {
+    for (int j = 0; j < primes[i]; ++j) {
+      dc.incorporate(i);
+    }
+  }
+
+  std::vector<int> counts{0, 0, 0, 0, 0};
+  const int num_samples = 100000;
+  for (int i = 0; i < num_samples; ++i) {
+    ++counts[dc.sample(&prng)];
+  }
+
+  std::vector<double> probs;
+  for (int i = 0; i < 5; ++i) {
+    probs.push_back(exp(dc.logp(i)));
+  }
+
+  // Check that we are within 3 standard deviations
+  for (int i = 0; i < 5; ++i) {
+    double approx_p = 1. * counts[i] / num_samples;
+    double stddev = sqrt(probs[i] * (1 - probs[i]) / num_samples);
+    BOOST_TEST(abs(probs[i] - approx_p) <= 3 * stddev);
+  }
+}

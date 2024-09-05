@@ -114,3 +114,30 @@ BOOST_AUTO_TEST_CASE(test_transition_hyperparameters) {
   // beta.
   BOOST_TEST(bb.alpha > bb.beta);
 }
+
+BOOST_AUTO_TEST_CASE(test_sample_and_log_prob) {
+  std::mt19937 prng;
+  BetaBernoulli bb;
+
+  for (int i = 0; i < 17; ++i) {
+    bb.incorporate(0);
+  }
+
+  for (int i = 0; i < 19; ++i) {
+    bb.incorporate(1);
+  }
+
+  std::vector<int> counts{0, 0};
+  const int num_samples = 100000;
+  for (int i = 0; i < num_samples; ++i) {
+    ++counts[bb.sample(&prng)];
+  }
+
+  double p = exp(bb.logp(0));
+
+  double stddev = sqrt((17 / 36. * 19 / 36.) / num_samples);
+
+  // Check that we are within 3 standard deviations
+  BOOST_TEST(abs(p - (1. * counts[0] / num_samples)) <= 3 * stddev);
+  BOOST_TEST(abs((1- p) - (1. * counts[1] / num_samples)) <= 3 * stddev);
+}

@@ -178,3 +178,42 @@ BOOST_AUTO_TEST_CASE(transition_hyperparameters) {
   nd.transition_hyperparameters(&prng);
   BOOST_TEST(nd.beta > 1.0);
 }
+
+BOOST_AUTO_TEST_CASE(sample_agrees) {
+  std::mt19937 prng;
+  ZeroMeanNormal nd;
+
+  for (int i = 0; i < 17; i+=2) {
+    nd.incorporate(i);
+  }
+
+  for (int i = 0; i >= -31; i-=3) {
+    nd.incorporate(i);
+  }
+
+  std::vector<double> samples;
+
+  const int num_samples = 200000;
+  for (int i = 0; i < num_samples; ++i) {
+    samples.emplace_back(nd.sample(&prng));
+  }
+
+  double sum = std::accumulate(samples.begin(), samples.end(), 0.);
+  double mean = sum / samples.size();
+
+  std::vector<double> diff(samples.size());
+  std::transform(
+          samples.begin(),
+          samples.end(),
+          diff.begin(),
+          [mean](double x) { return x - mean;});
+  double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.);
+  double stddev = std::sqrt(sq_sum / samples.size());
+
+  // Check that mean agrees with a normal inverse gamma model.
+  BOOST_TEST(mean == 0., tt::tolerance(5e-3));
+  double alpha_n = nd.alpha + nd.N / 2.0;
+  double beta_n = nd.beta + nd.var * nd.N;
+  double t_variance = beta_n / alpha_n;
+  BOOST_TEST(stddev == sqrt(alpha_n / (alpha_n - 1.) * t_variance), tt::tolerance(5e-3));
+}
