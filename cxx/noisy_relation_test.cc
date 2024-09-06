@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(test_cluster_logp_sample) {
   BOOST_TEST(lp < 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
+BOOST_AUTO_TEST_CASE(test_sample_and_incorporate) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
@@ -203,11 +203,11 @@ BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
   EmissionSpec em_spec("sometimes_gaussian");
   NoisyRelation<double> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
 
-  double s = NR1.incorporate_sample(&prng, {0, 1, 1});
+  double s = NR1.sample_and_incorporate(&prng, {0, 1, 1});
   BOOST_TEST(s < 100.0);
-  s = NR1.incorporate_sample(&prng, {0, 1, 5});
+  s = NR1.sample_and_incorporate(&prng, {0, 1, 5});
   BOOST_TEST(s < 100.0);
-  s = NR1.incorporate_sample(&prng, {0, 1, 2});
+  s = NR1.sample_and_incorporate(&prng, {0, 1, 2});
   BOOST_TEST(s < 100.0);
 
   BOOST_TEST(NR1.data.size() == 3);

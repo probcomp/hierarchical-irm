@@ -39,7 +39,7 @@ class Relation {
 
   // Takes a sample from the cluster containing `items` and incorporates it.
   // Returns the sampled value.
-  virtual ValueType incorporate_sample(
+  virtual ValueType sample_and_incorporate(
       std::mt19937* prng, const T_items& items) = 0;
 
   virtual void incorporate_to_cluster(const T_items& items,

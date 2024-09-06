@@ -107,7 +107,7 @@ class CleanRelation : public Relation<T> {
     clusters.at(z)->incorporate(value);
   }
 
-  ValueType incorporate_sample(std::mt19937* prng, const T_items& items) {
+  ValueType sample_and_incorporate(std::mt19937* prng, const T_items& items) {
     T_items z = incorporate_items(prng, items);
     ValueType value = sample_at_items(prng, items);
     data[items] = value;

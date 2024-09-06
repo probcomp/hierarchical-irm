@@ -68,7 +68,7 @@ class NoisyRelation : public Relation<T> {
     base_to_noisy_items[base_items].insert(items);
   }
 
-  ValueType incorporate_sample(std::mt19937* prng, const T_items& items) {
+  ValueType sample_and_incorporate(std::mt19937* prng, const T_items& items) {
     T_items z = emission_relation.incorporate_items(prng, items);
     const ValueType& base_val = get_base_value(items);
     ValueType value = sample_at_items(prng, items);

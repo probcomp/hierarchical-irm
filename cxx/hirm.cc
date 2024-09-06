@@ -332,7 +332,7 @@ std::string HIRM::sample_and_incorporate_relation(
         get_relation(r));
   }
   std::ostringstream ss;
-  std::visit([&](auto rel) { ss << rel->incorporate_sample(prng, items); },
+  std::visit([&](auto rel) { ss << rel->sample_and_incorporate(prng, items); },
              get_relation(r));
   return ss.str();
 }
