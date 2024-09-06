@@ -221,7 +221,14 @@ void write_observations(
     for (const auto& [entities, value_str]: obs_for_rel) {
       fp << value_str << "," << rel;
       for (size_t i = 0; i < entities.size(); ++i) {
-        fp << "," << reverse_encoding.at(domains[i]).at(entities[i]);
+        fp << ",";
+        const auto& rev_encoding = reverse_encoding.at(domains[i]);
+        auto it = rev_encoding.find(entities[i]);
+        if (it == rev_encoding.end()) {
+          fp << "new_" << domains[i] << "_" << entities[i];
+        } else {
+          fp << it->second;
+        }
       }
       fp << "\n";
     }

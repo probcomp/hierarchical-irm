@@ -88,8 +88,6 @@ class CleanRelation : public Relation<T> {
     assert(!data.contains(items));
     for (int i = 0; i < std::ssize(domains); ++i) {
       domains[i]->incorporate(prng, items[i]);
-      printf("DEBUG: in clean relation %s, adding item %d to domain %s\n",
-             name.c_str(), items[i], domains[i]->name.c_str());
       if (!data_r.at(domains[i]->name).contains(items[i])) {
         data_r.at(domains[i]->name)[items[i]] =
             std::unordered_set<T_items, H_items>();

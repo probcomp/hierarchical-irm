@@ -347,20 +347,18 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   for (const auto& [unused_cluster_id, irm] : irms) {
     for (const auto& [domain_name, domain] : irm->domains) {
       for (const auto& [item, table] : domain->crp.assignments) {
-        domain_crps[domain_name].incorporate(item, table);
-        printf("Debug: added (%d, %d) to domain %s\n", item, table, domain_name.c_str());
+        int crp_item = domain_crps[domain_name].assignments.size();
+        domain_crps[domain_name].incorporate(crp_item, item);
       }
     }
   }
   for (const auto& [r, spec] : schema) {
-    printf("Generating samples for relation %s\n", r.c_str());
     // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
       const std::vector<std::string>& r_domains =
           std::visit([](auto trel) { return trel.domains; }, spec);
       int num_samples = 0;
       while (num_samples < n) {
-        printf("Trying to generate sample #%d\n", num_samples);
         std::vector<int> entities;
         entities.reserve(r_domains.size());
         std::vector<std::pair<std::string, int>> domain_and_crps;
@@ -384,9 +382,7 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
           for (size_t i = 0; i < entities.size(); ++i) {
             domain_crps[domain_and_crps[i].first].unincorporate(
                 domain_and_crps[i].second);
-            printf("Debug: removed %s: %d \n", domain_and_crps[i].first.c_str(), domain_and_crps[i].second);
           }
-          std::exit(-1);
         }
       }
     }
