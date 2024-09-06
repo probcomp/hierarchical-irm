@@ -193,15 +193,18 @@ BOOST_AUTO_TEST_CASE(test_from_string) {
   BOOST_TEST(s == "hello world");
 }
 
-BOOST_AUTO_TEST_CASE(test_incorporate_sample) {
+BOOST_AUTO_TEST_CASE(test_sample_and_incorporate) {
   std::mt19937 prng;
   Domain D1("D1");
   Domain D2("D2");
   DistributionSpec spec("normal");
   CleanRelation<double> R1("R1", spec, {&D1, &D2});
-  R1.incorporate_sample(&prng, {0, 1});
-  R1.incorporate_sample(&prng, {0, 2});
-  R1.incorporate_sample(&prng, {5, 2});
+  double s = R1.sample_and_incorporate(&prng, {0, 1});
+  BOOST_TEST(s < 100.0);
+  s = R1.sample_and_incorporate(&prng, {0, 2});
+  BOOST_TEST(s < 100.0);
+  s = R1.sample_and_incorporate(&prng, {5, 2});
+  BOOST_TEST(s < 100.0);
 
   BOOST_TEST(R1.data.size() == 3);
 }

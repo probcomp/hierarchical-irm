@@ -314,9 +314,8 @@ double HIRM::logp_score() const {
   return logp_score_crp + logp_score_irms;
 }
 
-void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
-                                           const std::string& r,
-                                           T_items& items) {
+std::string HIRM::sample_and_incorporate_relation(
+    std::mt19937* prng, const std::string& r, T_items& items) {
   // If `r` is a noisy relation, first sample and incorporate to the base
   // relation if necessary.
   if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
@@ -332,12 +331,27 @@ void HIRM::sample_and_incorporate_relation(std::mt19937* prng,
         },
         get_relation(r));
   }
-  std::visit([&](auto rel) { rel->incorporate_sample(prng, items); },
+  std::ostringstream ss;
+  std::visit([&](auto rel) { ss << rel->sample_and_incorporate(prng, items); },
              get_relation(r));
+  return ss.str();
 }
 
-void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
+  T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
+  // Initialize the domain_crps from all the data across all the IRM's.
+  // If sample_and_incorporate ends up being used a lot more, we should
+  // move the domain_crps into the HIRM and maintain them when incorporating
+  // rather than recalculating them here.
+  for (const auto& [unused_cluster_id, irm] : irms) {
+    for (const auto& [domain_name, domain] : irm->domains) {
+      for (const auto& [item, table] : domain->crp.assignments) {
+        int crp_item = domain_crps[domain_name].assignments.size();
+        domain_crps[domain_name].incorporate(crp_item, item);
+      }
+    }
+  }
   for (const auto& [r, spec] : schema) {
     // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
@@ -347,22 +361,33 @@ void HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
       while (num_samples < n) {
         std::vector<int> entities;
         entities.reserve(r_domains.size());
+        std::vector<std::pair<std::string, int>> domain_and_crps;
+        domain_and_crps.reserve(r_domains.size());
         for (auto it = r_domains.cbegin(); it != r_domains.cend(); ++it) {
           int entity = domain_crps[*it].sample(prng);
           int crp_item = domain_crps[*it].assignments.size();
           domain_crps[*it].incorporate(crp_item, entity);
           entities.push_back(entity);
+          domain_and_crps.push_back(std::make_pair(*it, crp_item));
         }
         bool r_contains_items = std::visit(
             [&](auto rel) { return rel->get_data().contains(entities); },
             get_relation(r));
         if (!r_contains_items) {
-          sample_and_incorporate_relation(prng, r, entities);
+          std::string value = sample_and_incorporate_relation(prng, r, entities);
           ++num_samples;
+          obs[r].push_back(std::make_tuple(entities, value));
+        } else {
+          // Un-incorporate the entities from the domain_crps.
+          for (size_t i = 0; i < entities.size(); ++i) {
+            domain_crps[domain_and_crps[i].first].unincorporate(
+                domain_and_crps[i].second);
+          }
         }
       }
     }
   }
+  return obs;
 }
 
 HIRM::~HIRM() {
