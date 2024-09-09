@@ -249,6 +249,7 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
 
   BOOST_TEST(tschema.contains("Physician::School"));
   BOOST_TEST(tschema.contains("Practice::City"));
+  BOOST_TEST(tschema.contains("Practice::State"));
 }
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
