@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
 
   BOOST_TEST(tschema.size() == 2);
   BOOST_TEST(tschema.contains("School"));
-  BOOST_TEST(tschema.contains("Physician:school::School:name"));
+  BOOST_TEST(tschema.contains("Physician::School"));
   BOOST_TEST(std::get<T_noisy_relation>(tschema["School"]).is_observed);
-  BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician:school::School:name"]).is_observed);
+  BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician::School"]).is_observed);
 
   std::vector<std::string> expected_adfr = {
     "physician:school:School", "location:city:City",
@@ -216,45 +216,39 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   T_noisy_relation nr1 = std::get<T_noisy_relation>(tschema["Specialty"]);
   BOOST_TEST(nr1.is_observed);
   BOOST_TEST((nr1.emission_spec.emission == EmissionEnum::bigram_string));
-  // "School", "Physician"  moved to the front of the list.
-  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  expected_domains = {"School", "Physician", "Record"};
   BOOST_TEST(nr1.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("School"));
   T_noisy_relation nr2 = std::get<T_noisy_relation>(tschema["School"]);
   BOOST_TEST(nr2.is_observed);
   BOOST_TEST((nr2.emission_spec.emission == EmissionEnum::bigram_string));
-  // "School" moved to the front of the list.
-  expected_domains = {"School", "City", "Practice", "Physician", "Record"};
+  expected_domains = {"School", "Physician", "Record"};
   BOOST_TEST(nr2.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Degree"));
   T_noisy_relation nr3 = std::get<T_noisy_relation>(tschema["Degree"]);
   BOOST_TEST(nr3.is_observed);
   BOOST_TEST((nr3.emission_spec.emission == EmissionEnum::bigram_string));
-  // "School", "Physician" moved to the front of the list.
-  expected_domains = {"School", "Physician", "City", "Practice", "Record"};
+  expected_domains = {"School", "Physician", "Record"};
   BOOST_TEST(nr3.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("City"));
   T_noisy_relation nr4 = std::get<T_noisy_relation>(tschema["City"]);
   BOOST_TEST(nr4.is_observed);
   BOOST_TEST((nr4.emission_spec.emission == EmissionEnum::bigram_string));
-  // "City" moved to the front of the list.
-  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
+  expected_domains = {"City", "Practice", "Record"};
   BOOST_TEST(nr4.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("State"));
   T_noisy_relation nr5 = std::get<T_noisy_relation>(tschema["State"]);
   BOOST_TEST(nr5.is_observed);
   BOOST_TEST((nr5.emission_spec.emission == EmissionEnum::bigram_string));
-  // "City" moved to the front of the list.
-  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
+  expected_domains = {"City", "Practice", "Record"};
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 
-  BOOST_TEST(tschema.contains("Physician:school::School:name"));
-  BOOST_TEST(tschema.contains("Practice:city::City:name"));
-  BOOST_TEST(tschema.contains("Practice:city::City:state"));
+  BOOST_TEST(tschema.contains("Physician::School"));
+  BOOST_TEST(tschema.contains("Practice::City"));
 }
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {

@@ -134,15 +134,13 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
 
   // Handle only_final_emissions == false.
   std::string& previous_relation = base_relation_name;
+  std::vector<std::string> current_domains = domains[class_names.back()];
   for (int i = f.class_path.size() - 2; i >= 0; --i) {
     std::string path_prefix = make_prefix_path(var_names, i);
-    std::vector<std::string> reordered_domains = reorder_domains(
-          domains[class_names[i]],
-          annotated_domains[class_names[i]],
-          path_prefix);
+    current_domains.push_back(class_names[i]);
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
-        reordered_domains,
+        current_domains,
         previous_relation);
     std::string rel_name;
     if (i == 0) {
@@ -150,14 +148,11 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
       tnr.is_observed = true;
     } else {
       // Intermediate emissions have a name of the form
-      // "[Observing Class]:[Observing Variable Name]::[Base Relation Name]"
-      rel_name = class_names[i] + ":" + f.class_path[i] + "::" + base_relation_name;
+      // "[Observing Class]::[QueryFieldName]"
+      rel_name = class_names[i] + "::" + f.name;
       tnr.is_observed = false;
     }
-    // It is possible that some other query field already created this relation.
-    if (!tschema->contains(rel_name)) {
-      (*tschema)[rel_name] = tnr;
-    }
+    (*tschema)[rel_name] = tnr;
     previous_relation = rel_name;
     std::vector<std::string> reordered_annotated_domains = reorder_domains(
           annotated_domains[class_names[i]],
