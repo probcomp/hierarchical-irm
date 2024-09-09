@@ -108,7 +108,9 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
   // Handle only_final_emissions == true.
   if (only_final_emissions) {
     std::vector<std::string> noisy_domains = domains[class_names.back()];
-    noisy_domains.push_back(record_class.name);
+    for (int i = class_names.size() - 2; i >= 0; --i) {
+      noisy_domains.push_back(class_names[i]);
+    }
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
         noisy_domains,
