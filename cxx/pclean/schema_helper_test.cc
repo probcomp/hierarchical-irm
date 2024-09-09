@@ -248,8 +248,22 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Physician::School"));
+  T_noisy_relation nr6 = std::get<T_noisy_relation>(tschema["Physician::School"]);
+  BOOST_TEST(!nr6.is_observed);
+  expected_domains = {"School", "Physician"};
+  BOOST_TEST(nr6.domains == expected_domains, tt::per_element());
+
   BOOST_TEST(tschema.contains("Practice::City"));
+  T_noisy_relation nr7 = std::get<T_noisy_relation>(tschema["Practice::City"]);
+  BOOST_TEST(!nr7.is_observed);
+  expected_domains = {"City", "Practice"};
+  BOOST_TEST(nr7.domains == expected_domains, tt::per_element());
+
   BOOST_TEST(tschema.contains("Practice::State"));
+  T_noisy_relation nr8 = std::get<T_noisy_relation>(tschema["Practice::State"]);
+  BOOST_TEST(!nr8.is_observed);
+  expected_domains = {"City", "Practice"};
+  BOOST_TEST(nr8.domains == expected_domains, tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
