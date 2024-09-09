@@ -107,23 +107,15 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
 
   // Handle only_final_emissions == true.
   if (only_final_emissions) {
-    // If the base relation has n domains, we need the first n domains
-    // of this emission relation to be exactly the same (including order).
-    // The base relation's annotated_domains are exactly those that start
-    // with the path_prefix constructed above, and we use the fact that the
-    // domains and annotated_domains are in one-to-one correspondence to
-    // move the base relation's domains to the front.
-    std::string path_prefix = make_prefix_path(var_names, 0);
-    std::vector<std::string> reordered_domains = reorder_domains(
-          domains[record_class.name],
-          annotated_domains[record_class.name],
-          path_prefix);
+    std::vector<std::string> noisy_domains = domains[class_names.back()];
+    noisy_domains.push_back(record_class.name);
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
-        reordered_domains,
+        noisy_domains,
         base_relation_name);
     tnr.is_observed = true;
     (*tschema)[f.name] = tnr;
+    std::string path_prefix = make_prefix_path(var_names, 0);
     std::vector<std::string> reordered_annotated_domains = reorder_domains(
           annotated_domains[record_class.name],
           annotated_domains[record_class.name],
