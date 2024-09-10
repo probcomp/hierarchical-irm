@@ -108,8 +108,13 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
   // Handle only_final_emissions == true.
   if (only_final_emissions) {
     std::vector<std::string> noisy_domains = domains[class_names.back()];
+    std::vector<std::string> adfr = annotated_domains[class_names.back()];
     for (int i = class_names.size() - 2; i >= 0; --i) {
       noisy_domains.push_back(class_names[i]);
+      for (int j = 0; j < adfr.size(); ++j) {
+        adfr[j] = class_names[i] + ":" + adfr[j];
+      }
+      adfr.push_back(class_names[i]);
     }
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
@@ -117,21 +122,20 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
         base_relation_name);
     tnr.is_observed = true;
     (*tschema)[f.name] = tnr;
-    std::string path_prefix = make_prefix_path(var_names, 0);
-    std::vector<std::string> reordered_annotated_domains = reorder_domains(
-          annotated_domains[record_class.name],
-          annotated_domains[record_class.name],
-          path_prefix);
-    (*annotated_domains_for_relation)[f.name] = reordered_annotated_domains;
+    (*annotated_domains_for_relation)[f.name] = adfr;
     return;
   }
 
   // Handle only_final_emissions == false.
   std::string& previous_relation = base_relation_name;
   std::vector<std::string> current_domains = domains[class_names.back()];
+  std::vector<std::string> adfr = annotated_domains[class_names.back()];
   for (int i = f.class_path.size() - 2; i >= 0; --i) {
-    std::string path_prefix = make_prefix_path(var_names, i);
     current_domains.push_back(class_names[i]);
+    for (int j = 0; j < adfr.size(); ++j) {
+      adfr[j] = class_names[i] + ":" + adfr[j];
+    }
+    adfr.push_back(class_names[i]);
     T_noisy_relation tnr = get_emission_relation(
         std::get<ScalarVar>(last_var.spec),
         current_domains,
@@ -148,30 +152,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
     }
     (*tschema)[rel_name] = tnr;
     previous_relation = rel_name;
-    std::vector<std::string> reordered_annotated_domains = reorder_domains(
-          annotated_domains[class_names[i]],
-          annotated_domains[class_names[i]],
-          path_prefix);
-    (*annotated_domains_for_relation)[rel_name] = reordered_annotated_domains;
+    (*annotated_domains_for_relation)[rel_name] = adfr;
   }
-}
-
-std::vector<std::string> reorder_domains(
-    const std::vector<std::string>& original_domains,
-    const std::vector<std::string>& annotated_ds,
-    const std::string& prefix) {
-  std::vector<std::string> output_domains;
-  for (size_t i = 0; i < original_domains.size(); ++i) {
-    if (annotated_ds[i].starts_with(prefix)) {
-      output_domains.push_back(original_domains[i]);
-    }
-  }
-  for (size_t i = 0; i < original_domains.size(); ++i) {
-    if (!annotated_ds[i].starts_with(prefix)) {
-      output_domains.push_back(original_domains[i]);
-    }
-  }
-  return output_domains;
 }
 
 T_schema PCleanSchemaHelper::make_hirm_schema(

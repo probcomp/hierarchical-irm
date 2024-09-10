@@ -336,31 +336,6 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 }
 
-BOOST_AUTO_TEST_CASE(test_reorder_domains) {
-  std::vector<std::string> origs = {"0", "1", "2", "3", "4", "5", "6", "7"};
-  std::vector<std::string> annotated = {
-    "000", "001", "010", "011", "100", "101", "110", "111"};
-
-  std::vector<std::string> expected = {
-    "6", "7", "0", "1", "2", "3", "4", "5"};
-  BOOST_TEST(reorder_domains(origs, annotated, "11") == expected);
-
-  expected = {"4", "5", "6", "7", "0", "1", "2", "3"};
-  BOOST_TEST(reorder_domains(origs, annotated, "1") == expected);
-
-  origs = {
-    "republic_of_ireland", "northern_ireland", "england", "scotland", "wales"};
-  annotated = {
-    "ireland:republic_of_ireland",
-    "ireland:uk:northern_ireland",
-    "great_britain:uk:england",
-    "great_britain:uk:scotland",
-    "great_britain:uk:wales"};
-  expected = {
-    "northern_ireland", "republic_of_ireland", "england", "scotland", "wales"};
-  BOOST_TEST(reorder_domains(origs, annotated, "ireland:uk:") == expected);
-}
-
 BOOST_AUTO_TEST_CASE(test_record_class_is_clean) {
   std::stringstream ss2(R"""(
 class Record

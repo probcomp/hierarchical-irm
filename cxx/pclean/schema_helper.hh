@@ -44,10 +44,3 @@ class PCleanSchemaHelper {
   std::map<std::string, std::vector<std::string>> domains;
   std::map<std::string, std::vector<std::string>> annotated_domains;
 };
-
-// Returns original_domains, but with the elements corresponding to
-// annotated_ds elements that start with prefix moved to the front.
-std::vector<std::string> reorder_domains(
-    const std::vector<std::string>& original_domains,
-    const std::vector<std::string>& annotated_ds,
-    const std::string& prefix);
