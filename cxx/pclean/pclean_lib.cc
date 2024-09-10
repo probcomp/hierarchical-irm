@@ -7,6 +7,7 @@
 #include "irm.hh"
 #include "pclean/csv.hh"
 #include "pclean/pclean_lib.hh"
+#include "pclean/schema.hh"
 
 T_observations translate_observations(
     const DataFrame& df, const T_schema &schema,
@@ -56,4 +57,29 @@ T_observations translate_observations(
     }
   }
   return obs;
+}
+
+// Sample a single "row".
+void make_pclean_sample(const HIRM &hirm, const PCleanSchema& schema,
+                        std::mt19937* prng,
+                        std::map<std::string, std::string> *query_values) {
+  for (const auto& query_field : schema.query.fields) {
+    T_items entities;
+    // XXX entities!!!
+    (*query_values)[query_field.name] = hirm.sample_and_incorporate_relation(
+        prng, query_field.name, entities);
+  }
+}
+
+DataFrame make_pclean_samples(int num_samples, const HIRM &hirm,
+                              const PCleanSchema& schema, std::mt19937* prng) {
+  DataFrame df;
+  for (int i = 0; i < num_samples; i++) {
+     std::map<std::string, std::string> query_values;
+     make_pclean_sample(hirm, prng, &query_values);
+     for (const auto& [column, val] : query_values) {
+       df[column].push_back(val);
+     }
+  }
+  return df;
 }

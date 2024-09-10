@@ -33,6 +33,8 @@ int main(int argc, char** argv) {
       ("i,iters", "Number of inference iterations",
        cxxopts::value<int>()->default_value("10"))
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
+      ("samples", "Number of samples to generate",
+       cxxopts::value<int>()->default_value("0"))
       ("only_final_emissions", "Only create one layer of emissions",
        cxxopts::value<bool>()->default_value("false"))
       ("record_class_is_clean",
@@ -130,6 +132,15 @@ int main(int argc, char** argv) {
   if (!heldout_fn.empty()) {
     double lp = logp(&prng, &hirm, encoding, heldout_obs);
     std::cout << "Log likelihood of held out data is " << lp << std::endl;
+  }
+
+  int num_samples = result["samples"].as<int>();
+  if (num_samples > 0) {
+    std::string samples_out = result["output"].as<std::string>() + ".samples";
+    std::cout << "Generating " << num_samples << " samples\n";
+    DataFrame samples_df = make_pclean_samples(num_samples, hirm, &prng);
+    std::cout << "Writing samples to " << samples_out << " ...\n";
+    samples_df.to_csv(samples_out);
   }
 
   return 0;

@@ -23,6 +23,12 @@ class DataFrame {
   static DataFrame from_csv(std::istream& is,
                             const std::vector<std::string>& column_names = {});
 
+  // Writes the DataFrame to a file.  Returns false on error.
+  bool to_csv(const std::string& filename);
+  bool to_csv(std::ostream& os);
+
   // data['column_name'] holds the data for that column.
+  // TODO(thomaswc): Also hold the column names in a vector so we can preserve
+  // their order when reading & writing.
   std::map<std::string, std::vector<std::string>> data;
 };

@@ -77,6 +77,7 @@ cc_library(
     srcs = ["pclean_lib.cc"],
     deps = [
         ":csv",
+        ":schema",
         "//:hirm_lib",
         "//:util_io",
     ],
