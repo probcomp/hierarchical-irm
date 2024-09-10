@@ -47,15 +47,6 @@ void PCleanSchemaHelper::compute_domains_for(const std::string& name) {
   annotated_domains[name] = annotated_ds;
 }
 
-std::string make_prefix_path(
-    std::vector<std::string>& var_names, size_t index) {
-  std::string s;
-  for (size_t i = index; i < var_names.size(); ++i) {
-    s += var_names[i] + ":";
-  }
-  return s;
-}
-
 void PCleanSchemaHelper::make_relations_for_queryfield(
     const QueryField& f, const PCleanClass& record_class, T_schema* tschema,
     std::map<std::string, std::vector<std::string>>
@@ -111,8 +102,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
     std::vector<std::string> adfr = annotated_domains[class_names.back()];
     for (int i = class_names.size() - 2; i >= 0; --i) {
       noisy_domains.push_back(class_names[i]);
-      for (int j = 0; j < adfr.size(); ++j) {
-        adfr[j] = class_names[i] + ":" + adfr[j];
+      for (size_t j = 0; j < adfr.size(); ++j) {
+        adfr[j] = var_names[i] + ":" + adfr[j];
       }
       adfr.push_back(class_names[i]);
     }
@@ -132,8 +123,8 @@ void PCleanSchemaHelper::make_relations_for_queryfield(
   std::vector<std::string> adfr = annotated_domains[class_names.back()];
   for (int i = f.class_path.size() - 2; i >= 0; --i) {
     current_domains.push_back(class_names[i]);
-    for (int j = 0; j < adfr.size(); ++j) {
-      adfr[j] = class_names[i] + ":" + adfr[j];
+    for (size_t j = 0; j < adfr.size(); ++j) {
+      adfr[j] = var_names[i] + ":" + adfr[j];
     }
     adfr.push_back(class_names[i]);
     T_noisy_relation tnr = get_emission_relation(

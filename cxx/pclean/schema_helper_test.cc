@@ -158,8 +158,7 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
   BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician::School"]).is_observed);
 
   std::vector<std::string> expected_adfr = {
-    "physician:school:School", "location:city:City",
-    "location:Practice", "physician:Physician", "Record"};
+    "physician:school:School", "physician:Physician", "Record"};
   BOOST_TEST(annotated_domains_for_relation["School"] == expected_adfr,
              tt::per_element());
 }
