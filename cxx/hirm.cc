@@ -388,7 +388,7 @@ void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const
   for (const auto& [unused_cluster_id, irm] : irms) {
     for (const auto& [domain_name, domain] : irm->domains) {
       for (const auto& [item, table] : domain->crp.assignments) {
-        int crp_item = domain_crps->at(domain_name).assignments.size();
+        int crp_item = (*domain_crps)[domain_name].assignments.size();
         (*domain_crps)[domain_name].incorporate(crp_item, item);
       }
     }

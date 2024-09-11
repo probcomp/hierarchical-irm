@@ -80,10 +80,10 @@ void make_pclean_sample(
         annotated_domains_for_relations.at(query_field.name);
     assert(domains.size() == annotated_domains.size());
     for (size_t i = 0; i < domains.size(); ++i) {
-      int id;
+      int id = -1;
       auto it = entity_assignments.find(annotated_domains[i]);
       if (it == entity_assignments.end()) {
-        int id = domain_crps[domains[i]].sample(prng);
+        id = domain_crps[domains[i]].sample(prng);
         int crp_item = domain_crps[domains[i]].assignments.size();
         domain_crps[domains[i]].incorporate(crp_item, id);
         entity_assignments[annotated_domains[i]] = id;
