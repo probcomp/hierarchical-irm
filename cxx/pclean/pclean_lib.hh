@@ -20,7 +20,7 @@ T_observations translate_observations(
 
 // Return a dataframe of num_samples samples from the HIRM.
 DataFrame make_pclean_samples(
-    int num_samples, const HIRM &hirm, const PCleanSchema& schema,
+    int num_samples, HIRM *hirm, const PCleanSchema& schema,
     const std::map<std::string, std::vector<std::string>>
     &annotated_domains_for_relation,
     std::mt19937* prng);

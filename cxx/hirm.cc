@@ -28,18 +28,18 @@ void HIRM::unincorporate(const std::string& r, const T_items& items) {
   irm->unincorporate(r, items);
 }
 
-int HIRM::relation_to_table(const std::string& r) {
+int HIRM::relation_to_table(const std::string& r) const {
   int rc = relation_to_code.at(r);
   return crp.assignments.at(rc);
 }
 
-IRM* HIRM::relation_to_irm(const std::string& r) {
+IRM* HIRM::relation_to_irm(const std::string& r) const {
   int rc = relation_to_code.at(r);
   int table = crp.assignments.at(rc);
   return irms.at(table);
 }
 
-RelationVariant HIRM::get_relation(const std::string& r) {
+RelationVariant HIRM::get_relation(const std::string& r) const {
   IRM* irm = relation_to_irm(r);
   return irm->relations.at(r);
 }
@@ -380,7 +380,7 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   return obs;
 }
 
-void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) {
+void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const {
   // Initialize the domain_crps from all the data across all the IRM's.
   // If this ends up being used a lot more, we should
   // move the domain_crps into the HIRM and maintain them when incorporating
@@ -388,8 +388,8 @@ void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) {
   for (const auto& [unused_cluster_id, irm] : irms) {
     for (const auto& [domain_name, domain] : irm->domains) {
       for (const auto& [item, table] : domain->crp.assignments) {
-        int crp_item = domain_crps[domain_name].assignments.size();
-        domain_crps[domain_name].incorporate(crp_item, item);
+        int crp_item = domain_crps->at(domain_name).assignments.size();
+        (*domain_crps)[domain_name].incorporate(crp_item, item);
       }
     }
   }
