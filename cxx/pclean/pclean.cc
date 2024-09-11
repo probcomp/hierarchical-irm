@@ -138,7 +138,8 @@ int main(int argc, char** argv) {
   if (num_samples > 0) {
     std::string samples_out = result["output"].as<std::string>() + ".samples";
     std::cout << "Generating " << num_samples << " samples\n";
-    DataFrame samples_df = make_pclean_samples(num_samples, hirm, &prng);
+    DataFrame samples_df = make_pclean_samples(
+        num_samples, hirm, hirm_schema, annotated_domains_for_relations, &prng);
     std::cout << "Writing samples to " << samples_out << " ...\n";
     samples_df.to_csv(samples_out);
   }

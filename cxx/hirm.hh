@@ -80,6 +80,10 @@ class HIRM {
   std::string sample_and_incorporate_relation(
       std::mt19937* prng, const std::string& r, T_items& items);
 
+  // Return a map from domains to CRP's that are initialized with the entities
+  // each domain has seen so far.
+  void initialize_domain_crps(std::map<std::string, CRP>* domain_crps);
+
   ~HIRM();
 
   // Disable copying.

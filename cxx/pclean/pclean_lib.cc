@@ -60,23 +60,54 @@ T_observations translate_observations(
 }
 
 // Sample a single "row".
-void make_pclean_sample(const HIRM &hirm, const PCleanSchema& schema,
-                        std::mt19937* prng,
-                        std::map<std::string, std::string> *query_values) {
+void make_pclean_sample(
+    const HIRM &hirm, const PCleanSchema& schema,
+    const std::map<std::string, std::vector<std::string>>
+    &annotated_domains_for_relations,
+    std::mt19937* prng,
+    std::map<std::string, std::string> *query_values) {
+  std::map<std::string, CRP> domain_crps;
+  hirm.initialize_domain_crps(&domain_crps);
+
+  // entity_assignments[annotated_entity] gives the entity id for that entity.
+  std::map<std::string, int> entity_assignments;
   for (const auto& query_field : schema.query.fields) {
     T_items entities;
-    // XXX entities!!!
+    const std::vector<std::string>& domains = std::visit(
+        [](auto trel) { return trel.domains; },
+        hirm.get_relation(query_field.name));
+    const std::vector<std::string>& annotated_domains =
+        annotated_domains_for_relations.at(query_field.name);
+    assert(domains.size() == annotated_domains.size());
+    for (size_t i = 0; i < domains.size(); ++i) {
+      int id;
+      auto it = entity_assignments.find(annotated_domains[i]);
+      if (it == entity_assignments.end()) {
+        int id = domain_crps[domains[i]].sample(prng);
+        int crp_item = domain_crps[domains[i]].assignments.size();
+        domain_crps[domains[i]].incorporate(crp_item, id);
+        entity_assignements[annotated_domains[i]] = id;
+      }
+      else {
+        id = it->second;
+      }
+      entities.push_back(id);
+    }
     (*query_values)[query_field.name] = hirm.sample_and_incorporate_relation(
         prng, query_field.name, entities);
   }
 }
 
-DataFrame make_pclean_samples(int num_samples, const HIRM &hirm,
-                              const PCleanSchema& schema, std::mt19937* prng) {
+DataFrame make_pclean_samples(
+    int num_samples, const HIRM &hirm, const PCleanSchema& schema,
+    const std::map<std::string, std::vector<std::string>>
+      &annotated_domains_for_relations,
+    std::mt19937* prng) {
   DataFrame df;
   for (int i = 0; i < num_samples; i++) {
      std::map<std::string, std::string> query_values;
-     make_pclean_sample(hirm, prng, &query_values);
+     make_pclean_sample(hirm, schema, annotated_domains_for_relations,
+                        prng, &query_values);
      for (const auto& [column, val] : query_values) {
        df[column].push_back(val);
      }

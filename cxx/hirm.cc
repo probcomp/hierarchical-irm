@@ -340,18 +340,8 @@ std::string HIRM::sample_and_incorporate_relation(
 T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
-  // Initialize the domain_crps from all the data across all the IRM's.
-  // If sample_and_incorporate ends up being used a lot more, we should
-  // move the domain_crps into the HIRM and maintain them when incorporating
-  // rather than recalculating them here.
-  for (const auto& [unused_cluster_id, irm] : irms) {
-    for (const auto& [domain_name, domain] : irm->domains) {
-      for (const auto& [item, table] : domain->crp.assignments) {
-        int crp_item = domain_crps[domain_name].assignments.size();
-        domain_crps[domain_name].incorporate(crp_item, item);
-      }
-    }
-  }
+  initialize_domain_crps(&domain_crps);
+
   for (const auto& [r, spec] : schema) {
     // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
@@ -388,6 +378,21 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
     }
   }
   return obs;
+}
+
+void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) {
+  // Initialize the domain_crps from all the data across all the IRM's.
+  // If this ends up being used a lot more, we should
+  // move the domain_crps into the HIRM and maintain them when incorporating
+  // rather than recalculating them here.
+  for (const auto& [unused_cluster_id, irm] : irms) {
+    for (const auto& [domain_name, domain] : irm->domains) {
+      for (const auto& [item, table] : domain->crp.assignments) {
+        int crp_item = domain_crps[domain_name].assignments.size();
+        domain_crps[domain_name].incorporate(crp_item, item);
+      }
+    }
+  }
 }
 
 HIRM::~HIRM() {
