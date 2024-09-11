@@ -71,11 +71,13 @@ BOOST_AUTO_TEST_CASE(test_make_pclean_samples) {
   std::stringstream ss(R"""(
 class School
   name ~ string
+  degree_dist ~ categorical(k=100)
 
 class Physician
   school ~ School
   degree ~ stringcat(strings="MD PT NP DO PHD")
   specialty ~ stringcat(strings="Family Med:Internal Med:Physical Therapy", delim=":")
+  # observed_degree ~ maybe_swap(degree)
 
 class City
   name ~ string
@@ -91,22 +93,29 @@ class Record
 observe
   physician.specialty as Specialty
   physician.school.name as School
-  physician.observed_degree as Degree
+  physician.degree as Degree
   location.city.name as City
   location.city.state as State
   from Record
 )""");
 
   PCleanSchema pclean_schema;
+  printf("DEBUG: d\n");
   BOOST_TEST(read_schema(ss, &pclean_schema));
 
-  PCleanSchemaHelper schema_helper(pclean_schema, false, true);
+  printf("DEBUG: c\n");
+  PCleanSchemaHelper schema_helper(pclean_schema);
+  printf("DEBUG: b\n");
   T_schema hirm_schema = schema_helper.make_hirm_schema(
       &annotated_domains_for_relation);
+
+  printf("DEBUG: a\n");
   HIRM hirm(hirm_schema, &prng);
 
+  printf("DEBUG: before\n");
   DataFrame samples = make_pclean_samples(
       10, &hirm, pclean_schema, annotated_domains_for_relation, &prng);
+  printf("DEBUG: after\n");
   BOOST_TEST(samples.data["Specialty"].size() == 10);
   BOOST_TEST(samples.data["School"].size() == 10);
   BOOST_TEST(samples.data["Degree"].size() == 10);
