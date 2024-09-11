@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(test_translate_observations) {
       T_noisy_relation{{"dCounty", "dObs"}, true, EmissionSpec("bigram"), "County:state"}}};
 
   std::map<std::string, std::vector<std::string>> annotated_domains_for_relations;
-  annotated_domains_for_relations["Room Type"] = {"county:County", "Obs"};
-  annotated_domains_for_relations["Monthly Rent"] = {"county:County", "Obs"};
+  annotated_domains_for_relations["Room Type"] = {"Obs"};
+  annotated_domains_for_relations["Monthly Rent"] = {"Obs"};
   annotated_domains_for_relations["County"] = {"county:County", "Obs"};
   annotated_domains_for_relations["State"] = {"county:County", "Obs"};
 
