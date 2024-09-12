@@ -60,7 +60,14 @@ T_observations translate_observations(
   return obs;
 }
 
-// Sample a single "row" into *query_values.
+// Sample a single "row" into *query_values.  A value is sampled into
+// (*query_values)[f] for every query field in the schema.  The samples
+// are generated from the HIRM by first sampling an unique entity id for
+// each annotated domain used by the query field relations from the HIRM's
+// per-domain CRPs.
+// TODO(thomaswc): Remember the entity id samples across rows, so that
+// if we said that Person #5 was born in city #3, we remember that if
+// Person #5 comes up again.
 void make_pclean_sample(
     HIRM *hirm, const PCleanSchema& schema,
     const std::map<std::string, std::vector<std::string>>
