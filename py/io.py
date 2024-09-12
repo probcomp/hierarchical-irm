@@ -5,10 +5,9 @@ import collections
 
 Observation = namedtuple("Observation", ["relation", "value", "items"])
 
-IRM_Cluster = namedtuple("IRM_Cluster", ["domain", "cluster_id", "entities"])
-
-HIRM_Clusters = namedtuple("HIRM_Clusters", ["relation_clusters",
-                                             "irm_clusters"])
+Cluster = namedtuple("Cluster", ["cluster_id", "relations", "domain_clusters"])
+Domain_Cluster = namedtuple("Domain_Cluster", ["cluster_id", "domain",
+                                               "entities"])
 
 def load_observations(path):
   """Load a dataset from path, and return it as an array of Observations."""
@@ -24,16 +23,19 @@ def load_observations(path):
 
 def load_clusters(path):
   """Load the hirm clusters output from path as an HIRM_Clusters."""
-  rel_clusters = []
-  irm_clusters = []
+  id_to_relations = {}
+
   with open(path, 'r') as f:
     # Read the relation clusters
     for line in f:
       fields = line.split()
       if len(fields) == 0:
         break
-      rel_clusters.append(fields[1:])
+      id_to_relations[fields[0]] = fields[1:]
+
+    # Read the IRM clusters
+    for line in f:
+      fields = line.split()
 
 
-  return HIRM_Clusters(relation_clusters=rel_clusters,
-                       irm_clusters=irm_clusters)
+  return clusters
