@@ -60,7 +60,7 @@ T_observations translate_observations(
   return obs;
 }
 
-// Sample a single "row".
+// Sample a single "row" into *query_values.
 void make_pclean_sample(
     HIRM *hirm, const PCleanSchema& schema,
     const std::map<std::string, std::vector<std::string>>
