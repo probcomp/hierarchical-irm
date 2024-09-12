@@ -25,6 +25,7 @@ T_observations translate_observations(
     const T_relation& trel = schema.at(col_name);
     size_t num_domains = std::visit([&](const auto &r) {
       return r.domains.size();}, trel);
+    assert(num_domains == annotated_domains_for_relations.at(col_name).size());
 
     for (size_t i = 0; i < col.second.size(); ++i) {
       const std::string& val = col.second[i];
