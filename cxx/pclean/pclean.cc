@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
       ("output", "Filename of relation clusters output",
        cxxopts::value<std::string>())
       ("heldout", "Filename of heldout observations",
-       cxxopts::value<std::string>())
+       cxxopts::value<std::string>()->default_value(""))
       ("i,iters", "Number of inference iterations",
        cxxopts::value<int>()->default_value("10"))
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
