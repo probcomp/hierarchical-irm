@@ -4,7 +4,6 @@
 #include "hirm.hh"
 
 HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
-  printf("in hirm\n");
   while (true) {
     bool added_a_relation = false;
     bool have_pending_relations = false;
