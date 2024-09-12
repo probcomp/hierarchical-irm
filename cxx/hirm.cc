@@ -3,6 +3,7 @@
 
 #include "hirm.hh"
 
+/*
 HIRM::HIRM(const T_schema& schema, std::mt19937* prng) {
   // Add the clean relations before the noisy relations.
   for (const auto& [name, relation] : schema) {
@@ -16,6 +17,43 @@ HIRM::HIRM(const T_schema& schema, std::mt19937* prng) {
     }
   }
 }
+*/
+
+HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
+  while (true) {
+    bool added_a_relation = false;
+    bool have_pending_relations = false;
+    for (const auto& [name, relation] : _schema) {
+      if (schema.contains(name)) {
+        continue;
+      }
+
+      if (std::holds_alternative<T_clean_relation>(relation)) {
+        this->add_relation(prng, name, relation);
+        added_a_relation = true;
+        continue;
+      }
+
+      const std::string base_rel = std::get<T_noisy_relation>(relation).base_relation;
+      if (schema.contains(base_rel)) {
+        this->add_relation(prng, name, relation);
+        added_a_relation = true;
+      } else {
+        have_pending_relations = true;
+      }
+    }
+
+    if (!have_pending_relations) {
+      return;
+    }
+
+    if (!added_a_relation) {
+      printf("Detected loop in schema\n");
+      std::exit(1);
+    }
+  }
+}
+
 
 void HIRM::incorporate(std::mt19937* prng, const std::string& r,
                        const T_items& items, const ObservationVariant& value) {

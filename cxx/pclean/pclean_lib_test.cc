@@ -100,16 +100,12 @@ observe
 )""");
 
   PCleanSchema pclean_schema;
-  printf("DEBUG: d\n");
   BOOST_TEST(read_schema(ss, &pclean_schema));
 
-  printf("DEBUG: c\n");
   PCleanSchemaHelper schema_helper(pclean_schema);
-  printf("DEBUG: b\n");
   T_schema hirm_schema = schema_helper.make_hirm_schema(
       &annotated_domains_for_relation);
 
-  printf("DEBUG: a\n");
   HIRM hirm(hirm_schema, &prng);
 
   printf("DEBUG: before\n");

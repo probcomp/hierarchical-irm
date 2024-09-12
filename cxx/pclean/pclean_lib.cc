@@ -78,7 +78,11 @@ void make_pclean_sample(
         hirm->schema[query_field.name]);
     const std::vector<std::string>& annotated_domains =
         annotated_domains_for_relations.at(query_field.name);
-    assert(domains.size() == annotated_domains.size());
+    if (domains.size() != annotated_domains.size()) {
+      printf("For relation %s, found %ld domains but %ld annotated domains\n",
+             query_field.name.c_str(), domains.size(), annotated_domains.size());
+      std::exit(1);
+    }
     for (size_t i = 0; i < domains.size(); ++i) {
       int id = -1;
       auto it = entity_assignments.find(annotated_domains[i]);
