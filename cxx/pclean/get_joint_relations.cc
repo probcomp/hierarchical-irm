@@ -25,13 +25,16 @@ std::map<std::string, std::pair<std::string, std::string>> JOINT_NAME_TO_PARTS =
   // on a log-normal distribution.
 };
 
-
 T_clean_relation get_distribution_relation(
     const ScalarVar& scalar_var,
     const std::vector<std::string>& domains) {
   T_clean_relation cr;
+  if (!JOINT_NAME_TO_PARTS.contains(scalar_var.joint_name)) {
+    printf("Unknown joint distribution name %s\n", scalar_var.joint_name.c_str());
+    std::exit(1);
+  }
   cr.distribution_spec = DistributionSpec(
-      JOINT_NAME_TO_PARTS[scalar_var.joint_name].first,
+      JOINT_NAME_TO_PARTS.at(scalar_var.joint_name).first,
       scalar_var.params);
   cr.is_observed = false;
   cr.domains = domains;
@@ -43,8 +46,12 @@ T_noisy_relation get_emission_relation(
     const std::vector<std::string>& domains,
     const std::string& base_relation) {
   T_noisy_relation nr;
+  if (!JOINT_NAME_TO_PARTS.contains(scalar_var.joint_name)) {
+    printf("Unknown joint distribution name %s\n", scalar_var.joint_name.c_str());
+    std::exit(1);
+  }
   nr.emission_spec = EmissionSpec(
-      JOINT_NAME_TO_PARTS[scalar_var.joint_name].second,
+      JOINT_NAME_TO_PARTS.at(scalar_var.joint_name).second,
       scalar_var.params);
   nr.is_observed = false;
   nr.domains = domains;

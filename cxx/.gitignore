@@ -4,6 +4,7 @@
 *.o
 *.out
 *.prof
+*.samples
 boost_1_82_0/
 bazel-bin
 bazel-cxx

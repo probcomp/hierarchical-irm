@@ -46,3 +46,25 @@ BOOST_AUTO_TEST_CASE(test_carriage_ret_at_end_of_line) {
   DataFrame df = DataFrame::from_csv(ss);
   BOOST_TEST(df.data["C"][0] == "c");
 }
+
+BOOST_AUTO_TEST_CASE(test_round_trip) {
+  std::string s = R"""(
+Name,Specialty,Degree,School,Address,City,State,Zip
+K. Ryan,Family Medicine,DO,PCOM,6317 York Rd,Baltimore,MD,21212
+K. Ryan,Family Medicine,DO,PCOM,100 Walter Ward Blvd,Abingdon,MD,21009
+S. Evans,Internal Medicine,MD,UMD,100 Walter Ward Blvd,Abingdon,MD,21009
+M. Grady,Physical Therapy,PT,Other,3491 Merchants Blvd,Abingdon,MD,21009
+)""";
+  std::stringstream ss(s);
+  DataFrame df = DataFrame::from_csv(ss);
+  std::stringstream oss;
+  BOOST_TEST(df.to_csv(oss));
+  // Order isn't preserved because map sorts keys alphabetically.
+  std::string s2 = R"""(Address,City,Degree,Name,School,Specialty,State,Zip
+6317 York Rd,Baltimore,DO,K. Ryan,PCOM,Family Medicine,MD,21212
+100 Walter Ward Blvd,Abingdon,DO,K. Ryan,PCOM,Family Medicine,MD,21009
+100 Walter Ward Blvd,Abingdon,MD,S. Evans,UMD,Internal Medicine,MD,21009
+3491 Merchants Blvd,Abingdon,PT,M. Grady,Other,Physical Therapy,MD,21009
+)""";
+  BOOST_TEST(s2 == oss.str(), tt::per_element());
+}

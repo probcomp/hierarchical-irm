@@ -77,6 +77,7 @@ cc_library(
     srcs = ["pclean_lib.cc"],
     deps = [
         ":csv",
+        ":schema",
         "//:hirm_lib",
         "//:util_io",
     ],
@@ -86,7 +87,9 @@ cc_test(
     name = "pclean_lib_test",
     srcs = ["pclean_lib_test.cc"],
     deps = [
+        ":io",
         ":pclean_lib",
+        ":schema_helper",
         "@boost//:test",
     ],
 )
