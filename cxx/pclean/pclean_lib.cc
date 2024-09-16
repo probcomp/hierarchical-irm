@@ -68,7 +68,7 @@ T_observations translate_observations(
 // TODO(thomaswc): Remember the entity id samples across rows, so that
 // if we said that Person #5 was born in city #3, we remember that if
 // Person #5 comes up again.
-void make_pclean_sample(
+void WIP_make_pclean_sample(
     HIRM *hirm, const PCleanSchema& schema,
     const std::map<std::string, std::vector<std::string>>
     &annotated_domains_for_relations,
@@ -118,7 +118,7 @@ DataFrame make_pclean_samples(
   DataFrame df;
   for (int i = 0; i < num_samples; i++) {
      std::map<std::string, std::string> query_values;
-     make_pclean_sample(hirm, schema, annotated_domains_for_relations,
+     WIP_make_pclean_sample(hirm, schema, annotated_domains_for_relations,
                         prng, &query_values);
      for (const auto& [column, val] : query_values) {
        df.data[column].push_back(val);
