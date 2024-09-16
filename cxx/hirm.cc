@@ -3,16 +3,37 @@
 
 #include "hirm.hh"
 
-HIRM::HIRM(const T_schema& schema, std::mt19937* prng) {
-  // Add the clean relations before the noisy relations.
-  for (const auto& [name, relation] : schema) {
-    if (std::holds_alternative<T_clean_relation>(relation)) {
-      this->add_relation(prng, name, relation);
+HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
+  while (true) {
+    bool added_a_relation = false;
+    bool have_pending_relations = false;
+    for (const auto& [name, relation] : _schema) {
+      if (schema.contains(name)) {
+        continue;
+      }
+
+      if (std::holds_alternative<T_clean_relation>(relation)) {
+        this->add_relation(prng, name, relation);
+        added_a_relation = true;
+        continue;
+      }
+
+      const std::string base_rel = std::get<T_noisy_relation>(relation).base_relation;
+      if (schema.contains(base_rel)) {
+        this->add_relation(prng, name, relation);
+        added_a_relation = true;
+      } else {
+        have_pending_relations = true;
+      }
     }
-  }
-  for (const auto& [name, relation] : schema) {
-    if (std::holds_alternative<T_noisy_relation>(relation)) {
-      this->add_relation(prng, name, relation);
+
+    if (!have_pending_relations) {
+      return;
+    }
+
+    if (!added_a_relation) {
+      printf("Detected loop in schema\n");
+      std::exit(1);
     }
   }
 }
@@ -28,18 +49,18 @@ void HIRM::unincorporate(const std::string& r, const T_items& items) {
   irm->unincorporate(r, items);
 }
 
-int HIRM::relation_to_table(const std::string& r) {
+int HIRM::relation_to_table(const std::string& r) const {
   int rc = relation_to_code.at(r);
   return crp.assignments.at(rc);
 }
 
-IRM* HIRM::relation_to_irm(const std::string& r) {
+IRM* HIRM::relation_to_irm(const std::string& r) const {
   int rc = relation_to_code.at(r);
   int table = crp.assignments.at(rc);
   return irms.at(table);
 }
 
-RelationVariant HIRM::get_relation(const std::string& r) {
+RelationVariant HIRM::get_relation(const std::string& r) const {
   IRM* irm = relation_to_irm(r);
   return irm->relations.at(r);
 }
@@ -340,18 +361,8 @@ std::string HIRM::sample_and_incorporate_relation(
 T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   T_encoded_observations obs;
   std::map<std::string, CRP> domain_crps;
-  // Initialize the domain_crps from all the data across all the IRM's.
-  // If sample_and_incorporate ends up being used a lot more, we should
-  // move the domain_crps into the HIRM and maintain them when incorporating
-  // rather than recalculating them here.
-  for (const auto& [unused_cluster_id, irm] : irms) {
-    for (const auto& [domain_name, domain] : irm->domains) {
-      for (const auto& [item, table] : domain->crp.assignments) {
-        int crp_item = domain_crps[domain_name].assignments.size();
-        domain_crps[domain_name].incorporate(crp_item, item);
-      }
-    }
-  }
+  initialize_domain_crps(&domain_crps);
+
   for (const auto& [r, spec] : schema) {
     // If the relation is a leaf, sample n observations of it.
     if (!base_to_noisy_relations.contains(r)) {
@@ -388,6 +399,21 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
     }
   }
   return obs;
+}
+
+void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const {
+  // Initialize the domain_crps from all the data across all the IRM's.
+  // If this ends up being used a lot more, we should
+  // move the domain_crps into the HIRM and maintain them when incorporating
+  // rather than recalculating them here.
+  for (const auto& [unused_cluster_id, irm] : irms) {
+    for (const auto& [domain_name, domain] : irm->domains) {
+      for (const auto& [item, table] : domain->crp.assignments) {
+        int crp_item = (*domain_crps)[domain_name].assignments.size();
+        (*domain_crps)[domain_name].incorporate(crp_item, item);
+      }
+    }
+  }
 }
 
 HIRM::~HIRM() {

@@ -73,3 +73,40 @@ DataFrame DataFrame::from_csv(
 
   return df;
 }
+
+bool DataFrame::to_csv(const std::string& filename) {
+  std::ofstream fp(filename);
+  if (!fp.good()) {
+    return false;
+  }
+  bool ok = to_csv(fp);
+  fp.close();
+  return ok;
+}
+
+bool DataFrame::to_csv(std::ostream& os) {
+  // TODO(thomaswc): Quote column names or data items that contain commas.
+  auto it = data.begin();
+  if (it == data.end()) {
+    return true;
+  }
+  os << it->first;
+  size_t num_rows = it->second.size();
+  ++it;
+  for (; it != data.end(); ++it) {
+     os << "," << it->first;
+  }
+  os << "\n";
+
+  for (size_t i = 0; i < num_rows; ++i) {
+    for (auto it = data.begin(); it != data.end(); ++it) {
+      if (it != data.begin()) {
+        os << ",";
+      }
+      os << it->second[i];
+    }
+    os << "\n";
+  }
+  return true;
+}
+

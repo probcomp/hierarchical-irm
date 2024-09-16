@@ -33,9 +33,9 @@ class HIRM {
                    const T_items& items, const ObservationVariant& value);
   void unincorporate(const std::string& r, const T_items& items);
 
-  int relation_to_table(const std::string& r);
-  IRM* relation_to_irm(const std::string& r);
-  RelationVariant get_relation(const std::string& r);
+  int relation_to_table(const std::string& r) const;
+  IRM* relation_to_irm(const std::string& r) const;
+  RelationVariant get_relation(const std::string& r) const;
   void add_relation_to_irm(IRM* irm, const std::string& r,
                            const T_relation& t_relation);
 
@@ -79,6 +79,10 @@ class HIRM {
   // necessary.  Returns the sample value as a string.
   std::string sample_and_incorporate_relation(
       std::mt19937* prng, const std::string& r, T_items& items);
+
+  // Return a map from domains to CRP's that are initialized with the entities
+  // each domain has seen so far.
+  void initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const;
 
   ~HIRM();
 
