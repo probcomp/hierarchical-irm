@@ -13,7 +13,16 @@ class TestHirmIo(unittest.TestCase):
     self.assertEqual(observations[0].items, ["antelope"])
 
   def test_load_clusters(self):
-    pass
+    clusters = hirm_io.load_clusters("../cxx/assets/animals.unary.hirm")
+    self.assertEqual(len(clusters), 3)
+    self.assertEqual(clusters[0].cluster_id, "1")
+    self.assertEqual(clusters[1].cluster_id, "3")
+    self.assertEqual(clusters[2].cluster_id, "6")
+    self.assertEqual(clusters[0].relations[0], "paws")
+    self.assertEqual(len(clusters[0].domain_clusters), 3)
+    self.assertEqual(clusters[0].domain_clusters[0].cluster_id, "0")
+    self.assertEqual(clusters[0].domain_clusters[0].domain, "animal")
+    self.assertEqual(clusters[0].domain_clusters[0].entities[0], "beaver")
 
 
 if __name__ == '__main__':

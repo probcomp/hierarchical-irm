@@ -52,6 +52,7 @@ def load_clusters(path):
         parts = fields[0].split('=')
         assert len(parts) == 2
         cluster_id = parts[1]
+        continue
 
       domain_clusters.append(
           Domain_Cluster(cluster_id=fields[1],
