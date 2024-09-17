@@ -78,7 +78,7 @@ class HIRM {
   // function recursively incorporates a sample into the base relation, if
   // necessary.  Returns the sample value as a string.
   std::string sample_and_incorporate_relation(
-      std::mt19937* prng, const std::string& r, T_items& items);
+      std::mt19937* prng, const std::string& r, const T_items& items);
 
   // Return a map from domains to CRP's that are initialized with the entities
   // each domain has seen so far.

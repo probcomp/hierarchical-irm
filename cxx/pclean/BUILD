@@ -40,6 +40,7 @@ cc_library(
     name = "io",
     hdrs = ["io.hh"],
     srcs = ["io.cc"],
+    visibility = ["//:__subpackages__"],
     deps = [
         "//:util_parse",
         ":schema",
@@ -97,6 +98,7 @@ cc_test(
 cc_library(
     name = "schema",
     hdrs = ["schema.hh"],
+    visibility = ["//:__subpackages__"],
     deps = [],
 )
 
@@ -104,6 +106,7 @@ cc_library(
     name = "schema_helper",
     hdrs = ["schema_helper.hh"],
     srcs = ["schema_helper.cc"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":get_joint_relations",
         ":schema",

@@ -336,7 +336,7 @@ double HIRM::logp_score() const {
 }
 
 std::string HIRM::sample_and_incorporate_relation(
-    std::mt19937* prng, const std::string& r, T_items& items) {
+    std::mt19937* prng, const std::string& r, const T_items& items) {
   // If `r` is a noisy relation, first sample and incorporate to the base
   // relation if necessary.
   if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
