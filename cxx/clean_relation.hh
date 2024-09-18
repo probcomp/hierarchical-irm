@@ -132,7 +132,6 @@ class CleanRelation : public Relation<T> {
           // It's safe to unincorporate this element since no other data point
           // refers to it.
           data_r.at(name).erase(items[i]);
-          domains[i]->unincorporate(items[i]);
         }
       }
     }
@@ -166,6 +165,11 @@ class CleanRelation : public Relation<T> {
       z[i] = domains[i]->get_cluster_assignment(items[i]);
     }
     return z;
+  }
+
+  bool clusters_contains(const T_items& items) const {
+    std::vector<int> z = get_cluster_assignment(items);
+    return clusters.contains(z);
   }
 
   double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
@@ -452,6 +456,13 @@ class CleanRelation : public Relation<T> {
   const std::unordered_map<const T_items, ValueType, H_items>& get_data()
       const {
     return data;
+  }
+
+  const std::unordered_map<
+      std::string,
+      std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>&
+  get_data_r() const {
+    return data_r;
   }
 
   void transition_cluster_hparams(std::mt19937* prng, int num_theta_steps) {

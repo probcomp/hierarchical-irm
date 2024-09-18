@@ -39,8 +39,8 @@ class Relation {
 
   // Takes a sample from the cluster containing `items` and incorporates it.
   // Returns the sampled value.
-  virtual ValueType sample_and_incorporate(
-      std::mt19937* prng, const T_items& items) = 0;
+  virtual ValueType sample_and_incorporate(std::mt19937* prng,
+                                           const T_items& items) = 0;
 
   virtual void incorporate_to_cluster(const T_items& items,
                                       const ValueType& value) = 0;
@@ -69,6 +69,11 @@ class Relation {
   virtual const std::unordered_map<const T_items, ValueType, H_items>&
   get_data() const = 0;
 
+  virtual const std::unordered_map<
+      std::string,
+      std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>&
+  get_data_r() const = 0;
+
   virtual void update_value(const T_items& items, const ValueType& value) = 0;
 
   virtual std::vector<int> get_cluster_assignment(
@@ -76,6 +81,8 @@ class Relation {
 
   virtual bool has_observation(const Domain& domain,
                                const T_item& item) const = 0;
+
+  virtual bool clusters_contains(const T_items& items) const = 0;
 
   // Convert a string to ValueType.
   ValueType from_string(const std::string& s) {
@@ -87,7 +94,6 @@ class Relation {
 
   virtual ~Relation() = default;
 };
-
 
 // Overload from_string for ValueType=string because >> truncates at the first
 // space.
