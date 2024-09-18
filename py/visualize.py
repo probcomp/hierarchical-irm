@@ -171,5 +171,5 @@ def make_plots(clusters, obs, output):
     f.write("<html><body>\n\n")
     for cluster in clusters:
       f.write("<h1>IRM #" + cluster.cluster_id + "\n")
-      f.write(html_for_cluster(cluster, obs, clusters) + "\n)
+      f.write(html_for_cluster(cluster, obs, clusters) + "\n")
     f.write("</body></html>\n")
