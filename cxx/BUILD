@@ -55,7 +55,7 @@ cc_library(
 )
 
 cc_library(
-    name = "gendb_lib",
+    name = "gendb",
     hdrs = ["gendb.hh"],
     srcs = ["gendb.cc"],
     visibility = [":__subpackages__"],
@@ -219,7 +219,7 @@ cc_test(
     name = "gendb_test",
     srcs = ["gendb_test.cc"],
     deps = [
-        ":gendb_lib",
+        ":gendb",
         "@boost//:test",
     ],
 )

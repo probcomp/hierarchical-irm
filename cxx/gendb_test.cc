@@ -70,18 +70,18 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   // Check that the structure of reference_values is as expected.
   // School and City are not contained in reference_values because they
   // have no reference fields.
-  BOOST_TEST(gendb.reference_values.size() == 3);
-  BOOST_TEST(gendb.reference_values.contains("Physician"));
-  BOOST_TEST(gendb.reference_values.contains("Practice"));
-  BOOST_TEST(gendb.reference_values.contains("Record"));
-
-  BOOST_TEST(gendb.reference_values.at("Physician").at(0).size() == 1);
-  BOOST_TEST(gendb.reference_values.at("Physician").at(0).contains("school"));
-  BOOST_TEST(gendb.reference_values.at("Practice").at(0).size() == 1);
-  BOOST_TEST(gendb.reference_values.at("Practice").at(0).contains("city"));
-  BOOST_TEST(gendb.reference_values.at("Record").at(0).size() == 2);
-  BOOST_TEST(gendb.reference_values.at("Record").at(0).contains("physician"));
-  BOOST_TEST(gendb.reference_values.at("Record").at(0).contains("location"));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 0}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 1}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 2}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 3}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 4}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 0}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 1}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 2}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 3}));
+  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 4}));
+  BOOST_TEST(gendb.reference_values.contains({"Physician", "school", 0}));
+  BOOST_TEST(gendb.reference_values.contains({"Practice", "city", 0}));
 
   auto get_relation_items = [&](auto rel) {
     std::unordered_set<T_items, H_items> items;
@@ -100,10 +100,10 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 3);
     int index = i[2];
     int expected_location =
-        gendb.reference_values.at("Record").at(index).at("location");
+        gendb.reference_values.at({"Record", "location", index});
     BOOST_TEST(expected_location == i[1]);
     int expected_city =
-        gendb.reference_values.at("Practice").at(expected_location).at("city");
+        gendb.reference_values.at({"Practice", "city", expected_location});
     BOOST_TEST(expected_city == i[0]);
   }
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 2);
     int index = i[1];
     int expected_school =
-        gendb.reference_values.at("Physician").at(index).at("school");
+        gendb.reference_values.at({"Physician", "school", index});
     BOOST_TEST(expected_school == i[0]);
   }
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 2);
     int index = i[1];
     int expected_school =
-        gendb.reference_values.at("Physician").at(index).at("school");
+        gendb.reference_values.at({"Physician", "school", index});
     BOOST_TEST(expected_school == i[0]);
   }
 
