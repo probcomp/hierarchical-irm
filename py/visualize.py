@@ -2,6 +2,7 @@
 # Apache License, Version 2.0, refer to LICENSE.txt
 
 import base64
+import collections
 import copy
 import io
 import sys
@@ -19,8 +20,8 @@ def figure_to_html(fig) -> str:
   return html
 
 
-def make_numpy_matrix(obs, entities, relations):
-  """Return a numpy array containing the observations."""
+def make_unary_matrix(obs, entities, relations):
+  """Return a numpy array containing the observations for unary relations."""
   m = np.empty(shape=(len(entities), len(relations)))
   for ob in obs:
     val = ob.value
@@ -31,19 +32,24 @@ def make_numpy_matrix(obs, entities, relations):
   return m
 
 
+def make_binary_matrix(obs, entities):
+  """Return array containing the observations for a single binary relation."""
+  m = np.empty(shape=(len(entities), len(entities)))
+  for ob in obs:
+    val = ob.value
+    index1 = entities.index(ob.items[0])
+    index2 = entities.index(ob.items[1])
+    m[index1][index2] = val
+  return m
+
+
 def normalize_matrix(m):
   """Linearly map matrix values to be in [0, 1]."""
   return (m - np.min(m)) / np.ptp(m)
 
 
-def unary_matrix(cluster, obs, clusters):
-  """Plot a matrix visualization for the cluster of unary relations."""
-  fontsize = 12
-
-  relations = sorted(cluster.relations)
-  num_columns = len(relations)
-  longest_relation_length = max(len(r) for r in relations)
-
+def get_all_entities(cluster):
+  """Return the entities in the order the cluster prefers."""
   all_entities = []
   domain = ""
   for dc in cluster.domain_clusters:
@@ -55,12 +61,37 @@ def unary_matrix(cluster, obs, clusters):
 
     all_entities.extend(sorted(dc.entities))
 
+  return all_entities
+
+
+def add_redlines(ax, cluster, horizontal=True, vertical=False):
+  """Add redlines between entity clusters."""
+  n = 0
+  for dc in cluster.domain_clusters:
+    if n > 0:
+      if horizontal:
+        ax.axhline(n - 0.5, color='r', linewidth=2)
+      if vertical:
+        ax.axvline(n - 0.5, color='r', linewidth=2)
+
+    n += len(dc.entities)
+
+
+def unary_matrix(cluster, obs, clusters):
+  """Plot a matrix visualization for the cluster of unary relations."""
+  fontsize = 12
+
+  relations = sorted(cluster.relations)
+  num_columns = len(relations)
+  longest_relation_length = max(len(r) for r in relations)
+
+  all_entities = get_all_entities(cluster)
   num_rows = len(all_entities)
   longest_entity_length = max(len(e) for e in all_entities)
 
   width = (num_columns + longest_entity_length) * fontsize / 72.0 + 0.2 # Fontsize is in points, 1 pt = 1/72in
   height = (num_rows + longest_relation_length) * fontsize / 72.0 + 0.2
-  fig, ax = plt.subplots(figsize=(width,height))
+  fig, ax = plt.subplots(figsize=(width, height))
 
   ax.xaxis.tick_top()
   ax.set_xticks(np.arange(num_columns), labels=relations,
@@ -68,28 +99,77 @@ def unary_matrix(cluster, obs, clusters):
   ax.set_yticks(np.arange(num_rows), labels=all_entities, fontsize=fontsize)
 
   # Matrix of data
-  m = make_numpy_matrix(obs, all_entities, relations)
+  m = make_unary_matrix(obs, all_entities, relations)
   cmap = copy.copy(plt.get_cmap('Greys'))
   cmap.set_bad(color='gray')
   ax.imshow(normalize_matrix(m))
 
-  # Red lines between rows (entities)
-  n = 0
-  for dc in cluster.domain_clusters:
-    if n > 0:
-      ax.axhline(n - 0.5, color='r', linewidth=2)
-    n += len(dc.entities)
+  add_redlines(ax, cluster)
 
   fig.tight_layout()
   return fig
 
 
-def plot_unary_matrices(clusters, obs, output):
+def binary_matrix(cluster, obs, clusters):
+  """Plot a matrix visualization for a single binary relation."""
+  fontsize = 12
+  all_entities = get_all_entities(cluster)
+  n = len(all_entities)
+  longest_entity_length = max(len(e) for e in all_entities)
+  width = (n + longest_entity_length) * fontsize / 72.0 + 0.2
+  fig, ax = plt.subplots(figsize=(width, width))
+
+  ax.xaxis.tick_top()
+  ax.set_xticks(np.arange(n), labels=all_entities, rotation=90, fontsize=fontsize)
+  ax.set_yticks(np.arange(n), labels=all_entities, fontsize=fontsize)
+
+  m = make_binary_matrix(obs, all_entities)
+  cmap = copy.copy(plt.get_cmap('Greys'))
+  cmap.set_bad(color='gray')
+  ax.imshow(normalize_matrix(m))
+
+  add_redlines(ax, cluster, vertical=True)
+
+  fig.tight_layout()
+  return fig
+
+
+def collate_observations(obs):
+  """Separate observations into unary and binary."""
+  unary_obs = []
+  binary_obs = collections.defaultdict(list)
+  for ob in obs:
+    if len(ob.items) == 1:
+      unary_obs.append(ob)
+      break
+
+    if len(ob.items) == 2:
+      binary_obs[ob.relation].append(ob)
+
+  return unary_obs, binary_obs
+
+
+def html_for_cluster(cluster, obs, clusters):
+  """Return the html for visualizing a single cluster."""
+  html = ''
+  unary_obs, binary_obs = collate_observations(obs)
+  if unary_obs:
+    fig = unary_matrix(cluster, obs, clusters)
+    html += figure_to_html(fig) + "\n"
+
+  if binary_obs:
+    for rel, rel_obs in binary_obs.items():
+      html += f"<h2>{rel}</h2>\n"
+      fig = binary_matrix(cluster, rel_obs, clusters)
+      html += figure_to_html(fig) + "\n"
+  return html
+
+
+def make_plots(clusters, obs, output):
   """Write a matrix visualization for each cluster in clusters."""
   with open(output, 'w') as f:
     f.write("<html><body>\n\n")
     for cluster in clusters:
       f.write("<h1>IRM #" + cluster.cluster_id + "\n")
-      fig = unary_matrix(cluster, obs, clusters)
-      f.write(figure_to_html(fig) + "\n\n")
+      f.write(html_for_cluster(cluster, obs, clusters) + "\n)
     f.write("</body></html>\n")
