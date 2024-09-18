@@ -117,8 +117,13 @@ void GenDB::incorporate_query_relation(std::mt19937* prng,
 
   T_noisy_relation t_query_rel =
       std::get<T_noisy_relation>(hirm->schema.at(query_rel_name));
-  hirm->sample_and_incorporate_relation(prng, t_query_rel.base_relation,
-                                        base_items);
+  bool base_contains_items = std::visit(
+      [&](auto rel) { return rel->get_data().contains(base_items); },
+      hirm->get_relation(t_query_rel.base_relation));
+  if (!base_contains_items) {
+    hirm->sample_and_incorporate_relation(prng, t_query_rel.base_relation,
+                                          base_items);
+  }
   hirm->incorporate(prng, query_rel_name, items, value);
 }
 
