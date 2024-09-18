@@ -25,5 +25,5 @@ class TestHirmIo(unittest.TestCase):
     self.assertEqual(clusters[0].domain_clusters[0].entities[0], "beaver")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

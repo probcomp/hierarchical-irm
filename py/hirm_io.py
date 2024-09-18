@@ -32,7 +32,7 @@ def load_clusters(path):
     # Read the relation clusters
     for line in f:
       fields = line.rstrip().split()
-      if len(fields) == 0:
+      if not fields:
         break
       id_to_relations[fields[0]] = fields[1:]
 
@@ -41,7 +41,7 @@ def load_clusters(path):
     cluster_id = -1
     for line in f:
       fields = line.rstrip().split()
-      if len(fields) == 0:
+      if not fields:
         assert(cluster_id != -1)
         id_to_clusters[cluster_id] = domain_clusters
         domain_clusters = []

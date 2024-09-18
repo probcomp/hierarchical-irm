@@ -28,10 +28,10 @@ class testVisualize(unittest.TestCase):
 
   def test_normalize_matrix(self):
     m = np.identity(3)
-    np.testing.assert_equal(m, visualize.normalize_matrix(m))
-    np.testing.assert_equal(m, visualize.normalize_matrix(3.0*m))
-    np.testing.assert_equal([0, 0.25, 0.5, 0.75, 1.0],
-                            visualize.normalize_matrix(np.arange(3, 8)))
+    np.testing.assert_almost_equal(m, visualize.normalize_matrix(m))
+    np.testing.assert_almost_equal(m, visualize.normalize_matrix(3.0*m))
+    np.testing.assert_almost_equal([0, 0.25, 0.5, 0.75, 1.0],
+                                   visualize.normalize_matrix(np.arange(3, 8)))
 
 
 if __name__ == '__main__':

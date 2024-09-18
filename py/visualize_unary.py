@@ -28,5 +28,5 @@ def main():
   visualize.plot_unary_matrices(clusters, obs, args.output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def figure_to_html(fig: plt.Figure) -> str:
+def figure_to_html(fig) -> str:
   """Return html for a matplotlib figure."""
   memfile = io.BytesIO()
   fig.savefig(memfile, format='png')
@@ -47,7 +47,7 @@ def unary_matrix(cluster, obs, all_relations, clusters):
   all_entities = []
   domain = ""
   for dc in cluster.domain_clusters:
-    if domain == "":
+    if not domain:
       domain = dc.domain
     if domain != dc.domain:
       print("Error in unary_matrix: Found multiple domains in clusters")
@@ -66,15 +66,13 @@ def unary_matrix(cluster, obs, all_relations, clusters):
 
   # Red lines between columns (relations)
   d = 0
-  for i in range(len(clusters)):
-    if cluster.cluster_id == clusters[i].cluster_id:
+  for c in clusters:
+    if cluster.cluster_id == c.cluster_id:
       ax.axvline(d - 0.5, color='r', linewidth=2)
     d += len(clusters[i].relations)
-    if cluster.cluster_id == clusters[i].cluster_id:
+    if cluster.cluster_id == c.cluster_id:
       ax.axvline(d - 0.5, color='r', linewidth=2)
       break
-    # if i > 0:
-    #   ax.axvline(d - 0.5, color='r', linewidth=2)
 
   # Red lines between rows (entities)
   n = 0
