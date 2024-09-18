@@ -15,7 +15,7 @@ endt1=$(date +%s)
 bazel build -c opt :hirm pclean:pclean
 ./bazel-bin/hirm --mode=irm --iters=5 assets/animals.binary
 startt2=$(date +%s)
-./bazel-bin/hirm --seed=1 --iters=5 assets/animals.unary --samples=5
+./bazel-bin/hirm --seed=1 --iters=5 assets/nations.unary --samples=5
 ./bazel-bin/hirm --iters=5 --load=assets/animals.unary.1.hirm assets/animals.unary
 endt2=$(date +%s)
 startt3=$(date +%s)
