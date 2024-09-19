@@ -22,7 +22,7 @@ def figure_to_html(fig) -> str:
 
 def make_unary_matrix(obs, entities, relations):
   """Return a numpy array containing the observations for unary relations."""
-  m = np.empty(shape=(len(entities), len(relations)))
+  m = np.full((len(entities), len(relations)), np.nan)
   for ob in obs:
     val = ob.value
     ent_index = entities.index(ob.items[0])
@@ -34,18 +34,13 @@ def make_unary_matrix(obs, entities, relations):
 
 def make_binary_matrix(obs, entities):
   """Return array containing the observations for a single binary relation."""
-  m = np.empty(shape=(len(entities), len(entities)))
+  m = np.full((len(entities), len(entities)), np.nan)
   for ob in obs:
     val = ob.value
     index1 = entities.index(ob.items[0])
     index2 = entities.index(ob.items[1])
     m[index1][index2] = val
   return m
-
-
-def normalize_matrix(m):
-  """Linearly map matrix values to be in [0, 1]."""
-  return (m - np.min(m)) / np.ptp(m)
 
 
 def get_all_entities(cluster):
@@ -100,9 +95,9 @@ def unary_matrix(cluster, obs, clusters):
 
   # Matrix of data
   m = make_unary_matrix(obs, all_entities, relations)
-  cmap = copy.copy(plt.get_cmap('Greys'))
-  cmap.set_bad(color='gray')
-  ax.imshow(normalize_matrix(m))
+  cmap = copy.copy(plt.get_cmap())
+  cmap.set_bad(color='white')
+  ax.imshow(m, cmap=cmap)
 
   add_redlines(ax, cluster)
 
@@ -124,9 +119,9 @@ def binary_matrix(cluster, obs, clusters):
   ax.set_yticks(np.arange(n), labels=all_entities, fontsize=fontsize)
 
   m = make_binary_matrix(obs, all_entities)
-  cmap = copy.copy(plt.get_cmap('Greys'))
-  cmap.set_bad(color='gray')
-  ax.imshow(normalize_matrix(m))
+  cmap = copy.copy(plt.get_cmap())
+  cmap.set_bad(color='white')
+  ax.imshow(m, cmap=cmap)
 
   add_redlines(ax, cluster, vertical=True)
 
@@ -141,7 +136,6 @@ def collate_observations(obs):
   for ob in obs:
     if len(ob.items) == 1:
       unary_obs.append(ob)
-      break
 
     if len(ob.items) == 2:
       binary_obs[ob.relation].append(ob)
@@ -154,11 +148,13 @@ def html_for_cluster(cluster, obs, clusters):
   html = ''
   unary_obs, binary_obs = collate_observations(obs)
   if unary_obs:
-    fig = unary_matrix(cluster, obs, clusters)
+    print(f"For irm #{cluster.cluster_id}, building unary matrix based on {len(unary_obs)} observations")
+    fig = unary_matrix(cluster, unary_obs, clusters)
     html += figure_to_html(fig) + "\n"
 
   if binary_obs:
     for rel, rel_obs in binary_obs.items():
+      print(f"For irm #{cluster.cluster_id}, building binary matrix for {rel} based on {len(rel_obs)} observations")
       html += f"<h2>{rel}</h2>\n"
       fig = binary_matrix(cluster, rel_obs, clusters)
       html += figure_to_html(fig) + "\n"
@@ -170,6 +166,6 @@ def make_plots(clusters, obs, output):
   with open(output, 'w') as f:
     f.write("<html><body>\n\n")
     for cluster in clusters:
-      f.write("<h1>IRM #" + cluster.cluster_id + "\n")
+      f.write(f"<h1>IRM #{cluster.cluster_id}</h1>\n")
       f.write(html_for_cluster(cluster, obs, clusters) + "\n")
     f.write("</body></html>\n")
