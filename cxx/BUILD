@@ -55,6 +55,23 @@ cc_library(
 )
 
 cc_library(
+    name = "gendb",
+    hdrs = ["gendb.hh"],
+    srcs = ["gendb.cc"],
+    visibility = [":__subpackages__"],
+    deps = [
+        ":hirm_lib",
+        ":irm",
+        ":observations",
+        "//distributions:crp",
+        "//pclean:io",
+        "//pclean:schema",
+        "//pclean:schema_helper",
+    ],
+)
+
+
+cc_library(
     name = "hirm_lib",
     hdrs = ["hirm.hh"],
     srcs = ["hirm.cc"],
@@ -194,6 +211,15 @@ cc_test(
     srcs = ["domain_test.cc"],
     deps = [
         ":domain",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "gendb_test",
+    srcs = ["gendb_test.cc"],
+    deps = [
+        ":gendb",
         "@boost//:test",
     ],
 )

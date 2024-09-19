@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
   PCleanClass query_class = schema.classes[schema.query.record_class];
   std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
   schema_helper.make_relations_for_queryfield(
-      schema.query.fields[1], query_class, &tschema,
+      schema.query.fields["School"], query_class, &tschema,
       &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 2);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
   PCleanClass query_class = schema.classes[schema.query.record_class];
   std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
   schema_helper.make_relations_for_queryfield(
-      schema.query.fields[1], query_class, &tschema,
+      schema.query.fields["School"], query_class, &tschema,
       &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 1);

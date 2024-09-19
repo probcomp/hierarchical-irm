@@ -158,7 +158,7 @@ bool read_query(std::istream& is, PCleanQuery* query) {
         }
       }
     }
-    query->fields.push_back(qf);
+    query->fields[qf.name] = qf;
   }
   return true;
 }

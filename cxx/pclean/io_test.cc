@@ -44,13 +44,13 @@ observe
   BOOST_TEST(schema.query.record_class == "Record");
 
   BOOST_TEST(schema.query.fields.size() == 5);
-  BOOST_TEST(schema.query.fields[0].name == "Specialty");
+  BOOST_TEST(schema.query.fields["Specialty"].name == "Specialty");
   std::vector<std::string> expected_path = {"physician", "specialty"};
-  BOOST_TEST(schema.query.fields[0].class_path == expected_path,
+  BOOST_TEST(schema.query.fields["Specialty"].class_path == expected_path,
              tt::per_element());
-  BOOST_TEST(schema.query.fields[1].name == "School");
+  BOOST_TEST(schema.query.fields["School"].name == "School");
   std::vector<std::string> expected_path2 = {"physician", "school", "name"};
-  BOOST_TEST(schema.query.fields[1].class_path == expected_path2,
+  BOOST_TEST(schema.query.fields["School"].class_path == expected_path2,
              tt::per_element());
 
   BOOST_TEST(schema.classes.size() == 5);

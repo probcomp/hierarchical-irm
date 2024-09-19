@@ -79,7 +79,7 @@ void WIP_make_pclean_sample(
 
   // entity_assignments[annotated_entity] gives the entity id for that entity.
   std::map<std::string, int> entity_assignments;
-  for (const auto& query_field : schema.query.fields) {
+  for (const auto& [name, query_field] : schema.query.fields) {
     T_items entities;
     const std::vector<std::string>& domains = std::visit(
         [](auto trel) { return trel.domains; },

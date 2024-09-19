@@ -168,7 +168,7 @@ T_schema PCleanSchemaHelper::make_hirm_schema(
   // the class_path.  At least one of those relations will have name equal
   // to the name of the QueryField.
   const PCleanClass record_class = schema.classes[schema.query.record_class];
-  for (const QueryField& f : schema.query.fields) {
+  for (const auto& [unused_name, f] : schema.query.fields) {
     make_relations_for_queryfield(f, record_class, &tschema,
                                   annotated_domains_for_relation);
   }

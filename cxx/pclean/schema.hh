@@ -31,6 +31,8 @@ struct PCleanClass {
   // TODO(thomaswc): Figure out how to handle class level configurations.
 };
 
+// TODO(emilyaf): Maybe get rid of name here, since it's redundant, and just
+// do typedef vector<string> QueryField.
 struct QueryField {
   // "physician.school_name as School" gets parsed as
   // {name="School", class_path=["physician","school"]}.
@@ -40,7 +42,7 @@ struct QueryField {
 
 struct PCleanQuery {
   std::string record_class;
-  std::vector<QueryField> fields;
+  std::map<std::string, QueryField> fields;
 };
 
 struct PCleanSchema {
