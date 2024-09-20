@@ -8,8 +8,8 @@ Observation = collections.namedtuple(
 
 Cluster = collections.namedtuple(
     "Cluster", ["cluster_id", "relations", "domain_clusters"])
-Domain_Cluster = collections.namedtuple(
-    "Domain_Cluster", ["cluster_id", "domain", "entities"])
+DomainCluster = collections.namedtuple(
+    "DomainCluster", ["cluster_id", "domain", "entities"])
 
 def load_observations(path):
   """Load a dataset from path, and return it as an array of Observations."""
@@ -24,7 +24,7 @@ def load_observations(path):
   return data
 
 def load_clusters(path):
-  """Load the hirm clusters output from path as an HIRM_Clusters."""
+  """Load the hirm clusters output from path as a list of Cluster's."""
   id_to_relations = {}
   id_to_clusters = {}
 
@@ -55,9 +55,9 @@ def load_clusters(path):
         continue
 
       domain_clusters.append(
-          Domain_Cluster(cluster_id=fields[1],
-                         domain=fields[0],
-                         entities=fields[2:]))
+          DomainCluster(cluster_id=fields[1],
+                        domain=fields[0],
+                        entities=fields[2:]))
 
     id_to_clusters[cluster_id] = domain_clusters
 

@@ -1,12 +1,20 @@
 #!/usr/bin/python3
 
+# Generates an html file containing plots that visualize the clusters
+# produced by an HIRM.  Currently it only supports datasets with a single
+# domain, and only visualizes the unary and binary relations over that
+# domain.
+
+# Example usage:
+#   ./make_plots.py --observations=../cxx/assets/animals.unary.obs --clusters=../cxx/assets/animals.unary.hirm --output=/tmp/vis.html
+
 import argparse
 import hirm_io
 import visualize
 
 def main():
   parser = argparse.ArgumentParser(
-      description="Generate matrix plots for a collection of unary relations")
+      description="Generate matrix plots for an HIRM's output")
   parser.add_argument(
       "--observations", required=True, type=str,
       help="Path to file containing observations")
@@ -25,7 +33,7 @@ def main():
   clusters = hirm_io.load_clusters(args.clusters)
 
   print(f"Writing html to {args.output} ...")
-  visualize.plot_unary_matrices(clusters, obs, args.output)
+  visualize.make_plots(clusters, obs, args.output)
 
 
 if __name__ == "__main__":
