@@ -2,6 +2,12 @@
 # Apache License, Version 2.0, refer to LICENSE.txt
 
 import collections
+import re
+import sys
+
+
+Relation = collections.namedtuple(
+    "Relation", ["name", "distribution", "parameters", "domains"])
 
 Observation = collections.namedtuple(
     "Observation", ["relation", "value", "items"])
@@ -10,6 +16,28 @@ Cluster = collections.namedtuple(
     "Cluster", ["cluster_id", "relations", "domain_clusters"])
 DomainCluster = collections.namedtuple(
     "DomainCluster", ["cluster_id", "domain", "entities"])
+
+
+def load_schema(path):
+  """Load the schema from path, and return it as an array of Relations."""
+  relations = []
+  comment_line_re = re.compile(r'\s*#.*')
+  # TODO(thomaswc): Handle distribution parameters in brackets
+  line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*\(\s*(.+)\s*\)\s*(#.*)?')
+  with open(path, 'r') as f:
+    for line in f:
+      if comment_line_re.match(line):
+        next
+      m = line_re.match(line)
+      if not m:
+        print(f"Could not parse schema line\n{line}\n")
+        sys.exit(1)
+      domains = re.split(r'\s*,\s*', m.group(3))
+      relations.append(Relation(name=m.group(1), distribution=m.group(2),
+                                parameters={},
+                                domains=domains))
+  return relations
+
 
 def load_observations(path):
   """Load a dataset from path, and return it as an array of Observations."""
@@ -22,6 +50,7 @@ def load_observations(path):
                                   value=fields[0],
                                   items=fields[2:]))
   return data
+
 
 def load_clusters(path):
   """Load the hirm clusters output from path as a list of Cluster's."""

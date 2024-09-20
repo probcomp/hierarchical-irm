@@ -5,6 +5,13 @@ import hirm_io
 
 class TestHirmIo(unittest.TestCase):
 
+  def test_load_schema(self):
+    relations = hirm_io.load_schema("../cxx/assets/animals.unary.schema")
+    self.assertEqual(len(relations), 85)
+    self.assertEqual(relations[0].name, "black")
+    self.assertEqual(relations[0].distribution, "bernoulli")
+    self.assertEqual(relations[0].domains, ["animal"])
+
   def test_load_observations(self):
     observations = hirm_io.load_observations("../cxx/assets/animals.unary.obs")
     self.assertEqual(len(observations), 4250)
