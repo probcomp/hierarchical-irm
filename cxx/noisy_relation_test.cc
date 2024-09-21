@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(test_unincorporate) {
   NR1.unincorporate({0, 2});
   BOOST_TEST(NR1.data.size() == 2);
   BOOST_TEST(D1.items.contains(0));
-  BOOST_TEST(!D2.items.contains(2));
+  BOOST_TEST(!NR1.get_data_r().at("D2").contains(2));
 
   NR1.unincorporate({0, 1});
   BOOST_TEST(NR1.data.size() == 1);
-  BOOST_TEST(!D1.items.contains(0));
-  BOOST_TEST(!D2.items.contains(1));
+  BOOST_TEST(!NR1.get_data_r().at("D1").contains(0));
+  BOOST_TEST(!NR1.get_data_r().at("D2").contains(1));
 }
 
 BOOST_AUTO_TEST_CASE(test_get_update_value) {
@@ -157,7 +157,9 @@ BOOST_AUTO_TEST_CASE(test_incorporate_cluster) {
   NR1.incorporate(&prng, {0, 1, 7}, 2.9);
 
   int init_data_size = NR1.get_data().size();
-  int init_cluster_size = NR1.emission_relation.clusters.at(NR1.get_cluster_assignment({0, 1, 1}))->N;
+  int init_cluster_size =
+      NR1.emission_relation.clusters.at(NR1.get_cluster_assignment({0, 1, 1}))
+          ->N;
   double init_logp_score = NR1.logp_score();
   NR1.unincorporate_from_cluster({0, 1, 1});
   NR1.incorporate_to_cluster({0, 1, 1}, 1.);
@@ -165,8 +167,9 @@ BOOST_AUTO_TEST_CASE(test_incorporate_cluster) {
   // logp_score should change, but the number of points in the cluster should
   // stay the same.
   BOOST_TEST(init_logp_score != NR1.logp_score());
-  BOOST_TEST(init_cluster_size ==
-             NR1.emission_relation.clusters.at(NR1.get_cluster_assignment({0, 1, 1}))->N);
+  BOOST_TEST(init_cluster_size == NR1.emission_relation.clusters
+                                      .at(NR1.get_cluster_assignment({0, 1, 1}))
+                                      ->N);
   BOOST_TEST(init_data_size = NR1.get_data().size());
 }
 
