@@ -78,6 +78,9 @@ void IRM::unincorporate(const std::string& r, const T_items& items) {
   for (size_t i = 0; i < rel_domains.size(); ++i) {
     if (!irm_contains_item.at({rel_domains[i], items[i]})) {
       domains[rel_domains[i]]->unincorporate(items[i]);
+
+      // Only unincorporate duplicates once.
+      irm_contains_item[{rel_domains[i], items[i]}] = true;
     }
   }
 }
