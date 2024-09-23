@@ -75,6 +75,7 @@ class NoisyRelation : public Relation<T> {
     data[items] = value;
     emission_relation.clusters.at(z)->incorporate(
         std::make_pair(base_val, value));
+    emission_relation.data[items] = {base_val, value};
     return value;
   }
 
@@ -127,6 +128,10 @@ class NoisyRelation : public Relation<T> {
     return emission_relation.has_observation(domain, item);
   }
 
+  bool clusters_contains(const T_items& items) const {
+    return emission_relation.clusters_contains(items);
+  }
+
   const ValueType& get_value(const T_items& items) const {
     assert(data.contains(items));
     return data.at(items);
@@ -135,6 +140,13 @@ class NoisyRelation : public Relation<T> {
   const std::unordered_map<const T_items, ValueType, H_items>& get_data()
       const {
     return data;
+  }
+
+  const std::unordered_map<
+      std::string,
+      std::unordered_map<T_item, std::unordered_set<T_items, H_items>>>&
+  get_data_r() const {
+    return emission_relation.get_data_r();
   }
 
   void update_value(const T_items& items, const ValueType& value) {

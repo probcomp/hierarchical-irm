@@ -1,9 +1,11 @@
 #define BOOST_TEST_MODULE test pclean_schema
 
-#include "pclean/io.hh"
 #include "pclean/schema_helper.hh"
-#include <sstream>
+
 #include <boost/test/included/unit_test.hpp>
+#include <sstream>
+
+#include "pclean/io.hh"
 namespace tt = boost::test_tools;
 
 struct SchemaTestFixture {
@@ -55,36 +57,57 @@ BOOST_AUTO_TEST_CASE(test_domains_cache) {
   std::vector<std::string> expected_domains = {"School"};
   std::vector<std::string> expected_annotated_domains = {"School"};
   BOOST_TEST(schema_helper.domains["School"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["School"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.annotated_domains["School"] ==
+             expected_annotated_domains);
 
   expected_domains = {"School", "Physician"};
   expected_annotated_domains = {"school:School", "Physician"};
   BOOST_TEST(schema_helper.domains["Physician"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["Physician"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.annotated_domains["Physician"] ==
+             expected_annotated_domains);
 
   expected_domains = {"City"};
   expected_annotated_domains = {"City"};
   BOOST_TEST(schema_helper.domains["City"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["City"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.annotated_domains["City"] ==
+             expected_annotated_domains);
 
   expected_domains = {"City", "Practice"};
   expected_annotated_domains = {"city:City", "Practice"};
   BOOST_TEST(schema_helper.domains["Practice"] == expected_domains);
-  BOOST_TEST(schema_helper.annotated_domains["Practice"] == expected_annotated_domains);
+  BOOST_TEST(schema_helper.annotated_domains["Practice"] ==
+             expected_annotated_domains);
 
-  expected_domains = {
-    "City", "Practice", "School", "Physician", "Record"};
-  expected_annotated_domains = {
-    "location:city:City", "location:Practice",
-    "physician:school:School", "physician:Physician", "Record"};
+  expected_domains = {"City", "Practice", "School", "Physician", "Record"};
+  expected_annotated_domains = {"location:city:City", "location:Practice",
+                                "physician:school:School",
+                                "physician:Physician", "Record"};
   BOOST_TEST(schema_helper.domains["Record"] == expected_domains,
              tt::per_element());
   BOOST_TEST(
       schema_helper.annotated_domains["Record"] == expected_annotated_domains,
       tt::per_element());
+
+  auto& ref_indices = schema_helper.class_reference_indices;
+
+  // The Practice, Physician, and Record classes have reference fields, so they
+  // should be included in the reference field index map.
+  BOOST_TEST(ref_indices.size() == 3);
+
+  // For Physician and Practice, index 1 corresponds to the class itself, and
+  // index 0 corresponds to the reference class.
+  BOOST_TEST(ref_indices.at("Physician").at(1).at("school") == 0);
+  BOOST_TEST(ref_indices.at("Practice").at(1).at("city") == 0);
+
+  // For Record, index 4 corresponds to the class itself, which points to
+  // physician (index 3) and location (index 1).
+  BOOST_TEST(ref_indices.at("Record").at(4).at("physician") == 3);
+  BOOST_TEST(ref_indices.at("Record").at(4).at("location") == 1);
+  BOOST_TEST(ref_indices.at("Record").at(3).at("school") == 2);
+  BOOST_TEST(ref_indices.at("Record").at(1).at("city") == 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_domains_cache_two_paths_same_source) {
+BOOST_AUTO_TEST_CASE(test_domains_and_reference_cache_two_paths_same_source) {
   std::stringstream ss(R"""(
 class City
   name ~ string
@@ -98,18 +121,24 @@ class Person
   assert(ok);
   PCleanSchemaHelper schema_helper(schema);
 
-  std::vector<std::string> expected_domains = {
-    "City", "City", "Person"};
+  std::vector<std::string> expected_domains = {"City", "City", "Person"};
   std::vector<std::string> expected_annotated_domains = {
-    "birth_city:City", "home_city:City", "Person"};
+      "birth_city:City", "home_city:City", "Person"};
   BOOST_TEST(schema_helper.domains["Person"] == expected_domains,
              tt::per_element());
   BOOST_TEST(
       schema_helper.annotated_domains["Person"] == expected_annotated_domains,
       tt::per_element());
+
+  auto& ref_indices = schema_helper.class_reference_indices;
+
+  // Only the Person field has reference fields.
+  BOOST_TEST(ref_indices.size() == 1);
+  BOOST_TEST(ref_indices.at("Person").at(2).at("birth_city") == 0);
+  BOOST_TEST(ref_indices.at("Person").at(2).at("home_city") == 1);
 }
 
-BOOST_AUTO_TEST_CASE(test_domains_cache_diamond) {
+BOOST_AUTO_TEST_CASE(test_domains_and_reference_cache_diamond) {
   std::stringstream ss(R"""(
 class City
   name ~ string
@@ -129,16 +158,35 @@ class Physician
   assert(ok);
   PCleanSchemaHelper schema_helper(schema);
 
-  std::vector<std::string> expected_domains = {
-    "City", "Practice", "City", "School", "Physician"};
+  std::vector<std::string> expected_domains = {"City", "Practice", "City",
+                                               "School", "Physician"};
   std::vector<std::string> expected_annotated_domains = {
-    "practice:location:City", "practice:Practice",
-    "school:location:City", "school:School", "Physician"};
+      "practice:location:City", "practice:Practice", "school:location:City",
+      "school:School", "Physician"};
   BOOST_TEST(schema_helper.domains["Physician"] == expected_domains,
              tt::per_element());
-  BOOST_TEST(
-      schema_helper.annotated_domains["Physician"] ==
-      expected_annotated_domains, tt::per_element());
+  BOOST_TEST(schema_helper.annotated_domains["Physician"] ==
+                 expected_annotated_domains,
+             tt::per_element());
+
+  auto& ref_indices = schema_helper.class_reference_indices;
+
+  BOOST_TEST(ref_indices.size() == 3);
+
+  // Physician (index 4) has a reference field "practice", which appears
+  // at index 1. Practice has a reference field "location", which appears
+  // at index 0.
+  BOOST_TEST(ref_indices.at("Physician").at(4).at("practice") == 1);
+  BOOST_TEST(ref_indices.at("Physician").at(1).at("location") == 0);
+
+  // Physician (index 4) has a reference field "school", which appears
+  // at index 3. School has a reference field "location", which appears
+  // at index 2.
+  BOOST_TEST(ref_indices.at("Physician").at(4).at("school") == 3);
+  BOOST_TEST(ref_indices.at("Physician").at(3).at("location") == 2);
+
+  BOOST_TEST(ref_indices.at("Practice").at(1).at("location") == 0);
+  BOOST_TEST(ref_indices.at("School").at(1).at("location") == 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
@@ -146,19 +194,21 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield) {
   T_schema tschema;
 
   PCleanClass query_class = schema.classes[schema.query.record_class];
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  schema_helper.make_relations_for_queryfield(
-      schema.query.fields["School"], query_class, &tschema,
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  schema_helper.make_relations_for_queryfield(schema.query.fields["School"],
+                                              query_class, &tschema,
+                                              &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 2);
   BOOST_TEST(tschema.contains("School"));
   BOOST_TEST(tschema.contains("Physician::School"));
   BOOST_TEST(std::get<T_noisy_relation>(tschema["School"]).is_observed);
-  BOOST_TEST(!std::get<T_noisy_relation>(tschema["Physician::School"]).is_observed);
+  BOOST_TEST(
+      !std::get<T_noisy_relation>(tschema["Physician::School"]).is_observed);
 
-  std::vector<std::string> expected_adfr = {
-    "physician:school:School", "physician:Physician", "Record"};
+  std::vector<std::string> expected_adfr = {"physician:school:School",
+                                            "physician:Physician", "Record"};
   BOOST_TEST(annotated_domains_for_relation["School"] == expected_adfr,
              tt::per_element());
 }
@@ -168,10 +218,11 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
   T_schema tschema;
 
   PCleanClass query_class = schema.classes[schema.query.record_class];
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  schema_helper.make_relations_for_queryfield(
-      schema.query.fields["School"], query_class, &tschema,
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  schema_helper.make_relations_for_queryfield(schema.query.fields["School"],
+                                              query_class, &tschema,
+                                              &annotated_domains_for_relation);
 
   BOOST_TEST(tschema.size() == 1);
   BOOST_TEST(tschema.contains("School"));
@@ -179,9 +230,10 @@ BOOST_AUTO_TEST_CASE(test_make_relations_for_queryfield_only_final_emissions) {
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   PCleanSchemaHelper schema_helper(schema);
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  T_schema tschema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  T_schema tschema =
+      schema_helper.make_hirm_schema(&annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("School:name"));
   T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
@@ -191,14 +243,18 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(cr.domains == expected_domains);
 
   BOOST_TEST(tschema.contains("School:degree_dist"));
-  T_clean_relation cr2 = std::get<T_clean_relation>(tschema["School:degree_dist"]);
-  BOOST_TEST((cr2.distribution_spec.distribution == DistributionEnum::categorical));
+  T_clean_relation cr2 =
+      std::get<T_clean_relation>(tschema["School:degree_dist"]);
+  BOOST_TEST(
+      (cr2.distribution_spec.distribution == DistributionEnum::categorical));
   BOOST_TEST(cr2.distribution_spec.distribution_args.contains("k"));
   BOOST_TEST(cr2.domains == expected_domains);
 
   BOOST_TEST(tschema.contains("Physician:degree"));
-  T_clean_relation cr3 = std::get<T_clean_relation>(tschema["Physician:degree"]);
-  BOOST_TEST((cr3.distribution_spec.distribution == DistributionEnum::stringcat));
+  T_clean_relation cr3 =
+      std::get<T_clean_relation>(tschema["Physician:degree"]);
+  BOOST_TEST(
+      (cr3.distribution_spec.distribution == DistributionEnum::stringcat));
   std::vector<std::string> expected_domains2 = {"School", "Physician"};
   BOOST_TEST(cr3.domains == expected_domains2);
 
@@ -247,7 +303,8 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
 
   BOOST_TEST(tschema.contains("Physician::School"));
-  T_noisy_relation nr6 = std::get<T_noisy_relation>(tschema["Physician::School"]);
+  T_noisy_relation nr6 =
+      std::get<T_noisy_relation>(tschema["Physician::School"]);
   BOOST_TEST(!nr6.is_observed);
   expected_domains = {"School", "Physician"};
   BOOST_TEST(nr6.domains == expected_domains, tt::per_element());
@@ -263,13 +320,26 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schmea) {
   BOOST_TEST(!nr8.is_observed);
   expected_domains = {"City", "Practice"};
   BOOST_TEST(nr8.domains == expected_domains, tt::per_element());
+
+  auto& ref_indices = schema_helper.relation_reference_indices;
+
+  // Practice (index 1) has a reference field "city", which appears
+  // at index 0.
+  BOOST_TEST(ref_indices.at("Practice::State").at(1).at("city") == 0);
+
+  // Record (index 2) has a reference field "location", which appears
+  // at index 1 (and refers to Practice). Practice has a reference field
+  // "city", which appears at index 0.
+  BOOST_TEST(ref_indices.at("State").at(2).at("location") == 1);
+  BOOST_TEST(ref_indices.at("State").at(1).at("city") == 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   PCleanSchemaHelper schema_helper(schema, true);
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  T_schema tschema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  T_schema tschema =
+      schema_helper.make_hirm_schema(&annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("School:name"));
   T_clean_relation cr = std::get<T_clean_relation>(tschema["School:name"]);
@@ -279,14 +349,18 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST(cr.domains == expected_domains);
 
   BOOST_TEST(tschema.contains("School:degree_dist"));
-  T_clean_relation cr2 = std::get<T_clean_relation>(tschema["School:degree_dist"]);
-  BOOST_TEST((cr2.distribution_spec.distribution == DistributionEnum::categorical));
+  T_clean_relation cr2 =
+      std::get<T_clean_relation>(tschema["School:degree_dist"]);
+  BOOST_TEST(
+      (cr2.distribution_spec.distribution == DistributionEnum::categorical));
   BOOST_TEST(cr2.distribution_spec.distribution_args.contains("k"));
   BOOST_TEST(cr2.domains == expected_domains);
 
   BOOST_TEST(tschema.contains("Physician:degree"));
-  T_clean_relation cr3 = std::get<T_clean_relation>(tschema["Physician:degree"]);
-  BOOST_TEST((cr3.distribution_spec.distribution == DistributionEnum::stringcat));
+  T_clean_relation cr3 =
+      std::get<T_clean_relation>(tschema["Physician:degree"]);
+  BOOST_TEST(
+      (cr3.distribution_spec.distribution == DistributionEnum::stringcat));
   std::vector<std::string> expected_domains2 = {"School", "Physician"};
   BOOST_TEST(cr3.domains == expected_domains2);
 
@@ -333,6 +407,10 @@ BOOST_AUTO_TEST_CASE(test_make_hirm_schema_only_final_emissions) {
   BOOST_TEST((nr5.emission_spec.emission == EmissionEnum::bigram_string));
   expected_domains = {"City", "Practice", "Record"};
   BOOST_TEST(nr5.domains == expected_domains, tt::per_element());
+
+  auto& ref_indices = schema_helper.relation_reference_indices;
+  BOOST_TEST(ref_indices.at("State").at(2).at("location") == 1);
+  BOOST_TEST(ref_indices.at("State").at(1).at("city") == 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_record_class_is_clean) {
@@ -349,9 +427,10 @@ observe
   assert(ok);
 
   PCleanSchemaHelper schema_helper(schema2, false, true);
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  T_schema tschema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  T_schema tschema =
+      schema_helper.make_hirm_schema(&annotated_domains_for_relation);
 
   BOOST_TEST(!tschema.contains("Record:rent"));
   BOOST_TEST(tschema.contains("Rent"));
@@ -374,9 +453,10 @@ observe
   assert(ok);
 
   PCleanSchemaHelper schema_helper(schema2, false, false);
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relation;
-  T_schema tschema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relation);
+  std::map<std::string, std::vector<std::string>>
+      annotated_domains_for_relation;
+  T_schema tschema =
+      schema_helper.make_hirm_schema(&annotated_domains_for_relation);
 
   BOOST_TEST(tschema.contains("Record:rent"));
   BOOST_TEST(tschema.contains("Rent"));

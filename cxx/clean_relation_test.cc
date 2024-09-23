@@ -94,16 +94,18 @@ BOOST_AUTO_TEST_CASE(test_unincorporate) {
   // {0, 1} refer to them.
   BOOST_TEST(D1.items.contains(3));
   BOOST_TEST(D2.items.contains(1));
+  BOOST_TEST(R1.data_r.at("D1").contains(3));
+  BOOST_TEST(R1.data_r.at("D2").contains(1));
 
   R1.unincorporate({0, 2});
   BOOST_TEST(R1.data.size() == 2);
   BOOST_TEST(D1.items.contains(0));
-  BOOST_TEST(!D2.items.contains(2));
+  BOOST_TEST(!R1.data_r.at("D2").contains(2));
 
   R1.unincorporate({0, 1});
   BOOST_TEST(R1.data.size() == 1);
-  BOOST_TEST(!D1.items.contains(0));
-  BOOST_TEST(!D2.items.contains(1));
+  BOOST_TEST(!R1.data_r.at("D1").contains(0));
+  BOOST_TEST(!R1.data_r.at("D2").contains(1));
 }
 
 BOOST_AUTO_TEST_CASE(test_emission) {

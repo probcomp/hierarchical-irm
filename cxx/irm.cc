@@ -58,6 +58,31 @@ void IRM::incorporate(std::mt19937* prng, const std::string& r,
 
 void IRM::unincorporate(const std::string& r, const T_items& items) {
   std::visit([&](auto rel) { rel->unincorporate(items); }, relations.at(r));
+  std::vector<std::string> rel_domains =
+      std::visit([&](auto trel) { return trel.domains; }, schema.at(r));
+  std::map<std::pair<std::string, int>, bool> irm_contains_item;
+  for (size_t i = 0; i < rel_domains.size(); ++i) {
+    irm_contains_item[{rel_domains[i], items[i]}] = false;
+  }
+  for (size_t i = 0; i < rel_domains.size(); ++i) {
+    for (const std::string& r : domain_to_relations.at(rel_domains[i])) {
+      bool r_has_item = std::visit(
+          [&](auto rel) {
+            return rel->has_observation(rel_domains[i], items[i]);
+          },
+          relations.at(r));
+      irm_contains_item[{rel_domains[i], items[i]}] =
+          irm_contains_item.at({rel_domains[i], items[i]}) || r_has_item;
+    }
+  }
+  for (size_t i = 0; i < rel_domains.size(); ++i) {
+    if (!irm_contains_item.at({rel_domains[i], items[i]})) {
+      domains[rel_domains[i]]->unincorporate(items[i]);
+
+      // Only unincorporate duplicates once.
+      irm_contains_item[{rel_domains[i], items[i]}] = true;
+    }
+  }
 }
 
 void IRM::transition_cluster_assignments_all(std::mt19937* prng) {
@@ -396,7 +421,7 @@ void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
     // TRANSITION LATENT VALUES.
     for (auto& [rel, nrels] : irm->base_to_noisy_relations) {
       if (std::visit([](const auto& s) { return !s.is_observed; },
-                      irm->schema.at(rel))) {
+                     irm->schema.at(rel))) {
         clock_t t = clock();
         irm->transition_latent_values_relation(prng, rel);
         REPORT_SCORE(verbose, t, t_total, irm);

@@ -165,4 +165,131 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
   return items;
 }
 
+// This function recursively walks the tree of reference indices to populate the
+// "items" vector. The top-level call should pass ind = items.size() - 1 and
+// class_item equal to a primary key value (which goes in the last element of
+// items and determines the rest of the values).
+void GenDB::get_relation_items(const std::string& rel_name, const int ind,
+                               const int class_item, T_items& items) {
+  const std::vector<std::string>& domains = std::visit(
+      [&](auto tr) { return tr.domains; }, hirm->schema.at(rel_name));
+  items[ind] = class_item;
+  auto& ref_indices = schema_helper.relation_reference_indices;
+  if (ref_indices.contains(rel_name)) {
+    if (ref_indices.at(rel_name).contains(ind)) {
+      for (const auto& [rf_name, rf_ind] : ref_indices.at(rel_name).at(ind)) {
+        int rf_item =
+            reference_values.at({domains.at(ind), rf_name, class_item});
+        get_relation_items(rel_name, rf_ind, rf_item, items);
+      }
+    }
+  }
+}
+
+// Unincorporates the value of class_name.ref_field where the primary key
+// equals class_item. If `from_cluster_only` is true, values are unincorporated
+// from the relation's clusters without deleting empty clusters. This is useful
+// for the Gibbs sampler.
+std::map<std::string, std::unordered_map<T_items, ObservationVariant, H_items>>
+GenDB::unincorporate_reference(const std::string& class_name,
+                               const std::string& ref_field,
+                               const int class_item,
+                               const bool from_cluster_only) {
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_value_map;
+
+  for (const auto& [rel_name, query_field] : schema.query.fields) {
+    // Find relations that involve both the class and its reference field
+    // (exclude relations that include the class only because it's a node in
+    // a noisy observation path of something otherwise unrelated to the
+    // observed attribute.)
+    std::vector<std::string> domains = std::visit(
+        [&](auto& trel) { return trel.domains; }, hirm->schema.at(rel_name));
+    std::vector<size_t> domain_inds;
+    for (size_t i = 0; i < domains.size(); ++i) {
+      if (domains[i] == class_name &&
+          schema_helper.relation_reference_indices.at(rel_name).at(i).contains(
+              ref_field)) {
+        domain_inds.push_back(i);
+      }
+    }
+
+    // If this relation doesn't contain the relevant class/reference field, skip
+    // it. Either this relation doesn't have the given class as a domain, or it
+    // is a noisy relation where the class is noisily reporting observations of
+    // a different class and the DAG path from the observation doesn't contain
+    // the reference field.
+    if (domain_inds.size() == 0) {
+      continue;
+    }
+
+    // Access the relation's items where the domain is class_name and the entity
+    // value is class_item.
+    RelationVariant r = hirm->get_relation(rel_name);
+    const std::unordered_set<T_items, H_items>& items = std::visit(
+        [&](auto rel) {
+          return rel->get_data_r().at(class_name).at(class_item);
+        },
+        r);
+
+    for (const size_t ind : domain_inds) {
+      for (const auto& item : items) {
+        if (item[ind] == class_item) {
+          auto f = [&](auto rel) {
+            unincorporate_reference_relation(
+                rel, rel_name, item, stored_value_map, ind, from_cluster_only);
+          };
+          std::visit(f, r);
+        }
+      }
+    }
+  }
+  return stored_value_map;
+}
+
+// Recursively unincorporates from base relations and stores values.
+template <typename T>
+void GenDB::unincorporate_reference_relation(
+    Relation<T>* rel, const std::string& rel_name, const T_items& items,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_value_map,
+    const size_t ind, bool from_cluster_only) {
+  bool should_unincorporate;
+  if (from_cluster_only) {
+    should_unincorporate = rel->clusters_contains(items);
+  } else {
+    should_unincorporate = rel->get_data().contains(items);
+  }
+
+  // We can stop unincorporating from base relations if the index of
+  // the domain of interest is greater than the number of domains.
+  should_unincorporate = should_unincorporate && ind < items.size();
+  if (!should_unincorporate) {
+    return;
+  }
+
+  // Store the items/value and unincorporate them.
+  T value = rel->get_value(items);
+  stored_value_map[rel_name][items] = value;
+  if (from_cluster_only) {
+    rel->unincorporate_from_cluster(items);
+  } else {
+    rel->unincorporate(items);
+  }
+
+  // Recursively unincorporate from base relations.
+  if (const T_noisy_relation* t_rel =
+          std::get_if<T_noisy_relation>(&hirm->schema.at(rel_name))) {
+    auto noisy_rel = reinterpret_cast<NoisyRelation<T>*>(rel);
+    T_items base_items = noisy_rel->get_base_items(items);
+    RelationVariant base_rel = hirm->get_relation(t_rel->base_relation);
+    Relation<T>* base_rel_t = std::get<Relation<T>*>(base_rel);
+    unincorporate_reference_relation(base_rel_t, t_rel->base_relation,
+                                     base_items, stored_value_map, ind,
+                                     from_cluster_only);
+  }
+}
+
 GenDB::~GenDB() { delete hirm; }

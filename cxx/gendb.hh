@@ -63,6 +63,28 @@ class GenDB {
   T_items sample_class_ancestors(std::mt19937* prng,
                                  const std::string& class_name, int class_item);
 
+  // Populates "items" with entities by walking the DAG of reference indices,
+  // starting with "ind".
+  void get_relation_items(const std::string& rel_name, const int ind,
+                          const int class_item, T_items& items);
+
+  // Unincorporates all data where class_name refers to ref_field amd has
+  // primary key value class_item.
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+  unincorporate_reference(const std::string& class_name,
+                          const std::string& ref_field, const int class_item,
+                          const bool from_cluster_only = false);
+
+  // Unincorporates and stores items/values from a relation.
+  template <typename T>
+  void unincorporate_reference_relation(
+      Relation<T>* rel, const std::string& rel_name, const T_items& items,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_value_map,
+      const size_t ind, const bool from_cluster_only);
+
   ~GenDB();
 
   // Disable copying.
