@@ -5,7 +5,6 @@
 #include "gendb.hh"
 
 #include <boost/test/included/unit_test.hpp>
-#include <iostream>  // DO NOT SUBMIT
 #include <random>
 
 #include "pclean/io.hh"
