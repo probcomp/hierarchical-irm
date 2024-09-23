@@ -292,4 +292,32 @@ void GenDB::unincorporate_reference_relation(
   }
 }
 
+std::map<std::string, std::unordered_map<T_items, ObservationVariant, H_items>>
+GenDB::update_reference_items(
+    std::map<std::string, std::unordered_map<T_items, ObservationVariant,
+                                             H_items>>& stored_values,
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item, const int new_ref_val) {
+  int old_ref_val = reference_values.at({class_name, ref_field, class_item});
+
+  // Temporarily associate class_name.ref_field at index class_item with the new
+  // value.
+  reference_values[{class_name, ref_field, class_item}] = new_ref_val;
+
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      new_stored_values;
+
+  for (const auto& [relname, data] : stored_values) {
+    for (const auto& [items, val] : data) {
+      T_items new_items(items.size());
+      get_relation_items(relname, items.size() - 1, items.back(), new_items);
+      new_stored_values[relname][new_items] = val;
+    }
+  }
+  // Return reference_values to its original state.
+  reference_values[{class_name, ref_field, class_item}] = old_ref_val;
+  return new_stored_values;
+}
+
 GenDB::~GenDB() { delete hirm; }

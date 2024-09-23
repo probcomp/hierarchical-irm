@@ -85,6 +85,18 @@ class GenDB {
           stored_value_map,
       const size_t ind, const bool from_cluster_only);
 
+  // Returns a copy of stored_values, with the items updated to associate
+  // class_name.ref_field at index class_item with new_ref_val. This update is
+  // recursive, such that the reference fields of the class corresponding to
+  // ref_field are updated as well.
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+  update_reference_items(
+      std::map<std::string, std::unordered_map<T_items, ObservationVariant,
+                                               H_items>>& stored_values,
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item, const int new_ref_val);
+
   ~GenDB();
 
   // Disable copying.

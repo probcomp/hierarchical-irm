@@ -5,6 +5,7 @@
 #include "gendb.hh"
 
 #include <boost/test/included/unit_test.hpp>
+#include <iostream>  // DO NOT SUBMIT
 #include <random>
 
 #include "pclean/io.hh"
@@ -45,6 +46,22 @@ observe
 
   PCleanSchema schema;
 };
+
+void setup_gendb(std::mt19937* prng, GenDB& gendb) {
+  std::map<std::string, ObservationVariant> obs0 = {
+      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
+  std::map<std::string, ObservationVariant> obs1 = {
+      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
+  std::map<std::string, ObservationVariant> obs2 = {
+      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
+
+  int i = 0;
+  while (i < 30) {
+    gendb.incorporate(prng, {i++, obs0});
+    gendb.incorporate(prng, {i++, obs1});
+    gendb.incorporate(prng, {i++, obs2});
+  }
+}
 
 // This tests unincorporating the current value of `class_name.ref_field`
 // at index `class_item`.
@@ -220,20 +237,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-
-  std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
-  std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
-  std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
-
-  int i = 0;
-  while (i < 30) {
-    gendb.incorporate(&prng, std::make_pair(i++, obs0));
-    gendb.incorporate(&prng, std::make_pair(i++, obs1));
-    gendb.incorporate(&prng, std::make_pair(i++, obs2));
-  }
+  setup_gendb(&prng, gendb);
 
   // Each vector of items in a relation's data is entirely determined by
   // its last value (the primary key of the class lowest in the hierarchy).
@@ -259,58 +263,52 @@ BOOST_AUTO_TEST_CASE(test_get_relation_items) {
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-
-  std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
-  std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
-  std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
-
-  for (int i = 0; i < 30;) {
-    gendb.incorporate(&prng, std::make_pair(i++, obs0));
-    gendb.incorporate(&prng, std::make_pair(i++, obs1));
-    gendb.incorporate(&prng, std::make_pair(i++, obs2));
-  }
+  setup_gendb(&prng, gendb);
   test_unincorporate_reference_helper(gendb, "Physician", "school", 1, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-
-  std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
-  std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
-  std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
-
-  for (int i = 0; i < 30;) {
-    gendb.incorporate(&prng, std::make_pair(i++, obs0));
-    gendb.incorporate(&prng, std::make_pair(i++, obs1));
-    gendb.incorporate(&prng, std::make_pair(i++, obs2));
-  }
+  setup_gendb(&prng, gendb);
   test_unincorporate_reference_helper(gendb, "Record", "location", 2, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-
-  std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
-  std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
-  std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
-
-  for (int i = 0; i < 30;) {
-    gendb.incorporate(&prng, std::make_pair(i++, obs0));
-    gendb.incorporate(&prng, std::make_pair(i++, obs1));
-    gendb.incorporate(&prng, std::make_pair(i++, obs2));
-  }
+  setup_gendb(&prng, gendb);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_update_reference_items) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb);
+
+  std::string class_name = "Practice";
+  std::string ref_field = "city";
+  int class_item = 1;
+
+  BOOST_TEST(
+      gendb.reference_values.contains({class_name, ref_field, class_item}));
+
+  auto unincorporated_items =
+      gendb.unincorporate_reference(class_name, ref_field, class_item);
+  BOOST_TEST(unincorporated_items.size() > 0);
+
+  int new_ref_val = 7;
+  auto updated_items = gendb.update_reference_items(
+      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+
+  BOOST_TEST(unincorporated_items.size() == updated_items.size());
+  // All of the items should have been updated.
+  for (const auto& [rel_name, vals] : updated_items) {
+    BOOST_TEST(vals.size() == unincorporated_items.at(rel_name).size());
+    for (const auto& [items, v] : vals) {
+      BOOST_TEST(!unincorporated_items.at(rel_name).contains(items));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
