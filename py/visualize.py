@@ -117,7 +117,6 @@ def unary_matrix_plot(schema, cluster, obs, clusters):
   for n in small_dividers:
     ax.axhline(n - 0.5, color='r', linewidth=2)
 
-
   fig.tight_layout()
   return fig
 
@@ -127,7 +126,7 @@ def binary_matrix_plot(schema, cluster, obs, clusters):
   fontsize = 12
   relname = obs[0].relation
 
-  if relname in schema:
+  if schema and relname in schema:
     domain1 = schema[relname].domains[0]
     domain2 = schema[relname].domains[1]
   else:
@@ -149,8 +148,8 @@ def binary_matrix_plot(schema, cluster, obs, clusters):
   fig, ax = plt.subplots(figsize=(width, height))
 
   ax.xaxis.tick_top()
-  ax.set_xticks(np.arange(n1), labels=all_domain1_entities, rotation=90, fontsize=fontsize)
-  ax.set_yticks(np.arange(n2), labels=all_domain2_entities, fontsize=fontsize)
+  ax.set_yticks(np.arange(n1), labels=domain1_entities, fontsize=fontsize)
+  ax.set_xticks(np.arange(n2), labels=domain2_entities, rotation=90, fontsize=fontsize)
 
   m = make_binary_matrix(obs, domain1_entities, domain2_entities)
   cmap = copy.copy(plt.get_cmap())
