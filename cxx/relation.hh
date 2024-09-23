@@ -24,6 +24,12 @@ class Relation {
   virtual void incorporate(std::mt19937* prng, const T_items& items,
                            ValueType value) = 0;
 
+  // Unincorporates `items` and its corresponding value from the relation. Note
+  // that the entities in `items` are not unincorporated from their respective
+  // Domain CRPs, even if they are no longer contained in the relation's data,
+  // since they may appear in other relations. Use `irm::unincorporate` to
+  // ensure that entities not contained in any relation's data are
+  // unincorporated from the domains as well.
   virtual void unincorporate(const T_items& items) = 0;
 
   virtual double logp(const T_items& items, ValueType value,

@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(test_domains_cache) {
   BOOST_TEST(ref_indices.at("Record").at(1).at("city") == 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_domains_cache_two_paths_same_source) {
+BOOST_AUTO_TEST_CASE(test_domains_and_reference_cache_two_paths_same_source) {
   std::stringstream ss(R"""(
 class City
   name ~ string
@@ -138,7 +138,7 @@ class Person
   BOOST_TEST(ref_indices.at("Person").at(2).at("home_city") == 1);
 }
 
-BOOST_AUTO_TEST_CASE(test_domains_cache_diamond) {
+BOOST_AUTO_TEST_CASE(test_domains_and_reference_cache_diamond) {
   std::stringstream ss(R"""(
 class City
   name ~ string

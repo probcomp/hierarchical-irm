@@ -29,6 +29,10 @@ class PCleanSchemaHelper {
 
   void compute_domains_for(const std::string& name);
 
+  void compute_reference_indices_cache();
+
+  void compute_reference_indices_for(const std::string& name);
+
   void make_relations_for_queryfield(
       const QueryField& f, const PCleanClass& c, T_schema* schema,
       std::map<std::string, std::vector<std::string>>*

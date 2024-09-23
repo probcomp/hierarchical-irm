@@ -165,10 +165,10 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
   return items;
 }
 
-// This function walks the tree of reference indices to populate the "items"
-// vector. It should be called with ind = items.size() - 1 and class_item
-// equal to a primary key value (which goes in the last element of items
-// and determines the rest of the values).
+// This function recursively walks the tree of reference indices to populate the
+// "items" vector. The top-level call should pass ind = items.size() - 1 and
+// class_item equal to a primary key value (which goes in the last element of
+// items and determines the rest of the values).
 void GenDB::get_relation_items(const std::string& rel_name, const int ind,
                                const int class_item, T_items& items) {
   const std::vector<std::string>& domains = std::visit(
@@ -216,7 +216,10 @@ GenDB::unincorporate_reference(const std::string& class_name,
     }
 
     // If this relation doesn't contain the relevant class/reference field, skip
-    // it.
+    // it. Either this relation doesn't have the given class as a domain, or it
+    // is a noisy relation where the class is noisily reporting observations of
+    // a different class and the DAG path from the observation doesn't contain
+    // the reference field.
     if (domain_inds.size() == 0) {
       continue;
     }
