@@ -19,8 +19,8 @@ DomainCluster = collections.namedtuple(
 
 
 def load_schema(path):
-  """Load the schema from path, and return it as an array of Relations."""
-  relations = []
+  """Load the schema from path, and return it as a dict of Relations."""
+  relations = {}
   comment_line_re = re.compile(r'\s*#.*')
   # TODO(thomaswc): Handle distribution parameters in brackets
   line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*\(\s*(.+)\s*\)\s*(#.*)?')
@@ -32,10 +32,12 @@ def load_schema(path):
       if not m:
         print(f"Could not parse schema line\n{line}\n")
         sys.exit(1)
+      name = m.group(1)
       domains = re.split(r'\s*,\s*', m.group(3))
-      relations.append(Relation(name=m.group(1), distribution=m.group(2),
-                                parameters={},
-                                domains=domains))
+      relations[name] = Relation(name=name,
+                                 distribution=m.group(2),
+                                 parameters={},
+                                 domains=domains)
   return relations
 
 
