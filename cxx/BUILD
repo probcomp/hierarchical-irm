@@ -35,8 +35,9 @@ cc_library(
     srcs = ["inference.cc"],
     visibility = [":__subpackages__"],
     deps = [
-        ":irm",
+        ":gendb",
         ":hirm_lib",
+        ":irm",
     ],
 )
 
