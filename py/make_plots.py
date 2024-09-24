@@ -19,6 +19,10 @@ def main():
       "--observations", required=True, type=str,
       help="Path to file containing observations")
   parser.add_argument(
+      "--schema", type=str,
+      help="Path to file containing the schema.  "
+           "Only required if the schema contains more than one domain.")
+  parser.add_argument(
       "--clusters", required=True, type=str,
       help="Path to file containing HIRM output cluster")
   parser.add_argument(
@@ -27,13 +31,21 @@ def main():
 
   args = parser.parse_args()
 
+  schema = None
+  if args.schema:
+    print(f"Loading schema from {args.schema} ...")
+    schema = hirm_io.load_schema(args.schema)
+  else:
+    print("No schema given; assuming single domain.")
+
   print(f"Loading observations from {args.observations} ...")
   obs = hirm_io.load_observations(args.observations)
+
   print(f"Loading clusters from {args.clusters} ...")
   clusters = hirm_io.load_clusters(args.clusters)
 
   print(f"Writing html to {args.output} ...")
-  visualize.make_plots(clusters, obs, args.output)
+  visualize.make_plots(schema, obs, clusters, args.output)
 
 
 if __name__ == "__main__":
