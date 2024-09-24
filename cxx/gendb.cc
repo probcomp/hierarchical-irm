@@ -170,7 +170,7 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
 // class_item equal to a primary key value (which goes in the last element of
 // items and determines the rest of the values).
 void GenDB::get_relation_items(const std::string& rel_name, const int ind,
-                               const int class_item, T_items& items) {
+                               const int class_item, T_items& items) const {
   const std::vector<std::string>& domains = std::visit(
       [&](auto tr) { return tr.domains; }, hirm->schema.at(rel_name));
   items[ind] = class_item;
