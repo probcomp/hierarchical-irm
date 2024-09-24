@@ -70,3 +70,8 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
 }
 
 
+void inference_gendb(std::mt19937* prng, GenDB* gendb, int iters, int timeout,
+                     bool verbose) {
+  // TODO(emilyaf): Also transition entity assignments.
+  inference_hirm(prng, gendb->hirm, iters, timeout, verbose);
+}
