@@ -23,11 +23,11 @@ def load_schema(path):
   relations = {}
   comment_line_re = re.compile(r'\s*#.*')
   # TODO(thomaswc): Handle distribution parameters in brackets
-  line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*\(\s*(.+)\s*\)\s*(#.*)?')
+  line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*\(\s*([^\)]+)\s*\)\s*(#.*)?')
   with open(path, 'r') as f:
     for line in f:
       if comment_line_re.match(line):
-        next
+        continue
       m = line_re.match(line)
       if not m:
         print(f"Could not parse schema line\n{line}\n")
