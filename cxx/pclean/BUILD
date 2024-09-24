@@ -64,8 +64,8 @@ cc_binary(
         ":io",
         ":pclean_lib",
         ":schema",
-        ":schema_helper",
         "//:cxxopts",
+        "//:gendb",
         "//:hirm_lib",
         "//:inference",
         "//:util_io",
@@ -79,6 +79,7 @@ cc_library(
     deps = [
         ":csv",
         ":schema",
+        "//:gendb",
         "//:hirm_lib",
         "//:util_io",
     ],
@@ -90,7 +91,6 @@ cc_test(
     deps = [
         ":io",
         ":pclean_lib",
-        ":schema_helper",
         "@boost//:test",
     ],
 )
@@ -100,27 +100,4 @@ cc_library(
     hdrs = ["schema.hh"],
     visibility = ["//:__subpackages__"],
     deps = [],
-)
-
-cc_library(
-    name = "schema_helper",
-    hdrs = ["schema_helper.hh"],
-    srcs = ["schema_helper.cc"],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        ":get_joint_relations",
-        ":schema",
-        "//:irm",
-    ],
-)
-
-
-cc_test(
-    name = "schema_helper_test",
-    srcs = ["schema_helper_test.cc"],
-    deps = [
-        ":io",
-        ":schema_helper",
-        "@boost//:test",
-    ],
 )

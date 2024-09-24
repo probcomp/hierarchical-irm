@@ -67,7 +67,6 @@ cc_library(
         "//distributions:crp",
         "//pclean:io",
         "//pclean:schema",
-        "//pclean:schema_helper",
     ],
 )
 

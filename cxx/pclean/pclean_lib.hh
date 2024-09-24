@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "gendb.hh"
 #include "irm.hh"
 #include "util_io.hh"
 #include "pclean/csv.hh"
@@ -13,14 +14,8 @@
 // observation in the returned T_observations.  The column name of the value
 // is used as the relation name, and each entity in each domain is given
 // its own unique value.
-T_observations translate_observations(
-    const DataFrame& df, const T_schema &schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relation);
+T_observations translate_observations(const DataFrame& df, GenDB *gendb);
 
-// Return a dataframe of num_samples samples from the HIRM.
-DataFrame make_pclean_samples(
-    int num_samples, HIRM *hirm, const PCleanSchema& schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relation,
-    std::mt19937* prng);
+// Return a dataframe of num_samples samples from the GenDB.
+DataFrame make_pclean_samples(int num_samples, GenDB *gendb,
+                              std::mt19937* prng);
