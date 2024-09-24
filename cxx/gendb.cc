@@ -170,7 +170,7 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
 // class_item equal to a primary key value (which goes in the last element of
 // items and determines the rest of the values).
 void GenDB::get_relation_items(const std::string& rel_name, const int ind,
-                               const int class_item, T_items& items) {
+                               const int class_item, T_items& items) const {
   const std::vector<std::string>& domains = std::visit(
       [&](auto tr) { return tr.domains; }, hirm->schema.at(rel_name));
   items[ind] = class_item;
@@ -290,6 +290,34 @@ void GenDB::unincorporate_reference_relation(
                                      base_items, stored_value_map, ind,
                                      from_cluster_only);
   }
+}
+
+std::map<std::string, std::unordered_map<T_items, ObservationVariant, H_items>>
+GenDB::update_reference_items(
+    std::map<std::string, std::unordered_map<T_items, ObservationVariant,
+                                             H_items>>& stored_values,
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item, const int new_ref_val) {
+  int old_ref_val = reference_values.at({class_name, ref_field, class_item});
+
+  // Temporarily associate class_name.ref_field at index class_item with the new
+  // value.
+  reference_values[{class_name, ref_field, class_item}] = new_ref_val;
+
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      new_stored_values;
+
+  for (const auto& [relname, data] : stored_values) {
+    for (const auto& [items, val] : data) {
+      T_items new_items(items.size());
+      get_relation_items(relname, items.size() - 1, items.back(), new_items);
+      new_stored_values[relname][new_items] = val;
+    }
+  }
+  // Return reference_values to its original state.
+  reference_values[{class_name, ref_field, class_item}] = old_ref_val;
+  return new_stored_values;
 }
 
 GenDB::~GenDB() { delete hirm; }

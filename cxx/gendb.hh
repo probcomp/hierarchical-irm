@@ -66,7 +66,7 @@ class GenDB {
   // Populates "items" with entities by walking the DAG of reference indices,
   // starting with "ind".
   void get_relation_items(const std::string& rel_name, const int ind,
-                          const int class_item, T_items& items);
+                          const int class_item, T_items& items) const;
 
   // Unincorporates all data where class_name refers to ref_field amd has
   // primary key value class_item.
@@ -84,6 +84,19 @@ class GenDB {
                std::unordered_map<T_items, ObservationVariant, H_items>>&
           stored_value_map,
       const size_t ind, const bool from_cluster_only);
+
+  // Returns a copy of stored_values, with the items updated to associate
+  // class_name.ref_field at index class_item with new_ref_val. This update is
+  // recursive, such that the reference fields of the class corresponding to
+  // ref_field are updated as well. This method behaves as const (although it
+  // modifies/restores the state of reference_values).
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+  update_reference_items(
+      std::map<std::string, std::unordered_map<T_items, ObservationVariant,
+                                               H_items>>& stored_values,
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item, const int new_ref_val);
 
   ~GenDB();
 
