@@ -287,7 +287,9 @@ double GenDB::unincorporate_reference(
   int ref_val = reference_values.at({class_name, ref_field, class_item});
   for (auto& [rel_name, inds] : domain_inds) {
     for (int d_ind : inds) {
-      int r_ind = relation_reference_indices.at(rel_name).at(d_ind).at(ref_field);
+      int r_ind =
+          schema_helper.relation_reference_indices.at(rel_name).at(d_ind).at(
+              ref_field);
       logp_domain_cluster += unincorporate_from_domain_cluster_relation(
           rel_name, ref_val, r_ind, unincorporated_from_domains);
     }
