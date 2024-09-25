@@ -9,25 +9,20 @@
 #include "pclean/pclean_lib.hh"
 #include "pclean/schema.hh"
 
-T_observations translate_observations(
-    const DataFrame& df, const T_schema &schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relations) {
-  T_observations obs;
-
-  for (const auto& col : df.data) {
-    const std::string& col_name = col.first;
-    if (!schema.contains(col_name)) {
-      printf("Schema does not contain %s, skipping ...\n", col_name.c_str());
-      continue;
-    }
-
-    const T_relation& trel = schema.at(col_name);
-    size_t num_domains = std::visit([&](const auto &r) {
-      return r.domains.size();}, trel);
-    assert(num_domains == annotated_domains_for_relations.at(col_name).size());
-
-    for (size_t i = 0; i < col.second.size(); ++i) {
+void incorporate_observations(std::mt19937* prng,
+                              GenDB *gendb,
+                              const DataFrame& df) {
+  int num_rows = df.data.begin()->second.size();
+  for (int i = 0; i < num_rows; i++) {
+    std::map<std::string, ObservationVariant>> row_values;
+    for (const auto& col : df.data) {
+      const std::string& col_name = col.first;
+      if (!schema.contains(col_name)) {
+        if (i == 0) {
+          printf("Schema does not contain %s, skipping ...\n", col_name.c_str());
+        }
+        continue;
+      }
       const std::string& val = col.second[i];
       if (val.empty()) {
         // Don't incorporate missing values.
@@ -45,84 +40,41 @@ T_observations translate_observations(
           std::exit(1);
         }
       }
-      std::vector<std::string> entities;
-      for (size_t j = 0; j < num_domains; ++j) {
-        // Give every row it's own universe of unique id's.
-        // TODO(thomaswc): Discuss other options for handling this, such
-        // as sampling the non-index domains from a CRP prior or specifying
-        // additional CSV columns to use as foreign keys.
-        entities.push_back(annotated_domains_for_relations.at(col_name)[j]
-                           + ":" + std::to_string(i));
-      }
-      obs[col_name].push_back(std::make_tuple(entities, val));
+
+      row_values[col_name] = gendb->hirm->get_relation(col_name)->from_string(val);
     }
+    gendb->incorporate(prng, std::make_pair(i, row_values));
   }
-  return obs;
 }
 
 // Sample a single "row" into *query_values.  A value is sampled into
-// (*query_values)[f] for every query field in the schema.  The samples
-// are generated from the HIRM by first sampling an unique entity id for
-// each annotated domain used by the query field relations from the HIRM's
-// per-domain CRPs.
-// TODO(thomaswc): Remember the entity id samples across rows, so that
-// if we said that Person #5 was born in city #3, we remember that if
-// Person #5 comes up again.
-void WIP_make_pclean_sample(
-    HIRM *hirm, const PCleanSchema& schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relations,
-    std::mt19937* prng,
+// (*query_values)[f] for every query field in the schema.
+void make_pclean_sample(
+    std::mt19937* prng, GenDB* gendb,
     std::map<std::string, std::string> *query_values) {
-  std::map<std::string, CRP> domain_crps;
-  hirm->initialize_domain_crps(&domain_crps);
+  const std::string& record_class = gendb->schema.query.record_class;
+  int class_item = gendb->domain_crps[record_class].sample();
+  for (const auto& [name, query_field] : gendb->schema.query.fields) {
+    T_items entities = gendb->sample_class_ancestors(
+        prng, gendb->schema.query.record_class, class_item);
 
-  // entity_assignments[annotated_entity] gives the entity id for that entity.
-  std::map<std::string, int> entity_assignments;
-  for (const auto& [name, query_field] : schema.query.fields) {
-    T_items entities;
-    const std::vector<std::string>& domains = std::visit(
-        [](auto trel) { return trel.domains; },
-        hirm->schema[query_field.name]);
-    const std::vector<std::string>& annotated_domains =
-        annotated_domains_for_relations.at(query_field.name);
-    if (domains.size() != annotated_domains.size()) {
-      printf("For relation %s, found %ld domains but %ld annotated domains\n",
-             query_field.name.c_str(), domains.size(), annotated_domains.size());
-      std::exit(1);
-    }
-    for (size_t i = 0; i < domains.size(); ++i) {
-      int id = -1;
-      auto it = entity_assignments.find(annotated_domains[i]);
-      if (it == entity_assignments.end()) {
-        id = domain_crps[domains[i]].sample(prng);
-        int crp_item = domain_crps[domains[i]].assignments.size();
-        domain_crps[domains[i]].incorporate(crp_item, id);
-        entity_assignments[annotated_domains[i]] = id;
-      }
-      else {
-        id = it->second;
-      }
-      entities.push_back(id);
-    }
-    (*query_values)[query_field.name] = hirm->sample_and_incorporate_relation(
+    (*query_values)[query_field.name] = gendb->hirm->sample_and_incorporate_relation(
         prng, query_field.name, entities);
   }
 }
 
-DataFrame make_pclean_samples(
-    int num_samples, HIRM *hirm, const PCleanSchema& schema,
-    const std::map<std::string, std::vector<std::string>>
-      &annotated_domains_for_relations,
-    std::mt19937* prng) {
+DataFrame make_pclean_samples(int num_samples, GenDB *gendb,
+                              std::mt19937* prng) {
   DataFrame df;
+  const std::string& record_class = gendb->schema.query.record_class;
   for (int i = 0; i < num_samples; i++) {
      std::map<std::string, std::string> query_values;
-     WIP_make_pclean_sample(hirm, schema, annotated_domains_for_relations,
-                        prng, &query_values);
+     make_pclean_sample(prng, gendb, &query_values);
      for (const auto& [column, val] : query_values) {
        df.data[column].push_back(val);
      }
+
   }
   return df;
 }
+

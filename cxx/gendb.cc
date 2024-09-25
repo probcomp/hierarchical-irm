@@ -12,8 +12,8 @@
 #include "hirm.hh"
 #include "irm.hh"
 #include "observations.hh"
+#include "pclean/get_joint_relations.hh"
 #include "pclean/schema.hh"
-#include "pclean/schema_helper.hh"
 
 GenDB::GenDB(std::mt19937* prng, const PCleanSchema& schema_,
              bool _only_final_emissions, bool _record_class_is_clean)
@@ -146,6 +146,7 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
                                       const std::string& class_name,
                                       int class_item) {
   T_items items;
+  assert(schema.classes.contains(class_name));
   PCleanClass c = schema.classes.at(class_name);
 
   for (const auto& [name, var] : c.vars) {
@@ -176,7 +177,7 @@ void GenDB::get_relation_items(const std::string& rel_name, const int ind,
   const std::vector<std::string>& domains = std::visit(
       [&](auto tr) { return tr.domains; }, hirm->schema.at(rel_name));
   items[ind] = class_item;
-  auto& ref_indices = schema_helper.relation_reference_indices;
+  auto& ref_indices = relation_reference_indices;
   if (ref_indices.contains(rel_name)) {
     if (ref_indices.at(rel_name).contains(ind)) {
       for (const auto& [rf_name, rf_ind] : ref_indices.at(rel_name).at(ind)) {
@@ -211,7 +212,7 @@ GenDB::unincorporate_reference(const std::string& class_name,
     std::vector<size_t> domain_inds;
     for (size_t i = 0; i < domains.size(); ++i) {
       if (domains[i] == class_name &&
-          schema_helper.relation_reference_indices.at(rel_name).at(i).contains(
+          relation_reference_indices.at(rel_name).at(i).contains(
               ref_field)) {
         domain_inds.push_back(i);
       }
@@ -322,6 +323,11 @@ GenDB::update_reference_items(
   return new_stored_values;
 }
 
+double GenDB::logp_score() {
+  // TODO(emilyaf): Add additional factors to this score if necessary.
+  return hirm->logp_score();
+}
+
 GenDB::~GenDB() { delete hirm; }
 
 void GenDB::compute_domains_cache() {
@@ -342,8 +348,8 @@ void GenDB::compute_reference_indices_cache() {
 
 void GenDB::compute_domains_for(const std::string& name) {
   std::vector<std::string> ds;
-  std::vector<std::string> annotated_ds;
-  PCleanClass c = schema.classes[name];
+  assert(schema.classes.contains(name));
+  PCleanClass c = schema.classes.at(name);
 
   for (const auto& v : c.vars) {
     if (const ClassVar* cv = std::get_if<ClassVar>(&(v.second.spec))) {
@@ -353,25 +359,21 @@ void GenDB::compute_domains_for(const std::string& name) {
       for (const std::string& s : domains[cv->class_name]) {
         ds.push_back(s);
       }
-      for (const std::string& s : annotated_domains[cv->class_name]) {
-        annotated_ds.push_back(v.first + ':' + s);
-      }
     }
   }
 
   // Put the "primary" domain last, so that it survives reordering.
   ds.push_back(name);
-  annotated_ds.push_back(name);
 
   domains[name] = ds;
-  annotated_domains[name] = annotated_ds;
 }
 
 void GenDB::compute_reference_indices_for(
     const std::string& name) {
   std::vector<std::string> ds;
   int total_offset = 0;
-  PCleanClass c = schema.classes[name];
+  assert(schema.classes.contains(name));
+  PCleanClass c = schema.classes.at(name);
 
   // Recursively maps the indices of class "name" (and ancestors) in relation
   // items to the names and indices (in items) of their parents (reference
@@ -427,7 +429,7 @@ void GenDB::make_relations_for_queryfield(
     var_names.push_back(v.name);
     if (i < f.class_path.size() - 1) {
       class_names.push_back(std::get<ClassVar>(v.spec).class_name);
-      last_class = schema.classes[class_names.back()];
+      last_class = schema.classes.at(class_names.back());
     }
   }
   // Remove the last var_name because it isn't used in making the path_prefix.
@@ -536,7 +538,7 @@ T_schema GenDB::make_hirm_schema() {
   // For every query field, make one or more relations by walking up
   // the class_path.  At least one of those relations will have name equal
   // to the name of the QueryField.
-  const PCleanClass record_class = schema.classes[schema.query.record_class];
+  const PCleanClass record_class = schema.classes.at(schema.query.record_class);
   for (const auto& [unused_name, f] : schema.query.fields) {
     make_relations_for_queryfield(f, record_class, &tschema);
   }

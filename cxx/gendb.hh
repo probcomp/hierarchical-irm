@@ -15,9 +15,6 @@ class GenDB {
  public:
   const PCleanSchema& schema;
 
-  // TODO(emilyaf): Merge PCleanSchemaHelper and GenDB.
-  PCleanSchemaHelper schema_helper;
-
   // This data structure contains entity sets and linkages. Semantics are
   // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
   // where primary_key and ref_val are (integer) entity IDs.
@@ -100,6 +97,9 @@ class GenDB {
   // Translate the PCleanSchema into an HIRM T_schema.
   T_schema make_hirm_schema();
 
+  // Return the log probability of the data incorporated into the GenDB so far.
+  double logp_score();
+
   ~GenDB();
 
   // Disable copying.
@@ -118,14 +118,11 @@ class GenDB {
   void compute_reference_indices_for(const std::string& name);
 
   void make_relations_for_queryfield(
-      const QueryField& f, const PCleanClass& c, T_schema* schema,
-      std::map<std::string, std::vector<std::string>>*
-          annotated_domains_for_relation);
+      const QueryField& f, const PCleanClass& c, T_schema* schema);
 
   bool only_final_emissions;
   bool record_class_is_clean;
   std::map<std::string, std::vector<std::string>> domains;
-  std::map<std::string, std::vector<std::string>> annotated_domains;
 
   // Map keys are relation name, item index of a class, and reference field
   // name. The values in the inner map are the item index of the reference
@@ -138,5 +135,4 @@ class GenDB {
   // class. (See tests for more intuition.)
   std::map<std::string, std::map<int, std::map<std::string, int>>>
       class_reference_indices;
-
 };

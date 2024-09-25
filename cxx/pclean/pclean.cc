@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
   // Make GenDB
   std::cout << "Making GenDB model ...\n";
   GenDB gendb(
+      &prng,
       pclean_schema,
       result["only_final_emissions"].as<bool>(),
       result["record_class_is_clean"].as<bool>());
@@ -84,27 +85,8 @@ int main(int argc, char** argv) {
   DataFrame df = DataFrame::from_csv(obs_fn);
 
   // Incorporate observations.
-  std::cout << "Translating observations ...\n";
-  T_observations observations = translate_observations(df, &gendb);
-
-  std::string heldout_fn = result["heldout"].as<std::string>();
-  T_observations heldout_obs;
-  T_observations encoding_observations;
-  if (heldout_fn.empty()) {
-    encoding_observations = observations;
-  } else {
-    std::cout << "Loading held out observations from " << heldout_fn << std::endl;
-    DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
-    heldout_obs = translate_observations(heldout_df, &gendb);
-    encoding_observations = merge_observations(observations, heldout_obs);
-  }
-
-  std::cout << "Encoding observations ...\n";
-  T_encoding encoding = calculate_encoding(hirm_schema, encoding_observations);
-
   std::cout << "Incorporating observations ...\n";
-  // TODO(emilyaf): Fix the next line if necessary.
-  incorporate_observations(&prng, gendb->hirm, encoding, observations);
+  incorporate_observations(&prng, &gendb, df);
 
   // Run inference
   std::cout << "Running inference ...\n";
@@ -117,13 +99,19 @@ int main(int argc, char** argv) {
   if (result.count("output") > 0) {
     std::string out_fn = result["output"].as<std::string>();
     std::cout << "Savings results to " << out_fn << "\n";
-    to_txt(out_fn, gendb->hirm, encoding);
+    // TODO(thomaswc): Fix this.
+    // to_txt(out_fn, gendb.hirm, encoding);
   }
 
+  std::string heldout_fn = result["heldout"].as<std::string>();
   if (!heldout_fn.empty()) {
-    // TODO(thomaswc): Fix logp to take a GenDB.
-    double lp = logp(&prng, gendb->hirm, encoding, heldout_obs);
-    std::cout << "Log likelihood of held out data is " << lp << std::endl;
+    std::cout << "Loading held out observations from " << heldout_fn << std::endl;
+    DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
+    std::cout << "Incorporating held out observations ...\n";
+    double lp1 = gendb.logp_score();
+    incorporate_observations(&prng, &gendb, heldout_df);
+    double lp2 = gendb.logp_score();
+    std::cout << "Log likelihood of held out data is " << (lp2 - lp1) << std::endl;
   }
 
   int num_samples = result["samples"].as<int>();

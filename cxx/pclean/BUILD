@@ -20,6 +20,7 @@ cc_library(
     name = "get_joint_relations",
     hdrs = ["get_joint_relations.hh"],
     srcs = ["get_joint_relations.cc"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":schema",
         "//:clean_relation",
