@@ -48,17 +48,22 @@ observe
 
 void setup_gendb(std::mt19937* prng, GenDB& gendb) {
   std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
+      {"School", "Massachusetts Institute of Technology"},
+      {"Degree", "PHD"},
+      {"City", "Cambrij"}};
   std::map<std::string, ObservationVariant> obs1 = {
       {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
   std::map<std::string, ObservationVariant> obs2 = {
       {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
+  std::map<std::string, ObservationVariant> obs3 = {
+      {"School", "Boston University"}, {"Degree", "PhD"}, {"City", "Boston"}};
 
   int i = 0;
   while (i < 30) {
     gendb.incorporate(prng, {i++, obs0});
     gendb.incorporate(prng, {i++, obs1});
     gendb.incorporate(prng, {i++, obs2});
+    gendb.incorporate(prng, {i++, obs3});
   }
 }
 
@@ -278,6 +283,13 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_logp_score) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb);
+  BOOST_TEST(gendb.logp_score() < 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
@@ -681,6 +693,57 @@ observe
   BOOST_TEST(!cr.is_observed);
   T_noisy_relation nr = std::get<T_noisy_relation>(tschema["Rent"]);
   BOOST_TEST(nr.is_observed);
+}
+
+BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb);
+
+  std::string class_name = "Record";
+  std::string ref_field = "location";
+  int class_item = 1;
+
+  double init_logp = gendb.logp_score();
+  auto unincorporated_items =
+      gendb.unincorporate_reference(class_name, ref_field, class_item);
+
+  int old_ref_val =
+      gendb.reference_values.at({class_name, ref_field, class_item});
+  int new_ref_val = (old_ref_val == 0) ? 1 : old_ref_val - 1;
+  auto updated_items = gendb.update_reference_items(
+      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+
+  gendb.incorporate_reference(&prng, updated_items);
+  // Updating the reference values should change logp_score (though note that
+  // the domain_crps have not been updated), so the total logp_score is
+  // different only if new_ref_val and old_ref_val are in different IRM
+  // clusters.
+  BOOST_TEST(gendb.logp_score() != init_logp, tt::tolerance(1e-6));
+}
+
+BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb);
+
+  std::string class_name = "Record";
+  std::string ref_field = "location";
+  int class_item = 1;
+
+  double init_logp = gendb.logp_score();
+  auto unincorporated_items =
+      gendb.unincorporate_reference(class_name, ref_field, class_item);
+  int new_ref_val =
+      gendb.reference_values.at({class_name, ref_field, class_item});
+
+  auto updated_items = gendb.update_reference_items(
+      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+
+  // Logp_score shouldn't change if the same items/values are
+  // unincorporated/incorporated back into the same clusters.
+  gendb.incorporate_reference(&prng, updated_items, true);
+  BOOST_TEST(gendb.logp_score() == init_logp, tt::tolerance(1e-6));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

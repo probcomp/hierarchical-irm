@@ -32,6 +32,14 @@ GenDB::GenDB(std::mt19937* prng, const PCleanSchema& schema_,
   }
 }
 
+double GenDB::logp_score() const {
+  double domain_crps_logp = 0;
+  for (const auto& [d, crp] : domain_crps) {
+    domain_crps_logp += crp.logp_score();
+  }
+  return domain_crps_logp + hirm->logp_score();
+}
+
 void GenDB::incorporate(
     std::mt19937* prng,
     const std::pair<int, std::map<std::string, ObservationVariant>>& row) {
@@ -323,9 +331,46 @@ GenDB::update_reference_items(
   return new_stored_values;
 }
 
-double GenDB::logp_score() {
-  // TODO(emilyaf): Add additional factors to this score if necessary.
-  return hirm->logp_score();
+void GenDB::incorporate_reference(
+    std::mt19937* prng,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_values,
+    const bool to_cluster_only) {
+  for (const auto& [rel_name, query_field] : schema.query.fields) {
+    if (stored_values.contains(rel_name)) {
+      auto f = [&](auto rel) {
+        incorporate_reference_relation(prng, rel, rel_name, stored_values,
+                                       to_cluster_only);
+      };
+      std::visit(f, hirm->get_relation(rel_name));
+    }
+  }
+}
+
+template <typename T>
+void GenDB::incorporate_reference_relation(
+    std::mt19937* prng, Relation<T>* rel, const std::string& rel_name,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_values,
+    const bool to_cluster_only) {
+  if (const T_noisy_relation* trel =
+          std::get_if<T_noisy_relation>(&hirm->schema.at(rel_name))) {
+    if (stored_values.contains(trel->base_relation)) {
+      NoisyRelation<T>* noisy_rel = reinterpret_cast<NoisyRelation<T>*>(rel);
+      incorporate_reference_relation(prng, noisy_rel->base_relation,
+                                     trel->base_relation, stored_values,
+                                     to_cluster_only);
+    }
+  }
+  for (const auto& [items, value] : stored_values.at(rel_name)) {
+    if (to_cluster_only) {
+      rel->incorporate_to_cluster(items, std::get<T>(value));
+    } else {
+      rel->incorporate(prng, items, std::get<T>(value));
+    }
+  }
 }
 
 GenDB::~GenDB() { delete hirm; }

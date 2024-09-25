@@ -30,6 +30,9 @@ class GenDB {
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
 
+  // Return the log probability of the data incorporated into the GenDB so far.
+  double logp_score() const;
+
   // Incorporates a row of observed data into the GenDB instance.
   void incorporate(
       std::mt19937* prng,
@@ -97,8 +100,24 @@ class GenDB {
   // Translate the PCleanSchema into an HIRM T_schema.
   T_schema make_hirm_schema();
 
-  // Return the log probability of the data incorporated into the GenDB so far.
-  double logp_score();
+  // Incorporates the items and values from stored_values (generally an output
+  // of update_reference_items).
+  void incorporate_reference(
+      std::mt19937* prng,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_values,
+      const bool to_cluster_only = false);
+
+  // Recursively incorporates the items and values of stored_values for a single
+  // relation (and its base relations).
+  template <typename T>
+  void incorporate_reference_relation(
+      std::mt19937* prng, Relation<T>* rel, const std::string& rel_name,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_values,
+      const bool to_cluster_only);
 
   ~GenDB();
 
