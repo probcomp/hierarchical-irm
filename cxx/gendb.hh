@@ -110,7 +110,7 @@ class GenDB {
       const bool to_cluster_only = false);
 
   // Recursively incorporates the items and values of stored_values for a single
-  // relation.
+  // relation (and its base relations).
   template <typename T>
   void incorporate_reference_relation(
       std::mt19937* prng, Relation<T>* rel, const std::string& rel_name,

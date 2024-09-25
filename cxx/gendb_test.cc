@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
-  // BOOST_TEST(gendb.logp_score() < 0.0);
+  BOOST_TEST(gendb.logp_score() < 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
