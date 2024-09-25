@@ -14,10 +14,10 @@ void incorporate_observations(std::mt19937* prng,
                               const DataFrame& df) {
   int num_rows = df.data.begin()->second.size();
   for (int i = 0; i < num_rows; i++) {
-    std::map<std::string, ObservationVariant>> row_values;
+    std::map<std::string, ObservationVariant> row_values;
     for (const auto& col : df.data) {
       const std::string& col_name = col.first;
-      if (!schema.contains(col_name)) {
+      if (!gendb->schema.query.fields.contains(col_name)) {
         if (i == 0) {
           printf("Schema does not contain %s, skipping ...\n", col_name.c_str());
         }
@@ -35,13 +35,16 @@ void incorporate_observations(std::mt19937* prng,
       for (const char c: val) {
         if (!std::isprint(c)) {
           printf("Found non-printable character with ascii value %d on line "
-                 "%ld of column %s in value `%s`.\n",
-                 (int)c, i+2, col_name.c_str(), val.c_str());
+                 "%d of column %s in value `%s`.\n",
+                 (int) c, i + 2, col_name.c_str(), val.c_str());
           std::exit(1);
         }
       }
 
-      row_values[col_name] = gendb->hirm->get_relation(col_name)->from_string(val);
+      const RelationVariant& rv = gendb->hirm->get_relation(col_name);
+      ObservationVariant ov;
+      std::visit([&](const auto &r) { ov = r->from_string(val); }, rv);
+      row_values[col_name] = ov;
     }
     gendb->incorporate(prng, std::make_pair(i, row_values));
   }
@@ -53,7 +56,7 @@ void make_pclean_sample(
     std::mt19937* prng, GenDB* gendb,
     std::map<std::string, std::string> *query_values) {
   const std::string& record_class = gendb->schema.query.record_class;
-  int class_item = gendb->domain_crps[record_class].sample();
+  int class_item = gendb->domain_crps[record_class].sample(prng);
   for (const auto& [name, query_field] : gendb->schema.query.fields) {
     T_items entities = gendb->sample_class_ancestors(
         prng, gendb->schema.query.record_class, class_item);
@@ -66,7 +69,6 @@ void make_pclean_sample(
 DataFrame make_pclean_samples(int num_samples, GenDB *gendb,
                               std::mt19937* prng) {
   DataFrame df;
-  const std::string& record_class = gendb->schema.query.record_class;
   for (int i = 0; i < num_samples; i++) {
      std::map<std::string, std::string> query_values;
      make_pclean_sample(prng, gendb, &query_values);

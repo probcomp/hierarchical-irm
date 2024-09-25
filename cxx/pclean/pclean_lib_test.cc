@@ -55,7 +55,6 @@ Pediatrics,Harvard,MD,Seattle,WA
 )""");
 
   DataFrame df = DataFrame::from_csv(ss2);
-  DataFrame df;
 
   incorporate_observations(&prng, &gendb, df);
   BOOST_TEST(gendb.domain_crps["Record"].N == 5);
