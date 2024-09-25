@@ -15,14 +15,14 @@ struct SchemaTestFixture {
   SchemaTestFixture() {
     std::stringstream ss(R"""(
 class School
-  name ~ string
+  name ~ real
 
 class Physician
   school ~ School
   degree ~ stringcat(strings="MD PT NP DO PHD")
 
 class City
-  name ~ string
+  name ~ real
 
 class Practice
   city ~ City
@@ -46,20 +46,19 @@ observe
   PCleanSchema schema;
 };
 
-void setup_gendb(std::mt19937* prng, GenDB& gendb) {
+void setup_gendb(std::mt19937* prng, GenDB& gendb, int n = 30) {
+  std::normal_distribution<double> d(0., 1.);
   std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "Massachusetts Institute of Technology"},
-      {"Degree", "PHD"},
-      {"City", "Cambrij"}};
+      {"School", d(*prng)}, {"Degree", "PHD"}, {"City", d(*prng)}};
   std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
+      {"School", d(*prng)}, {"Degree", "MD"}, {"City", d(*prng)}};
   std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
+      {"School", d(*prng)}, {"Degree", "PT"}, {"City", d(*prng)}};
   std::map<std::string, ObservationVariant> obs3 = {
-      {"School", "Boston University"}, {"Degree", "PhD"}, {"City", "Boston"}};
+      {"School", d(*prng)}, {"Degree", "PhD"}, {"City", d(*prng)}};
 
   int i = 0;
-  while (i < 30) {
+  while (i < n) {
     gendb.incorporate(prng, {i++, obs0});
     gendb.incorporate(prng, {i++, obs1});
     gendb.incorporate(prng, {i++, obs2});
@@ -72,8 +71,7 @@ void setup_gendb(std::mt19937* prng, GenDB& gendb) {
 void test_unincorporate_reference_helper(GenDB& gendb,
                                          const std::string& class_name,
                                          const std::string& ref_field,
-                                         const int class_item,
-                                         const bool from_cluster_only) {
+                                         const int class_item) {
   BOOST_TEST(
       gendb.reference_values.contains({class_name, ref_field, class_item}));
 
@@ -81,8 +79,15 @@ void test_unincorporate_reference_helper(GenDB& gendb,
   // to at class_item.
   int ref_item = gendb.reference_values.at({class_name, ref_field, class_item});
 
-  auto unincorporated_items = gendb.unincorporate_reference(
-      class_name, ref_field, class_item, from_cluster_only);
+  std::map<std::string, std::vector<size_t>> domain_inds =
+      gendb.get_domain_inds(class_name, ref_field);
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_value_map;
+  std::map<std::tuple<int, std::string, T_item>, int>
+      unincorporated_from_domains;
+  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+                                stored_value_map, unincorporated_from_domains);
 
   const auto& ref_indices = gendb.schema_helper.relation_reference_indices;
   for (const auto& [name, trel] : gendb.hirm->schema) {
@@ -106,26 +111,20 @@ void test_unincorporate_reference_helper(GenDB& gendb,
     // If this relation doesn't contain the class and its reference class,
     // continue.
     if (ref_field_inds.size() > 0) {
-      BOOST_TEST(unincorporated_items.contains(name));
+      BOOST_TEST(stored_value_map.contains(name));
     } else {
       continue;
     }
 
     // Check that all of the unincorporated items have the right primary and
     // foreign key values.
-    for (auto [it, unused_val] : unincorporated_items[name]) {
+    for (auto [it, unused_val] : stored_value_map[name]) {
       bool seen_ref_value = false;
       for (size_t j = 0; j < ref_field_inds.size(); ++j) {
         seen_ref_value = seen_ref_value || (it[class_inds[j]] == class_item &&
                                             it[ref_field_inds[j]] == ref_item);
       }
       BOOST_TEST(seen_ref_value);
-    }
-
-    // Unincorporating from clusters only leaves the relation's data as-is, so
-    // we stop here.
-    if (from_cluster_only) {
-      return;
     }
 
     // Check that the relation's data doesn't contain any items with the
@@ -152,12 +151,13 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
 
+  std::normal_distribution<double> d(0., 1.);
   std::map<std::string, ObservationVariant> obs0 = {
-      {"School", "MIT"}, {"Degree", "PHD"}, {"City", "Cambrij"}};
+      {"School", d(prng)}, {"Degree", "PHD"}, {"City", d(prng)}};
   std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
+      {"School", d(prng)}, {"Degree", "MD"}, {"City", d(prng)}};
   std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
+      {"School", d(prng)}, {"Degree", "PT"}, {"City", d(prng)}};
 
   gendb.incorporate(&prng, std::make_pair(0, obs0));
   gendb.incorporate(&prng, std::make_pair(1, obs1));
@@ -268,21 +268,21 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Physician", "school", 1, true);
+  test_unincorporate_reference_helper(gendb, "Physician", "school", 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Record", "location", 2, true);
+  test_unincorporate_reference_helper(gendb, "Record", "location", 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
+  test_unincorporate_reference_helper(gendb, "Practice", "city", 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_logp_score) {
@@ -299,25 +299,32 @@ BOOST_AUTO_TEST_CASE(test_update_reference_items) {
 
   std::string class_name = "Practice";
   std::string ref_field = "city";
-  int class_item = 1;
+  int class_item = 0;
 
   BOOST_TEST(
       gendb.reference_values.contains({class_name, ref_field, class_item}));
 
-  auto unincorporated_items =
-      gendb.unincorporate_reference(class_name, ref_field, class_item);
-  BOOST_TEST(unincorporated_items.size() > 0);
+  std::map<std::string, std::vector<size_t>> domain_inds =
+      gendb.get_domain_inds(class_name, ref_field);
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_value_map;
+  std::map<std::tuple<int, std::string, T_item>, int>
+      unincorporated_from_domains;
+  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+                                stored_value_map, unincorporated_from_domains);
+  BOOST_TEST(stored_value_map.size() > 0);
 
   int new_ref_val = 7;
   auto updated_items = gendb.update_reference_items(
-      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+      stored_value_map, class_name, ref_field, class_item, new_ref_val);
 
-  BOOST_TEST(unincorporated_items.size() == updated_items.size());
+  BOOST_TEST(stored_value_map.size() == updated_items.size());
   // All of the items should have been updated.
   for (const auto& [rel_name, vals] : updated_items) {
-    BOOST_TEST(vals.size() == unincorporated_items.at(rel_name).size());
+    BOOST_TEST(vals.size() == stored_value_map.at(rel_name).size());
     for (const auto& [items, v] : vals) {
-      BOOST_TEST(!unincorporated_items.at(rel_name).contains(items));
+      BOOST_TEST(!stored_value_map.at(rel_name).contains(items));
     }
   }
 }
@@ -325,21 +332,28 @@ BOOST_AUTO_TEST_CASE(test_update_reference_items) {
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, 5);
 
   std::string class_name = "Record";
   std::string ref_field = "location";
-  int class_item = 1;
+  int class_item = 0;
 
   double init_logp = gendb.logp_score();
-  auto unincorporated_items =
-      gendb.unincorporate_reference(class_name, ref_field, class_item);
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_value_map;
+  std::map<std::string, std::vector<size_t>> domain_inds =
+      gendb.get_domain_inds(class_name, ref_field);
+  std::map<std::tuple<int, std::string, T_item>, int>
+      unincorporated_from_domains;
+  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+                                stored_value_map, unincorporated_from_domains);
 
   int old_ref_val =
       gendb.reference_values.at({class_name, ref_field, class_item});
   int new_ref_val = (old_ref_val == 0) ? 1 : old_ref_val - 1;
   auto updated_items = gendb.update_reference_items(
-      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+      stored_value_map, class_name, ref_field, class_item, new_ref_val);
 
   gendb.incorporate_reference(&prng, updated_items);
   // Updating the reference values should change logp_score (though note that
@@ -349,28 +363,180 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   BOOST_TEST(gendb.logp_score() != init_logp, tt::tolerance(1e-6));
 }
 
-BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
+BOOST_AUTO_TEST_CASE(test_transition_reference) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
 
   std::string class_name = "Record";
-  std::string ref_field = "location";
+  std::string ref_field = "physician";
   int class_item = 1;
 
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+
+  class_name = "Physician";
+  ref_field = "school";
+  class_item = 0;
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+
+  BOOST_TEST(gendb.logp_score() < 0.);
+}
+
+BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb, 20);
+
+  std::string class_name = "Physician";
+  std::string ref_field = "school";
+  std::string ref_class = "School";
+
+  // Find a non-singleton reference value.
+  int refval = -1;
+  int class_item = 0;
+  int init_refval_obs;
+  int candidate_refval;
+  while (true) {
+    candidate_refval =
+        gendb.reference_values.at({class_name, ref_field, class_item});
+    init_refval_obs =
+        gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size();
+    if (init_refval_obs > 1) {
+      refval = candidate_refval;
+      break;
+    }
+    ++class_item;
+  }
+  assert(refval > -1);
+
+  double init_logpscore = gendb.logp_score();
+
+  // Unincorporate the reference value.
+  auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_values;
+  std::map<std::tuple<int, std::string, T_item>, int>
+      unincorporated_from_domains;
+  std::map<std::tuple<std::string, std::string, int>, int>
+      unincorporated_from_entity_crps;
+  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+                                stored_values, unincorporated_from_domains);
+  int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
+  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+
+  // Check that the reference value was unincorporated from its entity CRP.
+  BOOST_TEST(gendb.domain_crps.at(ref_class).tables.size() =
+                 init_refval_obs - 1);
+
+  // Test that the class item/reference value were unincorporated from the
+  // relations. The reference value should still be in the domain CRP since it
+  // wasn't a singleton.
+  for (const std::string& r : gendb.class_to_relations.at(class_name)) {
+    auto f = [&](auto rel) {
+      for (auto& [items, val] : rel->get_data()) {
+        BOOST_TEST(items.back() != class_item);
+      }
+    };
+    std::visit(f, gendb.hirm->get_relation(r));
+
+    IRM* irm = gendb.hirm->relation_to_irm(r);
+    BOOST_TEST(irm->has_observation(ref_class, class_item));
+  }
+
+  double baseline_logp = gendb.logp_score();
+
+  // Logp score should be unchanged after re-incorporating.
+  gendb.reincorporate_new_refval(
+      class_name, ref_field, class_item, refval, ref_class, stored_values,
+      unincorporated_from_domains, unincorporated_from_entity_crps);
+  BOOST_TEST(
+      init_logpscore - baseline_logp == gendb.logp_score() - baseline_logp,
+      tt::tolerance(1e-3));
+}
+
+BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb, 20);
+
+  std::string class_name = "Practice";
+  std::string ref_field = "city";
+  std::string ref_class = "City";
+
+  // Find a non-singleton reference value.
+  int non_singleton_refval = -1;
+  int class_item = 0;
+  int candidate_refval;
+  while (true) {
+    candidate_refval =
+        gendb.reference_values.at({class_name, ref_field, class_item});
+    if (gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size() >
+        1) {
+      non_singleton_refval = candidate_refval;
+      break;
+    }
+    ++class_item;
+  }
+  assert(non_singleton_refval > -1);
+
+  // Now find the singleton value.
+  int refval = -1;
+  std::unordered_map<int, double> crp_dist =
+      gendb.domain_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
+  for (auto [t, w] : crp_dist) {
+    if (!gendb.domain_crps[ref_class].tables.contains(t)) {
+      refval = t;
+    }
+  }
+  assert(refval != -1);
+
   double init_logp = gendb.logp_score();
-  auto unincorporated_items =
-      gendb.unincorporate_reference(class_name, ref_field, class_item);
-  int new_ref_val =
-      gendb.reference_values.at({class_name, ref_field, class_item});
 
-  auto updated_items = gendb.update_reference_items(
-      unincorporated_items, class_name, ref_field, class_item, new_ref_val);
+  auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_values;
+  std::map<std::tuple<int, std::string, T_item>, int>
+      unincorporated_from_domains;
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      ref_class_relation_stored_values;
+  std::map<std::tuple<std::string, std::string, int>, int>
+      unincorporated_from_entity_crps;
+  int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
+  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+                                stored_values, unincorporated_from_domains);
+  gendb.unincorporate_singleton(class_name, ref_field, class_item, ref_class,
+                                ref_class_relation_stored_values,
+                                unincorporated_from_domains,
+                                unincorporated_from_entity_crps);
 
-  // Logp_score shouldn't change if the same items/values are
-  // unincorporated/incorporated back into the same clusters.
-  gendb.incorporate_reference(&prng, updated_items, true);
-  BOOST_TEST(gendb.logp_score() == init_logp, tt::tolerance(1e-6));
+  double baseline_logp = gendb.logp_score();
+
+  // The entity CRP doesn't contain the reference value.
+  BOOST_TEST(!gendb.domain_crps.at(ref_class).tables.contains(refval));
+
+  // Test that the reference value was unincorporated from IRM domain CRPs.
+  for (auto [code, irm] : gendb.hirm->irms) {
+    for (auto [name, d] : irm->domains) {
+      if (name == ref_class) {
+        BOOST_TEST(!d->items.contains(refval));
+      }
+    }
+  }
+
+  gendb.reincorporate_new_refval(
+      class_name, ref_field, class_item, refval, ref_class, stored_values,
+      unincorporated_from_domains, unincorporated_from_entity_crps);
+  // Logp score should be different.
+  BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
+             tt::tolerance(1e-3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

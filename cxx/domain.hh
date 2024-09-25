@@ -21,6 +21,9 @@ class Domain {
     if (items.contains(item)) {
       assert(table == -1);
     } else {
+      if (table == -1) {
+        assert(prng != nullptr);
+      }
       items.insert(item);
       int t = 0 <= table ? table : crp.sample(prng);
       crp.incorporate(item, t);

@@ -37,8 +37,13 @@ class Relation {
 
   virtual double logp_score() const = 0;
 
-  virtual double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
+  virtual double cluster_or_prior_logp(std::mt19937* prng,
+                                       const std::vector<int>& z,
                                        const ValueType& value) const = 0;
+
+  virtual double cluster_or_prior_logp_from_items(
+      std::mt19937* prng, const T_items& items,
+      const ValueType& value) const = 0;
 
   virtual ValueType sample_at_items(std::mt19937* prng,
                                     const T_items& items) const = 0;
@@ -47,6 +52,10 @@ class Relation {
   // Returns the sampled value.
   virtual ValueType sample_and_incorporate(std::mt19937* prng,
                                            const T_items& items) = 0;
+
+  virtual void cleanup_data(const T_items& items) = 0;
+
+  virtual void cleanup_clusters() = 0;
 
   virtual void incorporate_to_cluster(const T_items& items,
                                       const ValueType& value) = 0;

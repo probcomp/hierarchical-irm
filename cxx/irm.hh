@@ -7,9 +7,9 @@
 #include <unordered_set>
 
 #include "clean_relation.hh"
+#include "distributions/get_distribution.hh"
 #include "noisy_relation.hh"
 #include "transition_latent_value.hh"
-#include "distributions/get_distribution.hh"
 
 using T_relation = std::variant<T_clean_relation, T_noisy_relation>;
 using RelationVariant = std::variant<Relation<std::string>*, Relation<double>*,
@@ -26,7 +26,8 @@ class IRM {
       relations;  // map from name to Relation
   std::unordered_map<std::string, std::unordered_set<std::string>>
       domain_to_relations;  // reverse map
-  std::unordered_map<std::string, std::vector<std::string>> base_to_noisy_relations;
+  std::unordered_map<std::string, std::vector<std::string>>
+      base_to_noisy_relations;
 
   IRM(const T_schema& init_schema);
 
@@ -36,6 +37,8 @@ class IRM {
                    const T_items& items, ObservationVariant value);
 
   void unincorporate(const std::string& r, const T_items& items);
+
+  bool has_observation(const std::string& domain, const T_item& item) const;
 
   void transition_cluster_assignments_all(std::mt19937* prng);
 
@@ -48,7 +51,8 @@ class IRM {
 
   // Updates the latent values contained in relation `r` using Gibbs sampling.
   // `r` must be the base relation of at least one noisy relation.
-  void transition_latent_values_relation(std::mt19937* prng, const std::string& r);
+  void transition_latent_values_relation(std::mt19937* prng,
+                                         const std::string& r);
 
   double logp(
       const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
@@ -80,4 +84,5 @@ class IRM {
 
 // Run a single step of inference on an IRM model.
 void single_step_irm_inference(std::mt19937* prng, IRM* irm, double& t_total,
-                               bool verbose, int num_theta_steps = 10, bool transition_latents = true);
+                               bool verbose, int num_theta_steps = 10,
+                               bool transition_latents = true);

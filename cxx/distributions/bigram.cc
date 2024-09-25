@@ -36,8 +36,8 @@ std::vector<size_t> Bigram::string_to_indices(const std::string& str) const {
 
 void Bigram::incorporate(const std::string& x, double weight) {
   if ((max_length > 0) && (x.length() > max_length)) {
-    printf("String %s has length %ld, but max length is %ld.\n",
-           x.c_str(), x.length(), max_length);
+    printf("String %s has length %ld, but max length is %ld.\n", x.c_str(),
+           x.length(), max_length);
     std::exit(1);
   }
   const std::vector<size_t> indices = string_to_indices(x);
@@ -95,6 +95,7 @@ std::string Bigram::sample(std::mt19937* prng) {
     transition_dists[current_ind].incorporate(next_ind);
     current_ind = next_ind;
   }
+  N += 1;  // Correct for calling unincorporate below.
   unincorporate(sampled_string);
   return sampled_string;
 }

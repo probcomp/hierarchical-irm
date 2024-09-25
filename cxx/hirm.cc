@@ -18,7 +18,8 @@ HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
         continue;
       }
 
-      const std::string base_rel = std::get<T_noisy_relation>(relation).base_relation;
+      const std::string base_rel =
+          std::get<T_noisy_relation>(relation).base_relation;
       if (schema.contains(base_rel)) {
         this->add_relation(prng, name, relation);
         added_a_relation = true;
@@ -335,8 +336,9 @@ double HIRM::logp_score() const {
   return logp_score_crp + logp_score_irms;
 }
 
-std::string HIRM::sample_and_incorporate_relation(
-    std::mt19937* prng, const std::string& r, const T_items& items) {
+std::string HIRM::sample_and_incorporate_relation(std::mt19937* prng,
+                                                  const std::string& r,
+                                                  const T_items& items) {
   // If `r` is a noisy relation, first sample and incorporate to the base
   // relation if necessary.
   if (T_noisy_relation* trel = std::get_if<T_noisy_relation>(&schema.at(r))) {
@@ -385,7 +387,8 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
             [&](auto rel) { return rel->get_data().contains(entities); },
             get_relation(r));
         if (!r_contains_items) {
-          std::string value = sample_and_incorporate_relation(prng, r, entities);
+          std::string value =
+              sample_and_incorporate_relation(prng, r, entities);
           ++num_samples;
           obs[r].push_back(std::make_tuple(entities, value));
         } else {
@@ -401,7 +404,8 @@ T_encoded_observations HIRM::sample_and_incorporate(std::mt19937* prng, int n) {
   return obs;
 }
 
-void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const {
+void HIRM::initialize_domain_crps(
+    std::map<std::string, CRP>* domain_crps) const {
   // Initialize the domain_crps from all the data across all the IRM's.
   // If this ends up being used a lot more, we should
   // move the domain_crps into the HIRM and maintain them when incorporating
@@ -413,6 +417,12 @@ void HIRM::initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const
         (*domain_crps)[domain_name].incorporate(crp_item, item);
       }
     }
+  }
+}
+
+void HIRM::cleanup_relation_clusters() {
+  for (const auto& [name, relation] : schema) {
+    std::visit([&](auto rel) { rel->cleanup_clusters(); }, get_relation(name));
   }
 }
 

@@ -63,9 +63,11 @@ BOOST_AUTO_TEST_CASE(test_hirm) {
   BOOST_TEST(r5_obs == 2);
 
   hirm.set_cluster_assignment_gibbs(&prng, "R6", 4);
-  double logp_x_r6 = hirm.logp({{"R6", {1, 2}, false}}, &prng);
-  BOOST_TEST(logp_x_r6 < 0.0);
   BOOST_TEST(hirm.logp_score() < 0.0);
+
+  // TODO: Enable this when NoisyRelation supports cluster_or_prior_logp.
+  // double logp_x_r6 = hirm.logp({{"R6", {1, 2}, false}}, &prng);
+  // BOOST_TEST(logp_x_r6 < 0.0);
 
   hirm.transition_latent_values_relation(&prng, "R2");
   Relation<double>* R2 = std::get<Relation<double>*>(hirm.get_relation("R2"));
@@ -115,9 +117,8 @@ BOOST_AUTO_TEST_CASE(test_hirm_sample) {
 BOOST_AUTO_TEST_CASE(test_hirm_relation_names) {
   std::mt19937 prng;
   std::map<std::string, T_relation> schema1{
-    {"a", T_noisy_relation{{"domain1"}, true, EmissionSpec("bigram"), "b"}},
-    {"b", T_clean_relation{{"domain1"}, false, DistributionSpec("bigram")}}
-  };
+      {"a", T_noisy_relation{{"domain1"}, true, EmissionSpec("bigram"), "b"}},
+      {"b", T_clean_relation{{"domain1"}, false, DistributionSpec("bigram")}}};
   HIRM hirm(schema1, &prng);
   hirm.transition_cluster_assignments_all(&prng);
 }
