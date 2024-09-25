@@ -34,6 +34,7 @@ class GenDB {
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
 
+  // Return the log probability of the data incorporated into the GenDB so far.
   double logp_score() const;
 
   // Incorporates a row of observed data into the GenDB instance.
