@@ -53,10 +53,9 @@ void incorporate_observations(std::mt19937* prng,
 // Sample a single "row" into *query_values.  A value is sampled into
 // (*query_values)[f] for every query field in the schema.
 void make_pclean_sample(
-    std::mt19937* prng, GenDB* gendb,
+    std::mt19937* prng, GenDB* gendb, int class_item,
     std::map<std::string, std::string> *query_values) {
   const std::string& record_class = gendb->schema.query.record_class;
-  int class_item = gendb->domain_crps[record_class].sample(prng);
   for (const auto& [name, query_field] : gendb->schema.query.fields) {
     T_items entities = gendb->sample_class_ancestors(
         prng, gendb->schema.query.record_class, class_item);
@@ -66,12 +65,12 @@ void make_pclean_sample(
   }
 }
 
-DataFrame make_pclean_samples(int num_samples, GenDB *gendb,
+DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
                               std::mt19937* prng) {
   DataFrame df;
   for (int i = 0; i < num_samples; i++) {
      std::map<std::string, std::string> query_values;
-     make_pclean_sample(prng, gendb, &query_values);
+     make_pclean_sample(prng, gendb, start_row + i, &query_values);
      for (const auto& [column, val] : query_values) {
        df.data[column].push_back(val);
      }

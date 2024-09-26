@@ -19,5 +19,5 @@ void incorporate_observations(std::mt19937* prng,
                               const DataFrame& df);
 
 // Return a dataframe of num_samples samples from the GenDB.
-DataFrame make_pclean_samples(int num_samples, GenDB *gendb,
+DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
                               std::mt19937* prng);
