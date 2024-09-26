@@ -58,6 +58,7 @@ Pediatrics,Harvard,MD,Seattle,WA
 
   incorporate_observations(&prng, &gendb, df);
   BOOST_TEST(gendb.domain_crps["Record"].N == 5);
+  BOOST_TEST(gendb.domain_crps["Practice"].N == 5);
 }
 
 BOOST_AUTO_TEST_CASE(test_make_pclean_samples) {

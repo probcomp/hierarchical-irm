@@ -15,14 +15,17 @@ struct SchemaTestFixture {
   SchemaTestFixture() {
     std::stringstream ss(R"""(
 class School
-  name ~ string
+  name ~ string(maxlength=60)
+  degree_dist ~ categorical(k=100)
 
 class Physician
   school ~ School
   degree ~ stringcat(strings="MD PT NP DO PHD")
+  specialty ~ stringcat(strings="Family Med:Internal Med:Physical Therapy", delim=":")
 
 class City
   name ~ string
+  state ~ stringcat(strings="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY")
 
 class Practice
   city ~ City
@@ -32,9 +35,11 @@ class Record
   location ~ Practice
 
 observe
+  physician.specialty as Specialty
   physician.school.name as School
   physician.degree as Degree
   location.city.name as City
+  location.city.name as State
   from Record
 )""");
     [[maybe_unused]] bool ok = read_schema(ss, &schema);
@@ -48,15 +53,30 @@ observe
 
 void setup_gendb(std::mt19937* prng, GenDB& gendb) {
   std::map<std::string, ObservationVariant> obs0 = {
+      {"Specialty", "Family Med"},
       {"School", "Massachusetts Institute of Technology"},
       {"Degree", "PHD"},
-      {"City", "Cambrij"}};
+      {"City", "Cambrij"},
+      {"State", "WA"}
+  };
   std::map<std::string, ObservationVariant> obs1 = {
-      {"School", "MIT"}, {"Degree", "MD"}, {"City", "Cambridge"}};
+    {"Specialty", "Internal Med"},
+    {"School", "MIT"},
+    {"Degree", "MD"},
+    {"City", "Cambridge"},
+    {"State", "MA"}};
   std::map<std::string, ObservationVariant> obs2 = {
-      {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
+    {"Specialty", "Physical Therapy"},
+    {"School", "Tufts"},
+    {"Degree", "PT"},
+    {"City", "Boston"},
+    {"State", "MA"}};
   std::map<std::string, ObservationVariant> obs3 = {
-      {"School", "Boston University"}, {"Degree", "PhD"}, {"City", "Boston"}};
+      {"Specialty", "Internal Med"},
+      {"School", "Boston University"},
+      {"Degree", "PhD"},
+      {"City", "Boston"},
+      {"State", "MA"}};
 
   int i = 0;
   while (i < 30) {
@@ -370,6 +390,11 @@ class City
 class Person
   birth_city ~ City
   home_city ~ City
+
+observe
+  birth_city.name as BirthCity
+  home_city.name as HomeCity
+  from Person
 )""");
   PCleanSchema schema;
   [[maybe_unused]] bool ok = read_schema(ss, &schema);
@@ -403,6 +428,11 @@ class Practice
 class Physician
   practice ~ Practice
   school ~ School
+
+observe
+  practice.location.name as PracticeCity
+  school.location.name as SchoolCity
+  from Physician
 )""");
   PCleanSchema schema;
   [[maybe_unused]] bool ok = read_schema(ss, &schema);

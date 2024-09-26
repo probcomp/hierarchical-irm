@@ -60,6 +60,9 @@ void GenDB::incorporate(
     // Incorporate the items/value into the query relation.
     incorporate_query_relation(prng, query_rel, items, val);
   }
+
+  // Add to the record_class's CRP.
+  domain_crps[schema.query.record_class].incorporate(id, id);
 }
 
 // This function walks the class_path of the query, populates the global
