@@ -55,10 +55,11 @@ void incorporate_observations(std::mt19937* prng,
 void make_pclean_sample(
     std::mt19937* prng, GenDB* gendb, int class_item,
     std::map<std::string, std::string> *query_values) {
-  const std::string& record_class = gendb->schema.query.record_class;
   for (const auto& [name, query_field] : gendb->schema.query.fields) {
-    T_items entities = gendb->sample_class_ancestors(
-        prng, gendb->schema.query.record_class, class_item);
+    T_items entities = gendb->sample_entities_relation(
+        prng, gendb->schema.query.record_class,
+        query_field.class_path.begin(), query_field.class_path.end(),
+        class_item);
 
     (*query_values)[query_field.name] = gendb->hirm->sample_and_incorporate_relation(
         prng, query_field.name, entities);

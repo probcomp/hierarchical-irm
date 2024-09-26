@@ -156,8 +156,10 @@ observe
   BOOST_TEST(read_schema(ss, &pclean_schema));
 
   GenDB gendb(&prng, pclean_schema);
+  printf("debug: after gendb\n");
 
-  DataFrame samples = make_pclean_samples(10, &gendb, &prng);
+  DataFrame samples = make_pclean_samples(10, 0, &gendb, &prng);
+  printf("debug: after make_pclean_samples\n");
   BOOST_TEST(samples.data["Specialty"].size() == 10);
   BOOST_TEST(samples.data["School"].size() == 10);
   BOOST_TEST(samples.data["Degree"].size() == 10);
