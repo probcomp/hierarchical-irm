@@ -1,6 +1,8 @@
 // Copyright 2021 MIT Probabilistic Computing Project
 // Apache License, Version 2.0, refer to LICENSE.txt
 
+#include <iostream>
+
 #include "hirm.hh"
 
 HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
@@ -40,6 +42,13 @@ HIRM::HIRM(const T_schema& _schema, std::mt19937* prng) {
 
 void HIRM::incorporate(std::mt19937* prng, const std::string& r,
                        const T_items& items, const ObservationVariant& value) {
+  std::visit([&](const auto &v) {
+    std::cout << "DEBUG: incorporating val [" << v << "] into HIRM relation " << r << "\n"; }, value);
+  std::cout << "with items ";
+  for (const auto& i : items) {
+    std:: cout << i << " ";
+  }
+  std::cout << "\n";
   IRM* irm = relation_to_irm(r);
   irm->incorporate(prng, r, items, value);
 }

@@ -2,13 +2,15 @@
 // See LICENSE.txt
 
 #include <algorithm>
+#include <cstdlib>
 #include <cassert>
 #include "distributions/stringcat.hh"
 
 int StringCat::string_to_index(const std::string& s) const {
   auto it = std::find(strings.begin(), strings.end(), s);
   if (it == strings.end()) {
-    assert(false);
+    printf("String %s not in StringCat's list of strings\n", s.c_str());
+    std::exit(1);
   }
   return it - strings.begin();
 }
