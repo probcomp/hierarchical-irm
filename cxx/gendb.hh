@@ -38,9 +38,13 @@ class GenDB {
   double logp_score() const;
 
   // Incorporates a row of observed data into the GenDB instance.
+  // When sample_new = True, ids for unseen entities are created by
+  // sampling from the domain CRPs.  When sample_new = False, new ids
+  // are created for such entities.
   void incorporate(
       std::mt19937* prng,
-      const std::pair<int, std::map<std::string, ObservationVariant>>& row);
+      const std::pair<int, std::map<std::string, ObservationVariant>>& row,
+      bool sample_new);
 
   // Incorporates a single element of a row of observed data.
   void incorporate_query_relation(std::mt19937* prng,
@@ -53,18 +57,20 @@ class GenDB {
   void sample_and_incorporate_reference(
       std::mt19937* prng,
       const std::tuple<std::string, std::string, int>& ref_key,
-      const std::string& ref_class);
+      const std::string& ref_class, bool sample_new);
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.
   T_items sample_entities_relation(
       std::mt19937* prng, const std::string& class_name,
       std::vector<std::string>::const_iterator class_path_start,
-      std::vector<std::string>::const_iterator class_path_end, int class_item);
+      std::vector<std::string>::const_iterator class_path_end,
+      int class_item, bool sample_new);
 
   // Sample items from a class' ancestors (recursive reference fields).
-  T_items sample_class_ancestors(std::mt19937* prng,
-                                 const std::string& class_name, int class_item);
+  T_items sample_class_ancestors(
+      std::mt19937* prng, const std::string& class_name, int class_item,
+      bool sample_new);
 
   // Populates "items" with entities by walking the DAG of reference indices,
   // starting with "ind".

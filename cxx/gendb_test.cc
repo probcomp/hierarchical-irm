@@ -46,7 +46,7 @@ observe
   PCleanSchema schema;
 };
 
-void setup_gendb(std::mt19937* prng, GenDB& gendb) {
+void setup_gendb(std::mt19937* prng, GenDB& gendb, bool sample_new) {
   std::map<std::string, ObservationVariant> obs0 = {
       {"School", "Massachusetts Institute of Technology"},
       {"Degree", "PHD"},
@@ -60,10 +60,10 @@ void setup_gendb(std::mt19937* prng, GenDB& gendb) {
 
   int i = 0;
   while (i < 30) {
-    gendb.incorporate(prng, {i++, obs0});
-    gendb.incorporate(prng, {i++, obs1});
-    gendb.incorporate(prng, {i++, obs2});
-    gendb.incorporate(prng, {i++, obs3});
+    gendb.incorporate(prng, {i++, obs0}, sample_new);
+    gendb.incorporate(prng, {i++, obs1}, sample_new);
+    gendb.incorporate(prng, {i++, obs2}, sample_new);
+    gendb.incorporate(prng, {i++, obs3}, sample_new);
   }
 }
 
@@ -159,12 +159,12 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   std::map<std::string, ObservationVariant> obs2 = {
       {"School", "Tufts"}, {"Degree", "PT"}, {"City", "Boston"}};
 
-  gendb.incorporate(&prng, std::make_pair(0, obs0));
-  gendb.incorporate(&prng, std::make_pair(1, obs1));
-  gendb.incorporate(&prng, std::make_pair(2, obs2));
-  gendb.incorporate(&prng, std::make_pair(3, obs0));
-  gendb.incorporate(&prng, std::make_pair(4, obs1));
-  gendb.incorporate(&prng, std::make_pair(5, obs2));
+  gendb.incorporate(&prng, std::make_pair(0, obs0), true);
+  gendb.incorporate(&prng, std::make_pair(1, obs1), true);
+  gendb.incorporate(&prng, std::make_pair(2, obs2), true);
+  gendb.incorporate(&prng, std::make_pair(3, obs0), true);
+  gendb.incorporate(&prng, std::make_pair(4, obs1), true);
+  gendb.incorporate(&prng, std::make_pair(5, obs2), true);
 
   // Check that the structure of reference_values is as expected.
   // School and City are not contained in reference_values because they
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
 
   // Each vector of items in a relation's data is entirely determined by
   // its last value (the primary key of the class lowest in the hierarchy).
@@ -267,35 +267,35 @@ BOOST_AUTO_TEST_CASE(test_get_relation_items) {
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
   test_unincorporate_reference_helper(gendb, "Physician", "school", 1, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
   test_unincorporate_reference_helper(gendb, "Record", "location", 2, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
 }
 
 BOOST_AUTO_TEST_CASE(test_logp_score) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
   BOOST_TEST(gendb.logp_score() < 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
 
   std::string class_name = "Practice";
   std::string ref_field = "city";
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(test_update_reference_items) {
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
 
   std::string class_name = "Record";
   std::string ref_field = "location";
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, true);
 
   std::string class_name = "Record";
   std::string ref_field = "location";

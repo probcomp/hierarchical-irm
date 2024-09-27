@@ -40,7 +40,8 @@ double GenDB::logp_score() const {
 
 void GenDB::incorporate(
     std::mt19937* prng,
-    const std::pair<int, std::map<std::string, ObservationVariant>>& row) {
+    const std::pair<int, std::map<std::string, ObservationVariant>>& row,
+    bool sample_new) {
   int id = row.first;
 
   // Maps a query relation name to an observed value.
@@ -53,7 +54,8 @@ void GenDB::incorporate(
         schema.query.fields.at(query_rel).class_path;
     T_items items =
         sample_entities_relation(prng, schema.query.record_class,
-                                 class_path.cbegin(), class_path.cend(), id);
+                                 class_path.cbegin(), class_path.cend(), id,
+                                 sample_new);
 
     // Incorporate the items/value into the query relation.
     incorporate_query_relation(prng, query_rel, items, val);
@@ -67,13 +69,14 @@ void GenDB::incorporate(
 T_items GenDB::sample_entities_relation(
     std::mt19937* prng, const std::string& class_name,
     std::vector<std::string>::const_iterator class_path_start,
-    std::vector<std::string>::const_iterator class_path_end, int class_item) {
+    std::vector<std::string>::const_iterator class_path_end,
+    int class_item, bool sample_new) {
   if (class_path_end - class_path_start == 1) {
     // The last item in class_path is the class from which the queried attribute
     // is observed (for which there's a corresponding clean relation, observing
     // the attribute from the class). We need to DFS-traverse the class's
     // parents, similar to PCleanSchemaHelper::compute_domains_for.
-    return sample_class_ancestors(prng, class_name, class_item);
+    return sample_class_ancestors(prng, class_name, class_item, sample_new);
   }
 
   // These are noisy relation domains along the path from the latent cleanly-
@@ -88,11 +91,12 @@ T_items GenDB::sample_entities_relation(
   std::tuple<std::string, std::string, int> ref_key = {class_name, ref_field,
                                                        class_item};
   if (!reference_values.contains(ref_key)) {
-    sample_and_incorporate_reference(prng, ref_key, ref_class);
+    sample_and_incorporate_reference(prng, ref_key, ref_class, sample_new);
   }
   T_items items =
-      sample_entities_relation(prng, ref_class, ++class_path_start,
-                               class_path_end, reference_values.at(ref_key));
+      sample_entities_relation(
+          prng, ref_class, ++class_path_start, class_path_end,
+          reference_values.at(ref_key), sample_new);
   // The order of the items corresponds to the order of the relation's domains,
   // with the class (domain) corresponding to the primary key placed last on the
   // list.
@@ -103,9 +107,14 @@ T_items GenDB::sample_entities_relation(
 void GenDB::sample_and_incorporate_reference(
     std::mt19937* prng,
     const std::tuple<std::string, std::string, int>& ref_key,
-    const std::string& ref_class) {
+    const std::string& ref_class, bool sample_new) {
   auto [class_name, ref_field, class_item] = ref_key;
-  int new_val = domain_crps[ref_class].sample(prng);
+  int new_val;
+  if (sample_new) {
+    new_val = domain_crps[ref_class].sample(prng);
+  } else {
+    new_val = domain_crps[ref_class].tables.rbegin()->first + 1;
+  }
 
   // Generate a unique ID for the sample and incorporate it into the
   // domain CRP.
@@ -150,7 +159,7 @@ void GenDB::incorporate_query_relation(std::mt19937* prng,
 // reference_values table/entity CRPs) if necessary.
 T_items GenDB::sample_class_ancestors(std::mt19937* prng,
                                       const std::string& class_name,
-                                      int class_item) {
+                                      int class_item, bool sample_new) {
   T_items items;
   PCleanClass c = schema.classes.at(class_name);
 
@@ -161,10 +170,11 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
       std::tuple<std::string, std::string, int> ref_key = {class_name, name,
                                                            class_item};
       if (!reference_values.contains(ref_key)) {
-        sample_and_incorporate_reference(prng, ref_key, cv->class_name);
+        sample_and_incorporate_reference(
+            prng, ref_key, cv->class_name, sample_new);
       }
-      T_items ref_items = sample_class_ancestors(prng, cv->class_name,
-                                                 reference_values.at(ref_key));
+      T_items ref_items = sample_class_ancestors(
+          prng, cv->class_name, reference_values.at(ref_key), sample_new);
       items.insert(items.end(), ref_items.begin(), ref_items.end());
     }
   }
