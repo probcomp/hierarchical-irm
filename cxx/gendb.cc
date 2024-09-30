@@ -33,10 +33,8 @@ GenDB::GenDB(std::mt19937* prng, const PCleanSchema& schema_,
 double GenDB::logp_score() const {
   double domain_crps_logp = 0;
   for (const auto& [d, crp] : domain_crps) {
-    printf("Debug: domain %s has crp score %f\n", d.c_str(), crp.logp_score());
     domain_crps_logp += crp.logp_score();
   }
-  printf("Debug: hirm has score %f\n", hirm->logp_score());
   return domain_crps_logp + hirm->logp_score();
 }
 
@@ -117,7 +115,6 @@ void GenDB::sample_and_incorporate_reference(
   } else {
     new_val = domain_crps[ref_class].tables.rbegin()->first + 1;
   }
-  printf("Debug: in sample_and_incorporate_reference, sample_new = %d new_val = %d\n", sample_new, new_val);
 
   // Generate a unique ID for the sample and incorporate it into the
   // domain CRP.
