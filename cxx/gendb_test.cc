@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
   std::string ref_field = "location";
   int class_item = 1;
 
-  double init_logp = gendb.logp_score();
+  // double init_logp = gendb.logp_score();
   auto unincorporated_items =
       gendb.unincorporate_reference(class_name, ref_field, class_item);
   int new_ref_val =
