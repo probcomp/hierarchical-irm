@@ -328,9 +328,11 @@ double HIRM::logp(
 
 double HIRM::logp_score() const {
   double logp_score_crp = crp.logp_score();
+  printf("Debug: HIRM log_score_crp = %f\n", logp_score_crp);
   double logp_score_irms = 0.0;
   for (const auto& [table, irm] : irms) {
     logp_score_irms += irm->logp_score();
+    printf("Debug: HIRM table %d score = %f\n", table, irm->logp_score());
   }
   return logp_score_crp + logp_score_irms;
 }
