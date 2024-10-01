@@ -22,7 +22,8 @@ class GenDB {
   // This data structure contains entity sets and linkages. Semantics are
   // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
   // where primary_key and ref_val are (integer) entity IDs.
-  std::map<std::tuple<std::string, std::string, int>, int> reference_values;
+  std::map<std::string, std::map<std::pair<std::string, int>, int>>
+      reference_values;
 
   HIRM* hirm;  // Owned by the GenDB instance.
 
@@ -54,9 +55,8 @@ class GenDB {
   // Samples a reference value and stores it in reference_values and the
   // relevant domain CRP.
   void sample_and_incorporate_reference(
-      std::mt19937* prng,
-      const std::tuple<std::string, std::string, int>& ref_key,
-      const std::string& ref_class);
+      std::mt19937* prng, const std::string& class_name,
+      const std::pair<std::string, int>& ref_key, const std::string& ref_class);
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.
@@ -180,6 +180,10 @@ class GenDB {
   // Gibbs kernel for transitioning a reference value.
   void transition_reference(std::mt19937* prng, const std::string& class_name,
                             const std::string& ref_field, const int class_item);
+
+  // Transitions all reference fields and rows for a class and its ancestors.
+  void transition_reference_class_and_ancestors(std::mt19937* prng,
+                                                const std::string& class_name);
 
   ~GenDB();
 
