@@ -57,5 +57,8 @@ class DistributionAdapter : public Distribution<std::string> {
   void init_theta(std::mt19937* prng) { d->init_theta(prng); }
   void transition_theta(std::mt19937* prng) { d->transition_theta(prng); }
 
+  // TODO(thomaswc): Define nearest methods for the DistributionAdapter
+  // instantiations we use.
+
   ~DistributionAdapter() { delete d; }
 };

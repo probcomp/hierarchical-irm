@@ -27,4 +27,6 @@ class DirichletCategorical : public Distribution<int> {
   int sample(std::mt19937* prng);
 
   void transition_hyperparameters(std::mt19937* prng);
+
+  int nearest(const int& x) const;
 };

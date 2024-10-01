@@ -59,3 +59,14 @@ void DirichletCategorical::transition_hyperparameters(std::mt19937* prng) {
     alpha = alphas[i];
   }
 }
+
+int DirichletCategorical::nearest(const int& x) const {
+  if (x < 0) {
+    return 0;
+  }
+  // x can't be negative here, so safe to cast to size_t.
+  if (size_t(x) >= counts.size()) {
+    return counts.size() - 1;
+  }
+  return x;
+}

@@ -30,4 +30,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   auto it = std::find(strings.begin(), strings.end(), samp);
   bool found = (it != strings.end());
   BOOST_TEST(found);
+
+  BOOST_TEST(sc.nearest("test") == "test");
+  BOOST_TEST(sc.nearest("otter") == "other");
 }
