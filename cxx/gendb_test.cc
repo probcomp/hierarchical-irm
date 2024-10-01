@@ -95,11 +95,12 @@ void test_unincorporate_reference_helper(GenDB& gendb,
                                          const std::string& ref_field,
                                          const int class_item) {
   BOOST_TEST(
-      gendb.reference_values.contains({class_name, ref_field, class_item}));
+      gendb.reference_values.at(class_name).contains({ref_field, class_item}));
 
   // Store the entity of the reference class that class_name.ref_field points
   // to at class_item.
-  int ref_item = gendb.reference_values.at({class_name, ref_field, class_item});
+  int ref_item =
+      gendb.reference_values.at(class_name).at({ref_field, class_item});
 
   std::map<std::string, std::vector<size_t>> domain_inds =
       gendb.get_domain_inds(class_name, ref_field);
@@ -191,18 +192,18 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   // Check that the structure of reference_values is as expected.
   // School and City are not contained in reference_values because they
   // have no reference fields.
-  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 0}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 1}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 2}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 3}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "physician", 4}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 0}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 1}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 2}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 3}));
-  BOOST_TEST(gendb.reference_values.contains({"Record", "location", 4}));
-  BOOST_TEST(gendb.reference_values.contains({"Physician", "school", 0}));
-  BOOST_TEST(gendb.reference_values.contains({"Practice", "city", 0}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"physician", 0}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"physician", 1}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"physician", 2}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"physician", 3}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"physician", 4}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"location", 0}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"location", 1}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"location", 2}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"location", 3}));
+  BOOST_TEST(gendb.reference_values.at("Record").contains({"location", 4}));
+  BOOST_TEST(gendb.reference_values.at("Physician").contains({"school", 0}));
+  BOOST_TEST(gendb.reference_values.at("Practice").contains({"city", 0}));
 
   auto get_relation_items = [&](auto rel) {
     std::unordered_set<T_items, H_items> items;
@@ -221,10 +222,10 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 3);
     int index = i[2];
     int expected_location =
-        gendb.reference_values.at({"Record", "location", index});
+        gendb.reference_values.at("Record").at({"location", index});
     BOOST_TEST(expected_location == i[1]);
     int expected_city =
-        gendb.reference_values.at({"Practice", "city", expected_location});
+        gendb.reference_values.at("Practice").at({"city", expected_location});
     BOOST_TEST(expected_city == i[0]);
   }
 
@@ -236,7 +237,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 2);
     int index = i[1];
     int expected_school =
-        gendb.reference_values.at({"Physician", "school", index});
+        gendb.reference_values.at("Physician").at({"school", index});
     BOOST_TEST(expected_school == i[0]);
   }
 
@@ -248,7 +249,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
     BOOST_TEST(i.size() == 2);
     int index = i[1];
     int expected_school =
-        gendb.reference_values.at({"Physician", "school", index});
+        gendb.reference_values.at("Physician").at({"school", index});
     BOOST_TEST(expected_school == i[0]);
   }
 
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(test_update_reference_items) {
   int class_item = 0;
 
   BOOST_TEST(
-      gendb.reference_values.contains({class_name, ref_field, class_item}));
+      gendb.reference_values.at(class_name).contains({ref_field, class_item}));
 
   std::map<std::string, std::vector<size_t>> domain_inds =
       gendb.get_domain_inds(class_name, ref_field);
@@ -782,7 +783,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
                                 stored_value_map, unincorporated_from_domains);
 
   int old_ref_val =
-      gendb.reference_values.at({class_name, ref_field, class_item});
+      gendb.reference_values.at(class_name).at({ref_field, class_item});
   int new_ref_val = (old_ref_val == 0) ? 1 : old_ref_val - 1;
   auto updated_items = gendb.update_reference_items(
       stored_value_map, class_name, ref_field, class_item, new_ref_val);
@@ -834,7 +835,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
   int candidate_refval;
   while (true) {
     candidate_refval =
-        gendb.reference_values.at({class_name, ref_field, class_item});
+        gendb.reference_values.at(class_name).at({ref_field, class_item});
     init_refval_obs =
         gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size();
     if (init_refval_obs > 1) {
@@ -906,7 +907,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   int candidate_refval;
   while (true) {
     candidate_refval =
-        gendb.reference_values.at({class_name, ref_field, class_item});
+        gendb.reference_values.at(class_name).at({ref_field, class_item});
     if (gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size() >
         1) {
       non_singleton_refval = candidate_refval;
@@ -1094,6 +1095,13 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   // Logp score should be different. TODO: debug numerics.
   // BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
   //            tt::tolerance(1e-3));
+}
+
+BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb, 20);
+  gendb.transition_reference_class_and_ancestors(&prng, "Record");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

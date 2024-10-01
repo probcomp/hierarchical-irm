@@ -13,6 +13,29 @@
 
 class GenDB {
  public:
+<<<<<<< HEAD
+=======
+  const PCleanSchema& schema;
+
+  // TODO(emilyaf): Merge PCleanSchemaHelper and GenDB.
+  PCleanSchemaHelper schema_helper;
+
+  // This data structure contains entity sets and linkages. Semantics are
+  // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
+  // where primary_key and ref_val are (integer) entity IDs.
+  std::map<std::string, std::map<std::pair<std::string, int>, int>>
+      reference_values;
+
+  HIRM* hirm;  // Owned by the GenDB instance.
+
+  // Map keys are class names. Values are CRPs for latent entities, where the
+  // "tables" are entity IDs and the "customers" are unique identifiers of
+  // observations of that class.
+  std::map<std::string, CRP> domain_crps;
+
+  // Maps class names to relations corresponding to attributes of the class.
+  std::map<std::string, std::vector<std::string>> class_to_relations;
+>>>>>>> 9358ed2 (Finish inference_gendb method.)
 
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
@@ -41,9 +64,14 @@ class GenDB {
   // Samples a reference value and stores it in reference_values and the
   // relevant domain CRP.
   void sample_and_incorporate_reference(
+<<<<<<< HEAD
       std::mt19937* prng,
       const std::tuple<std::string, std::string, int>& ref_key,
       const std::string& ref_class, bool new_rows_have_unique_entities);
+=======
+      std::mt19937* prng, const std::string& class_name,
+      const std::pair<std::string, int>& ref_key, const std::string& ref_class);
+>>>>>>> 9358ed2 (Finish inference_gendb method.)
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.
@@ -178,6 +206,10 @@ class GenDB {
   // Gibbs kernel for transitioning a reference value.
   void transition_reference(std::mt19937* prng, const std::string& class_name,
                             const std::string& ref_field, const int class_item);
+
+  // Transitions all reference fields and rows for a class and its ancestors.
+  void transition_reference_class_and_ancestors(std::mt19937* prng,
+                                                const std::string& class_name);
 
   ~GenDB();
 
