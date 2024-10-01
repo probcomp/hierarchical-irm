@@ -3,6 +3,7 @@
 
 #include "gendb.hh"
 
+#include <iostream>
 #include <map>
 #include <random>
 #include <string>
@@ -136,9 +137,14 @@ void GenDB::sample_and_incorporate_reference(
   auto [ref_field, class_item] = ref_key;
   int new_val;
   if (new_rows_have_unique_entities) {
-    new_val = entity_crps[ref_class].max_table() + 1;
+    auto it = domain_crps[ref_class].tables.rbegin();
+    if (it == domain_crps[ref_class].tables.rend()) {
+      new_val = 0;
+    } else {
+      new_val = it->first + 1;
+    }
   } else {
-    new_val = entity_crps[ref_class].sample(prng);
+    new_val = domain_crps[ref_class].sample(prng);
   }
 
   // Generate a unique ID for the sample and incorporate it into the
@@ -236,6 +242,13 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
       T_items ref_items = sample_class_ancestors(
           prng, cv->class_name, reference_values.at(class_name).at(ref_key),
           new_rows_have_unique_entities);
+=======
+        sample_and_incorporate_reference(prng, class_name, ref_key,
+                                         cv->class_name);
+      }
+      T_items ref_items = sample_class_ancestors(
+          prng, cv->class_name, reference_values.at(class_name).at(ref_key));
+>>>>>>> 9358ed2 (Finish inference_gendb method.)
       items.insert(items.end(), ref_items.begin(), ref_items.end());
     }
   }
@@ -491,6 +504,7 @@ double GenDB::unincorporate_from_domain_cluster_relation(
   unincorporated[{irm_code, ref_class, item}] = cluster_id;
 
   // Recursively check and unincorporate the entity's ancestors.
+<<<<<<< HEAD
   if (relation_reference_indices.contains(r) &&
       relation_reference_indices.at(r).contains(ind)) {
     for (auto [name, r_ind] : relation_reference_indices.at(r).at(ind)) {
@@ -643,6 +657,11 @@ void GenDB::transition_reference(std::mt19937* prng,
                                  const std::string& ref_field,
                                  const int class_item) {
   // Get the Gibbs probabilities for the entity CRP of the reference value.
+  std::cerr << "a" << std::endl;
+  auto x = schema.classes.at(class_name);
+  std::cerr << "aa" << std::endl;
+  std::cerr << "ref field " << ref_field << std::endl;
+  // for (auto [a, b] : )
   const std::string& ref_class =
       std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
           .class_name;
@@ -654,6 +673,7 @@ void GenDB::transition_reference(std::mt19937* prng,
     return;
   }
 
+  std::cerr << "just got gibbs probs" << std::endl;
   // For each relation, get the indices (in the items vector) of the reference
   // value being transitioned.
   std::map<std::string, std::vector<size_t>> domain_inds =
@@ -708,6 +728,7 @@ void GenDB::transition_reference(std::mt19937* prng,
                                 unincorporated_from_entity_crps);
   }
 
+  std::cerr << "starting loop " << std::endl;
   // Loop over the candidate reference values and compute the logp of each.
   int i = 0;
   for (const auto& [table, n_customers] : crp_dist) {
