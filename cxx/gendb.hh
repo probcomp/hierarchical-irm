@@ -42,6 +42,11 @@ class GenDB {
   void sample_and_incorporate_reference(
 
       std::mt19937* prng, const std::string& class_name,
+      const std::pair<std::string, int>& ref_key,
+      const std::string& ref_class);
+
+  void get_unique_entities_relation(const std::string& rel_name, const int ind,
+                                    const int class_item, T_items& items);
       const std::pair<std::string, int>& ref_key, const std::string& ref_class,
       bool new_rows_have_unique_entities);
 
@@ -50,8 +55,7 @@ class GenDB {
   T_items sample_entities_relation(
       std::mt19937* prng, const std::string& class_name,
       std::vector<std::string>::const_iterator class_path_start,
-      std::vector<std::string>::const_iterator class_path_end, int class_item,
-      bool new_rows_have_unique_entities);
+      std::vector<std::string>::const_iterator class_path_end, int class_item);
 
   // Samples and incorporates a value into all relations belonging to class_name
   // (including class attributes and noisy observations of ancestor class
@@ -62,8 +66,7 @@ class GenDB {
 
   // Sample items from a class' ancestors (recursive reference fields).
   T_items sample_class_ancestors(std::mt19937* prng,
-                                 const std::string& class_name, int class_item,
-                                 bool new_rows_have_unique_entities);
+                                 const std::string& class_name, int class_item);
 
   // Populates "items" with entities by walking the DAG of reference indices,
   // starting with "ind".
