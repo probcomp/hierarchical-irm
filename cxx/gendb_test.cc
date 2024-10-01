@@ -285,6 +285,13 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
 }
 
+BOOST_AUTO_TEST_CASE(test_unincorporate_reference_sample_new_false) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb, false);
+  test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
+}
+
 BOOST_AUTO_TEST_CASE(test_logp_score) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);

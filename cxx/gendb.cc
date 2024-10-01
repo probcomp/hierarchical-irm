@@ -113,7 +113,12 @@ void GenDB::sample_and_incorporate_reference(
   if (sample_new) {
     new_val = domain_crps[ref_class].sample(prng);
   } else {
-    new_val = domain_crps[ref_class].tables.rbegin()->first + 1;
+    auto it = domain_crps[ref_class].tables.rbegin();
+    if (it == domain_crps[ref_class].tables.rend()) {
+      new_val = 0;
+    } else {
+      new_val = it->first + 1;
+    }
   }
 
   // Generate a unique ID for the sample and incorporate it into the
