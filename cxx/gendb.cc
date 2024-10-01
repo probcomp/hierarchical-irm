@@ -405,7 +405,8 @@ void GenDB::incorporate_reference_relation(
 // appear in the data may still be incorporated into IRM domain clusters. This
 // method detects and unincorporates the entities, and stores their domain
 // cluster IDs (so that the entities can later be incorporated into the same
-// clusters, if sampled by transition_reference).
+// clusters, if sampled by transition_reference). It returns the CRP logp of any
+// unincorporated entities.
 double GenDB::unincorporate_from_domain_cluster_relation(
     const std::string& r, const int item, const int ind,
     std::map<std::tuple<int, std::string, T_item>, int>& unincorporated) {
@@ -431,7 +432,7 @@ double GenDB::unincorporate_from_domain_cluster_relation(
   if (crp.tables.contains(cluster_id)) {
     logp_adj += crp.logp(cluster_id);
   } else {
-    logp_adj += log(crp.alpha) - log(crp.N + crp.alpha);
+    logp_adj += crp.logp_new_table();
   }
   unincorporated[{irm_code, ref_class, item}] = cluster_id;
 
@@ -492,7 +493,7 @@ double GenDB::unincorporate_from_entity_cluster(
     }
   } else {
     if (is_ancestor_reference) {
-      logp_adj += log(crp.alpha) - log(crp.N + crp.alpha);
+      logp_adj += crp.logp_new_table();
     }
   }
   return logp_adj;
@@ -519,7 +520,8 @@ double GenDB::unincorporate_reference_relation_singleton(
   stored_value_map[rel_name][items] = value;
 
   rel->unincorporate_from_cluster(items);
-  std::mt19937* prng = nullptr;  // unused
+  // Unused prng, since the cluster should exist.
+  std::mt19937* prng = nullptr;
   double logp_rel = rel->cluster_or_prior_logp_from_items(prng, items, value);
   // Clean up data but leave empty clusters in case they are re-populated later.
   rel->cleanup_data(items);

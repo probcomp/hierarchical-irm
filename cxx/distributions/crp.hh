@@ -26,6 +26,8 @@ class CRP {
 
   int sample(std::mt19937* prng);
 
+  double logp_new_table() const;
+
   double logp(int table) const;
 
   double logp_score() const;

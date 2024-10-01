@@ -123,8 +123,6 @@ class CleanRelation : public Relation<T> {
       if (data_r.at(name).contains(items[i])) {
         data_r.at(name).at(items[i]).erase(items);
         if (data_r.at(name).at(items[i]).size() == 0) {
-          // It's safe to unincorporate this element since no other data point
-          // refers to it.
           data_r.at(name).erase(items[i]);
         }
       }
@@ -200,13 +198,7 @@ class CleanRelation : public Relation<T> {
     return clusters.contains(z);
   }
 
-  double cluster_or_prior_logp_from_items(std::mt19937* prng,
-                                          const T_items& items,
-                                          const ValueType& value) const {
-    if (clusters_contains(items)) {
-      T_items z = get_cluster_assignment(items);
-      return clusters.at(z)->logp(value);
-    }
+  double prior_logp(std::mt19937* prng, const ValueType& value) const {
     assert(prng != nullptr);
     Distribution<ValueType>* prior = make_new_distribution(prng);
     double prior_logp = prior->logp(value);
@@ -214,16 +206,22 @@ class CleanRelation : public Relation<T> {
     return prior_logp;
   }
 
+  double cluster_or_prior_logp_from_items(std::mt19937* prng,
+                                          const T_items& items,
+                                          const ValueType& value) const {
+    if (clusters_contains(items)) {
+      T_items z = get_cluster_assignment(items);
+      return clusters.at(z)->logp(value);
+    }
+    return prior_logp(prng, value);
+  }
+
   double cluster_or_prior_logp(std::mt19937* prng, const std::vector<int>& z,
                                const ValueType& value) const {
     if (clusters.contains(z)) {
       return clusters.at(z)->logp(value);
     }
-    assert(prng != nullptr);
-    Distribution<ValueType>* prior = make_new_distribution(prng);
-    double prior_logp = prior->logp(value);
-    delete prior;
-    return prior_logp;
+    return prior_logp(prng, value);
   }
 
   ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {

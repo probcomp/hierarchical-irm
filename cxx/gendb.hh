@@ -63,6 +63,8 @@ class GenDB {
   void get_relation_items(const std::string& rel_name, const int ind,
                           const int class_item, T_items& items) const;
 
+  // Returns a map of relation name to the indices (in the items vector) where
+  // the reference field appears.
   std::map<std::string, std::vector<size_t>> get_domain_inds(
       const std::string& class_name, const std::string& ref_field);
 
@@ -87,6 +89,8 @@ class GenDB {
                std::unordered_map<T_items, ObservationVariant, H_items>>&
           stored_value_map);
 
+  // Recursively unincorporates from base relations and stores values. Returns
+  // the logp of the unincorporated values.
   template <typename T>
   double unincorporate_reference_relation_singleton(
       Relation<T>* rel, const std::string& rel_name, const T_items& items,
@@ -111,7 +115,7 @@ class GenDB {
   T_schema make_hirm_schema();
 
   // Incorporates the items and values from stored_values (generally an output
-  // of update_reference_items).
+  // of update_reference_items). New IRM domain clusters may be added.
   void incorporate_reference(
       std::mt19937* prng,
       std::map<std::string,
@@ -131,12 +135,14 @@ class GenDB {
   int get_reference_id(const std::string& class_name,
                        const std::string& ref_field, const int class_item);
 
-  // Unincorporates entities from IRM domain clusters.
+  // Unincorporates entities from IRM domain clusters and return the logp of the
+  // unincorporated entities.
   double unincorporate_from_domain_cluster_relation(
       const std::string& r, int item, const int ind,
       std::map<std::tuple<int, std::string, T_item>, int>& unincorporated);
 
-  // Unincorporates reference values from their entity clusters.
+  // Unincorporates reference values from their entity clusters and returns the
+  // logp of the unincorporated values.
   double unincorporate_from_entity_cluster(
       const std::string& class_name, const std::string& ref_field,
       const int class_item,

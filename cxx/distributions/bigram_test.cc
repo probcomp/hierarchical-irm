@@ -25,6 +25,12 @@ BOOST_AUTO_TEST_CASE(test_simple) {
 
   bg.incorporate("fractions", 1.23);
   BOOST_TEST(bg.N == 2.23);
+
+  // Ensure that `sample` doesn't change N.
+  std::mt19937 prng;
+  double init_N = bg.N;
+  bg.sample(&prng);
+  BOOST_TEST(init_N == bg.N);
 }
 
 BOOST_AUTO_TEST_CASE(test_max_length) {

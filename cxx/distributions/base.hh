@@ -19,7 +19,8 @@ class Distribution {
   // have been previously passed to incorporate().
   virtual void unincorporate(const T& x) {
     incorporate(x, -1.0);
-    // TODO: Debug why this fails sometimes.
+    // TODO: Debug why this fails sometimes, e.g. for the bigram_string
+    // emission. 
     // assert(N >= 0);
   }
 

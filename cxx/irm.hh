@@ -38,6 +38,7 @@ class IRM {
 
   void unincorporate(const std::string& r, const T_items& items);
 
+  // Returns true if domain contains item.
   bool has_observation(const std::string& domain, const T_item& item) const;
 
   void transition_cluster_assignments_all(std::mt19937* prng);

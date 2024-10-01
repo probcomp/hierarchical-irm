@@ -45,6 +45,8 @@ int CRP::sample(std::mt19937* prng) {
   return items[idx];
 }
 
+double CRP::logp_new_table() const { return log(alpha) - log(N + alpha); }
+
 double CRP::logp(int table) const {
   auto dist = tables_weights();
   if (!dist.contains(table)) {
