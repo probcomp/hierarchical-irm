@@ -41,8 +41,11 @@ double GenDB::logp_score() const {
 void GenDB::incorporate(
     std::mt19937* prng,
     const std::pair<int, std::map<std::string, ObservationVariant>>& row,
-    bool sample_new) {
+    bool new_entities_have_new_parts) {
   int id = row.first;
+
+  // TODO:  Consider not walking the DAG when new_entities_have_new_parts =
+  // True.
 
   // Maps a query relation name to an observed value.
   std::map<std::string, ObservationVariant> vals = row.second;
@@ -55,7 +58,7 @@ void GenDB::incorporate(
     T_items items =
         sample_entities_relation(prng, schema.query.record_class,
                                  class_path.cbegin(), class_path.cend(), id,
-                                 sample_new);
+                                 new_entities_have_new_parts);
 
     // Incorporate the items/value into the query relation.
     incorporate_query_relation(prng, query_rel, items, val);
@@ -70,13 +73,14 @@ T_items GenDB::sample_entities_relation(
     std::mt19937* prng, const std::string& class_name,
     std::vector<std::string>::const_iterator class_path_start,
     std::vector<std::string>::const_iterator class_path_end,
-    int class_item, bool sample_new) {
+    int class_item, bool new_entities_have_new_parts) {
   if (class_path_end - class_path_start == 1) {
     // The last item in class_path is the class from which the queried attribute
     // is observed (for which there's a corresponding clean relation, observing
     // the attribute from the class). We need to DFS-traverse the class's
     // parents, similar to PCleanSchemaHelper::compute_domains_for.
-    return sample_class_ancestors(prng, class_name, class_item, sample_new);
+    return sample_class_ancestors(prng, class_name, class_item,
+                                  new_entities_have_new_parts);
   }
 
   // These are noisy relation domains along the path from the latent cleanly-
@@ -91,12 +95,13 @@ T_items GenDB::sample_entities_relation(
   std::tuple<std::string, std::string, int> ref_key = {class_name, ref_field,
                                                        class_item};
   if (!reference_values.contains(ref_key)) {
-    sample_and_incorporate_reference(prng, ref_key, ref_class, sample_new);
+    sample_and_incorporate_reference(prng, ref_key, ref_class,
+                                     new_entities_have_new_parts);
   }
   T_items items =
       sample_entities_relation(
           prng, ref_class, ++class_path_start, class_path_end,
-          reference_values.at(ref_key), sample_new);
+          reference_values.at(ref_key), new_entities_have_new_parts);
   // The order of the items corresponds to the order of the relation's domains,
   // with the class (domain) corresponding to the primary key placed last on the
   // list.
@@ -107,18 +112,18 @@ T_items GenDB::sample_entities_relation(
 void GenDB::sample_and_incorporate_reference(
     std::mt19937* prng,
     const std::tuple<std::string, std::string, int>& ref_key,
-    const std::string& ref_class, bool sample_new) {
+    const std::string& ref_class, bool new_entities_have_new_parts) {
   auto [class_name, ref_field, class_item] = ref_key;
   int new_val;
-  if (sample_new) {
-    new_val = domain_crps[ref_class].sample(prng);
-  } else {
+  if (new_entities_have_new_parts) {
     auto it = domain_crps[ref_class].tables.rbegin();
     if (it == domain_crps[ref_class].tables.rend()) {
       new_val = 0;
     } else {
       new_val = it->first + 1;
     }
+  } else {
+    new_val = domain_crps[ref_class].sample(prng);
   }
 
   // Generate a unique ID for the sample and incorporate it into the
@@ -164,7 +169,7 @@ void GenDB::incorporate_query_relation(std::mt19937* prng,
 // reference_values table/entity CRPs) if necessary.
 T_items GenDB::sample_class_ancestors(std::mt19937* prng,
                                       const std::string& class_name,
-                                      int class_item, bool sample_new) {
+                                      int class_item, bool new_entities_have_new_parts) {
   T_items items;
   PCleanClass c = schema.classes.at(class_name);
 
@@ -176,10 +181,11 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
                                                            class_item};
       if (!reference_values.contains(ref_key)) {
         sample_and_incorporate_reference(
-            prng, ref_key, cv->class_name, sample_new);
+            prng, ref_key, cv->class_name, new_entities_have_new_parts);
       }
       T_items ref_items = sample_class_ancestors(
-          prng, cv->class_name, reference_values.at(ref_key), sample_new);
+          prng, cv->class_name, reference_values.at(ref_key),
+          new_entities_have_new_parts);
       items.insert(items.end(), ref_items.begin(), ref_items.end());
     }
   }

@@ -46,7 +46,8 @@ observe
   PCleanSchema schema;
 };
 
-void setup_gendb(std::mt19937* prng, GenDB& gendb, bool sample_new) {
+void setup_gendb(std::mt19937* prng, GenDB& gendb,
+                 bool new_entities_have_new_parts) {
   std::map<std::string, ObservationVariant> obs0 = {
       {"School", "Massachusetts Institute of Technology"},
       {"Degree", "PHD"},
@@ -60,10 +61,10 @@ void setup_gendb(std::mt19937* prng, GenDB& gendb, bool sample_new) {
 
   int i = 0;
   while (i < 30) {
-    gendb.incorporate(prng, {i++, obs0}, sample_new);
-    gendb.incorporate(prng, {i++, obs1}, sample_new);
-    gendb.incorporate(prng, {i++, obs2}, sample_new);
-    gendb.incorporate(prng, {i++, obs3}, sample_new);
+    gendb.incorporate(prng, {i++, obs0}, new_entities_have_new_parts);
+    gendb.incorporate(prng, {i++, obs1}, new_entities_have_new_parts);
+    gendb.incorporate(prng, {i++, obs2}, new_entities_have_new_parts);
+    gendb.incorporate(prng, {i++, obs3}, new_entities_have_new_parts);
   }
 }
 
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
 
   // Each vector of items in a relation's data is entirely determined by
   // its last value (the primary key of the class lowest in the hierarchy).
@@ -267,35 +268,35 @@ BOOST_AUTO_TEST_CASE(test_get_relation_items) {
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
   test_unincorporate_reference_helper(gendb, "Physician", "school", 1, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
   test_unincorporate_reference_helper(gendb, "Record", "location", 2, true);
 }
 
 BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
 }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reference_sample_new_false) {
+BOOST_AUTO_TEST_CASE(test_unincorporate_reference_new_entities_have_new_parts) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, false);
+  setup_gendb(&prng, gendb, true);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
 }
 
 BOOST_AUTO_TEST_CASE(test_logp_score) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
   // TODO(emilyaf): Fix this test.  Right now, it is brittle and was broken
   // just by changing CRP's table from an unordered_map to a map.
   // BOOST_TEST(gendb.logp_score() < 0.0);
@@ -304,7 +305,7 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
 
   std::string class_name = "Practice";
   std::string ref_field = "city";
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE(test_update_reference_items) {
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
 
   std::string class_name = "Record";
   std::string ref_field = "location";
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
+  setup_gendb(&prng, gendb, false);
 
   std::string class_name = "Record";
   std::string ref_field = "location";
@@ -378,7 +379,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items_to_cluster) {
 
   // Logp_score shouldn't change if the same items/values are
   // unincorporated/incorporated back into the same clusters.
-  gendb.incorporate_reference(&prng, updated_items, true);
+  gendb.incorporate_reference(&prng, updated_items, false);
   // TODO(emilyaf): Fix this test.  Right now, it is brittle and was broken
   // just by changing CRP's table from an unordered_map to a map.
   // BOOST_TEST(gendb.logp_score() == init_logp, tt::tolerance(1e-6));
