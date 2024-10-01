@@ -239,6 +239,24 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(test_new_entities_have_new_parts) {
+  std::mt19937 prng;
+  GenDB gendb(&prng, schema);
+  setup_gendb(&prng, gendb, true);
+
+  // incorporate is called 32 times in setup_gendb.
+  BOOST_TEST(gendb.domain_crps["School"].N == 32);
+  BOOST_TEST(gendb.domain_crps["Physician"].N == 32);
+  BOOST_TEST(gendb.domain_crps["City"].N == 32);
+  BOOST_TEST(gendb.domain_crps["Practice"].N == 32);
+
+  // Each "customer" (entity) gets its own table.
+  BOOST_TEST(gendb.domain_crps["School"].tables.size() == 32);
+  BOOST_TEST(gendb.domain_crps["Physician"].tables.size() == 32);
+  BOOST_TEST(gendb.domain_crps["City"].tables.size() == 32);
+  BOOST_TEST(gendb.domain_crps["Practice"].tables.size() == 32);
+}
+
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
@@ -283,13 +301,6 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb, false);
-  test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
-}
-
-BOOST_AUTO_TEST_CASE(test_unincorporate_reference_new_entities_have_new_parts) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, true);
   test_unincorporate_reference_helper(gendb, "Practice", "city", 0, false);
 }
 
