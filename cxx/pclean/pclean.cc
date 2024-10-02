@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
   std::cout << "Running inference ...\n";
   inference_gendb(&prng, &gendb,
                   result["iters"].as<int>(),
+                  1,
                   result["timeout"].as<int>(),
                   result["verbose"].as<bool>());
 
