@@ -22,3 +22,7 @@ void incorporate_observations(std::mt19937* prng,
 // All existing rows added to gendb should have ids < start_row.
 DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
                               std::mt19937* prng);
+
+// Makes an encoding from a GenDB.  The i-th entity from domain "domain"
+// is given the name "domain:i".
+T_encoding make_dummy_encoding_from_gendb(const GenDB& gendb);

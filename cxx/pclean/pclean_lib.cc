@@ -84,3 +84,15 @@ DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
   return df;
 }
 
+T_encoding make_dummy_encoding_from_gendb(const GenDB& gendb) {
+  T_encoding_f item_to_code;
+  T_encoding_r code_to_item;
+
+  for (const auto& [domain, crp] : gendb.domain_crps) {
+    for (int i = 0; i < crp.max_table(); ++i) {
+      code_to_item[domain][i] = domain + ":" + std::to_string(i);
+    }
+  }
+
+  return std::make_pair(item_to_code, code_to_item);
+}
