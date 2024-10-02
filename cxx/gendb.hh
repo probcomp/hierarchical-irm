@@ -38,14 +38,16 @@ class GenDB {
   double logp_score() const;
 
   // Incorporates a row of observed data into the GenDB instance.
-  // When new_entities_have_new_parts = True, each part of the row is assumed
-  // to correspond to a new entity.
-  // When new_entities_have_new_parts = False, entity ids for each row part
+  // When new_rows_have_unique_entities = True, each part of the row is assumed
+  // to correspond to a new entity.  In particular, if two entities are added
+  // to the same domain in the course of adding a row, those entities will also
+  // be unique.
+  // When new_rows_have_unique_entities = False, entity ids for each row part
   // is sampled from the correpsonding CRP.
   void incorporate(
       std::mt19937* prng,
       const std::pair<int, std::map<std::string, ObservationVariant>>& row,
-      bool new_entities_have_new_parts);
+      bool new_rows_have_unique_entities);
 
   // Incorporates a single element of a row of observed data.
   void incorporate_query_relation(std::mt19937* prng,
@@ -58,7 +60,7 @@ class GenDB {
   void sample_and_incorporate_reference(
       std::mt19937* prng,
       const std::tuple<std::string, std::string, int>& ref_key,
-      const std::string& ref_class, bool new_entities_have_new_parts);
+      const std::string& ref_class, bool new_rows_have_unique_entities);
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.
@@ -66,12 +68,12 @@ class GenDB {
       std::mt19937* prng, const std::string& class_name,
       std::vector<std::string>::const_iterator class_path_start,
       std::vector<std::string>::const_iterator class_path_end,
-      int class_item, bool new_entities_have_new_parts);
+      int class_item, bool new_rows_have_unique_entities);
 
   // Sample items from a class' ancestors (recursive reference fields).
   T_items sample_class_ancestors(
       std::mt19937* prng, const std::string& class_name, int class_item,
-      bool new_entities_have_new_parts);
+      bool new_rows_have_unique_entities);
 
   // Populates "items" with entities by walking the DAG of reference indices,
   // starting with "ind".

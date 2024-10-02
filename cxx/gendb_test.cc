@@ -47,7 +47,7 @@ observe
 };
 
 void setup_gendb(std::mt19937* prng, GenDB& gendb,
-                 bool new_entities_have_new_parts) {
+                 bool new_rows_have_unique_entities) {
   std::map<std::string, ObservationVariant> obs0 = {
       {"School", "Massachusetts Institute of Technology"},
       {"Degree", "PHD"},
@@ -61,10 +61,10 @@ void setup_gendb(std::mt19937* prng, GenDB& gendb,
 
   int i = 0;
   while (i < 30) {
-    gendb.incorporate(prng, {i++, obs0}, new_entities_have_new_parts);
-    gendb.incorporate(prng, {i++, obs1}, new_entities_have_new_parts);
-    gendb.incorporate(prng, {i++, obs2}, new_entities_have_new_parts);
-    gendb.incorporate(prng, {i++, obs3}, new_entities_have_new_parts);
+    gendb.incorporate(prng, {i++, obs0}, new_rows_have_unique_entities);
+    gendb.incorporate(prng, {i++, obs1}, new_rows_have_unique_entities);
+    gendb.incorporate(prng, {i++, obs2}, new_rows_have_unique_entities);
+    gendb.incorporate(prng, {i++, obs3}, new_rows_have_unique_entities);
   }
 }
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_new_entities_have_new_parts) {
+BOOST_AUTO_TEST_CASE(test_new_rows_have_unique_entities) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb, true);
@@ -255,6 +255,13 @@ BOOST_AUTO_TEST_CASE(test_new_entities_have_new_parts) {
   BOOST_TEST(gendb.domain_crps["Physician"].tables.size() == 32);
   BOOST_TEST(gendb.domain_crps["City"].tables.size() == 32);
   BOOST_TEST(gendb.domain_crps["Practice"].tables.size() == 32);
+
+  // And each table has just a single customer.  (We only check the first
+  // table.)
+  BOOST_TEST(gendb.domain_crps["School"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.domain_crps["Physician"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.domain_crps["City"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.domain_crps["Practice"].tables.begin()->second.size() == 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
