@@ -74,5 +74,5 @@ void inference_gendb(std::mt19937* prng, GenDB* gendb, int iters, int timeout,
                      bool verbose) {
   inference_hirm(prng, gendb->hirm, iters, timeout, verbose);
   gendb->transition_reference_class_and_ancestors(
-      gendb->schema.query.record_class);
+      prng, gendb->schema.query.record_class);
 }
