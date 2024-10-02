@@ -117,6 +117,7 @@ cc_library(
     deps = [
         ":base",
         ":dirichlet_categorical",
+        "//emissions:string_alignment",
     ],
 )
 
@@ -228,6 +229,15 @@ cc_test(
     srcs = ["stringcat_test.cc"],
     deps = [
         ":stringcat",
+        "@boost//:test",
+    ],
+)
+
+cc_test(
+    name = "string_nat_test",
+    srcs = ["string_nat_test.cc"],
+    deps = [
+        ":string_nat",
         "@boost//:test",
     ],
 )

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <cctype>
+
 #include "distributions/bigram.hh"
 
 // A distribution over natural numbers represented as strings of digits.
@@ -12,4 +14,14 @@
 class StringNat : public Bigram {
  public:
   StringNat(size_t _max_length = 20): Bigram(_max_length, '0', '9') {}
+
+  std::string nearest(const std::string& x) const {
+    std::string s;
+    for (const char& c : x) {
+      if (std::isdigit(c)) {
+        s += c;
+      }
+    }
+    return s;
+  }
 };
