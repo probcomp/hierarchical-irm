@@ -117,6 +117,7 @@ class CleanRelation : public Relation<T> {
     return value;
   }
 
+  // TODO: add a test.
   void cleanup_data(const T_items& items) {
     for (int i = 0; i < std::ssize(domains); ++i) {
       const std::string& name = domains[i]->name;
@@ -130,6 +131,7 @@ class CleanRelation : public Relation<T> {
     data.erase(items);
   }
 
+  // TODO: add a test.
   void cleanup_clusters() {
     for (auto it = clusters.cbegin(); it != clusters.cend();) {
       if (it->second->N == 0) {
