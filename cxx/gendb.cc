@@ -582,7 +582,7 @@ void GenDB::transition_reference(std::mt19937* prng,
       std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
           .class_name;
   int init_refval = reference_values.at({class_name, ref_field, class_item});
-  std::unordered_map<int, double> crp_dist =
+  std::map<int, double> crp_dist =
       domain_crps[ref_class].tables_weights_gibbs(init_refval);
 
   // For each relation, get the indices (in the items vector) of the reference

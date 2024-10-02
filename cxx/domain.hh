@@ -3,6 +3,7 @@
 
 #pragma once
 #include <cassert>
+#include <map>
 #include <string>
 #include <unordered_set>
 
@@ -44,10 +45,10 @@ class Domain {
     crp.unincorporate(item);
     crp.incorporate(item, table);
   }
-  std::unordered_map<int, double> tables_weights() const {
+  std::map<int, double> tables_weights() const {
     return crp.tables_weights();
   }
-  std::unordered_map<int, double> tables_weights_gibbs(
+  std::map<int, double> tables_weights_gibbs(
       const T_item& item) const {
     int table = get_cluster_assignment(item);
     return crp.tables_weights_gibbs(table);

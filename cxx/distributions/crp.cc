@@ -71,13 +71,13 @@ double CRP::logp_score() const {
 
 int CRP::max_table() const {
   if (N == 0) {
-    return 0;
+    return -1;
   }
   return tables.rbegin()->first;
 }
 
-std::unordered_map<int, double> CRP::tables_weights() const {
-  std::unordered_map<int, double> dist;
+std::map<int, double> CRP::tables_weights() const {
+  std::map<int, double> dist;
   if (N == 0) {
     dist[0] = 1;
     return dist;
@@ -89,14 +89,15 @@ std::unordered_map<int, double> CRP::tables_weights() const {
   return dist;
 }
 
-std::unordered_map<int, double> CRP::tables_weights_gibbs(int table) const {
+std::map<int, double> CRP::tables_weights_gibbs(int table) const {
   assert(N > 0);
   assert(tables.contains(table));
   auto dist = tables_weights();
   --dist.at(table);
   if (dist.at(table) == 0) {
     dist.at(table) = alpha;
-    dist.erase(max_table());
+    int t_max = dist.rbegin()->first;
+    dist.erase(t_max);
   }
   return dist;
 }
