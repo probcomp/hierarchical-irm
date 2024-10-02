@@ -91,6 +91,13 @@ class NoisyRelation : public Relation<T> {
                                              std::make_pair(base_val, value));
   }
 
+  void cleanup_data(const T_items& items) {
+    emission_relation.cleanup_data(items);
+    data.erase(items);
+  }
+
+  void cleanup_clusters() { emission_relation.cleanup_clusters(); }
+
   void unincorporate_from_cluster(const T_items& items) {
     emission_relation.unincorporate_from_cluster(items);
   }
@@ -189,8 +196,17 @@ class NoisyRelation : public Relation<T> {
     return emission_relation.get_cluster_assignment(items);
   }
 
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
+  double cluster_or_prior_logp(std::mt19937* prng, const std::vector<int>& z,
                                const ValueType& value) const {
+    // This method can't be implemented with the current API since it requires
+    // the value of the base relation.
+    printf("cluster_or_prior_logp is unimplemented for NoisyRelation\n");
+    std::exit(1);
+  }
+
+  double cluster_or_prior_logp_from_items(std::mt19937* prng,
+                                          const T_items& items,
+                                          const ValueType& value) const {
     const T_items base_items = get_base_items(items);
     const auto& base_data = base_relation->get_data();
     if (!base_data.contains(base_items)) {
@@ -198,9 +214,11 @@ class NoisyRelation : public Relation<T> {
     }
 
     auto values = std::make_pair(base_data.at(base_items), value);
-    if (emission_relation.clusters.contains(items)) {
-      return emission_relation.clusters.at(items)->logp(values);
+    if (emission_relation.clusters_contains(items)) {
+      std::vector<int> z = get_cluster_assignment(items);
+      return emission_relation.clusters.at(z)->logp(values);
     }
+    assert(prng != nullptr);
     auto emission_prior = emission_relation.make_new_distribution(prng);
     double emission_logp = emission_prior->logp(values);
     delete emission_prior;
@@ -209,9 +227,10 @@ class NoisyRelation : public Relation<T> {
 
   ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {
     const ValueType& base_value = get_base_value(items);
-    if (emission_relation.clusters.contains(items)) {
+    if (emission_relation.clusters_contains(items)) {
+      std::vector<int> z = get_cluster_assignment(items);
       return reinterpret_cast<Emission<ValueType>*>(
-                 emission_relation.clusters.at(items))
+                 emission_relation.clusters.at(z))
           ->sample_corrupted(base_value, prng);
     }
     auto emission_prior = reinterpret_cast<Emission<ValueType>*>(

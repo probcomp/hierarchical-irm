@@ -77,12 +77,16 @@ class HIRM {
   // Incorporates a sample into relation `r`. If `r` is a noisy relation, this
   // function recursively incorporates a sample into the base relation, if
   // necessary.  Returns the sample value as a string.
-  std::string sample_and_incorporate_relation(
-      std::mt19937* prng, const std::string& r, const T_items& items);
+  std::string sample_and_incorporate_relation(std::mt19937* prng,
+                                              const std::string& r,
+                                              const T_items& items);
 
   // Return a map from domains to CRP's that are initialized with the entities
   // each domain has seen so far.
   void initialize_domain_crps(std::map<std::string, CRP>* domain_crps) const;
+
+  // Remove empty relation clusters.
+  void cleanup_relation_clusters();
 
   ~HIRM();
 
@@ -90,4 +94,3 @@ class HIRM {
   HIRM& operator=(const HIRM&) = delete;
   HIRM(const HIRM&) = delete;
 };
-

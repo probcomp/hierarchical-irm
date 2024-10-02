@@ -5,18 +5,21 @@
 #include "irm.hh"
 
 #include <boost/test/included/unit_test.hpp>
+
 #include "distributions/get_distribution.hh"
 
 namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_CASE(test_irm) {
   std::map<std::string, T_relation> schema1{
-      {"R1", T_clean_relation{{"D1", "D1"}, true, DistributionSpec("bernoulli")}},
+      {"R1",
+       T_clean_relation{{"D1", "D1"}, true, DistributionSpec("bernoulli")}},
       {"R2", T_clean_relation{{"D1", "D2"}, false, DistributionSpec("normal")}},
       {"R3", T_clean_relation{{"D3", "D1"}, true, DistributionSpec("bigram")}},
-      {"R4",
-       T_noisy_relation{
-           {"D1", "D2", "D3"}, true, EmissionSpec("sometimes_gaussian"), "R2"}}};
+      {"R4", T_noisy_relation{{"D1", "D2", "D3"},
+                              true,
+                              EmissionSpec("sometimes_gaussian"),
+                              "R2"}}};
   IRM irm(schema1);
 
   BOOST_TEST(irm.logp_score() == 0.0);

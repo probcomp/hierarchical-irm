@@ -17,18 +17,15 @@ class Bigram : public Distribution<std::string> {
   std::vector<size_t> string_to_indices(const std::string& str) const;
 
  public:
-  double alpha = 1;  // hyperparameter for all transition distributions.
+  double alpha = 1;       // hyperparameter for all transition distributions.
   size_t max_length = 0;  // 0 means no maximum length
-  char min_char;  // Character with smallest ASCII value.
-  char max_char;  // Character with largest ASCII value.
+  char min_char;          // Character with smallest ASCII value.
+  char max_char;          // Character with largest ASCII value.
   size_t num_chars;
   mutable std::vector<DirichletCategorical> transition_dists;
 
-  Bigram(size_t _max_length = 80,
-         char _min_char = ' ',
-         char _max_char = '~'):
-    max_length(_max_length), min_char(_min_char), max_char(_max_char)
-  {
+  Bigram(size_t _max_length = 80, char _min_char = ' ', char _max_char = '~')
+      : max_length(_max_length), min_char(_min_char), max_char(_max_char) {
     num_chars = max_char - min_char + 1;
     const size_t total_chars = num_chars + 1;  // Include a start/stop symbol.
 

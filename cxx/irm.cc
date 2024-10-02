@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <functional>
+#include <set>
 #include <variant>
 
 RelationVariant clean_relation_from_spec(const std::string& name,
@@ -83,6 +84,18 @@ void IRM::unincorporate(const std::string& r, const T_items& items) {
       irm_contains_item[{rel_domains[i], items[i]}] = true;
     }
   }
+}
+
+bool IRM::has_observation(const std::string& domain, const T_item& item) const {
+  auto check_rel = [&](auto rel) {
+    return rel->has_observation(*domains.at(domain), item);
+  };
+  for (const std::string& r : domain_to_relations.at(domain)) {
+    if (std::visit(check_rel, relations.at(r))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void IRM::transition_cluster_assignments_all(std::mt19937* prng) {
@@ -165,6 +178,8 @@ void IRM::transition_latent_values_relation(std::mt19937* prng,
   std::visit(transition_values, relations.at(r));
 }
 
+// This method is currently unsupported for IRMs that include NoisyRelations
+// since cluster_or_prior_logp is not implemented for NoisyRelation.
 double IRM::logp(
     const std::vector<std::tuple<std::string, T_items, ObservationVariant>>&
         observations,
