@@ -354,17 +354,9 @@ std::string HIRM::sample_and_incorporate_relation(std::mt19937* prng,
         },
         get_relation(r));
   }
-  std::cerr << "calling sample and incorporate on relation " << r << " items ";
-  for (int i : items) {
-    std::cerr << i << " ";
-  }
-  std::cerr << std::endl;
   std::ostringstream ss;
   std::visit([&](auto rel) { ss << rel->sample_and_incorporate(prng, items); },
              get_relation(r));
-  bool c = std::visit([&](auto rel) { return rel->get_data().contains(items); },
-             get_relation(r));
-  std::cerr << "and now the relation conta sht he data ? " << c << std::endl;
   return ss.str();
 }
 

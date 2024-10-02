@@ -65,6 +65,7 @@ void GenDB::incorporate(
     // Incorporate the items/value into the query relation.
     incorporate_query_relation(prng, query_rel, items, val);
   }
+  // Crap need some way of ensuring that relations for each class have the same domains. Probably need to loop over class_to_relations in incorporate_query_relation.
 }
 
 // This function walks the class_path of the query, populates the global
@@ -238,29 +239,36 @@ double GenDB::unincorporate_reference(
         stored_value_map,
     std::map<std::tuple<int, std::string, T_item>, int>&
         unincorporated_from_domains) {
+  std::cerr << "in uninc ref " << class_name << " field " << ref_field << " class item " << class_item << std::endl;
   double logp_relations = 0.;
   for (auto [rel_name, inds] : domain_inds) {
     // Access the relation's items where the domain is class_name and the entity
     // value is class_item.
     RelationVariant r = hirm->get_relation(rel_name);
-    const std::unordered_set<T_items, H_items>& items = std::visit(
-        [&](auto rel) {
-          return rel->get_data_r().at(class_name).at(class_item);
-        },
-        r);
-
-    for (const size_t ind : inds) {
-      for (const auto& item : items) {
-        if (item[ind] == class_item) {
-          auto f = [&](auto rel) {
-            logp_relations += unincorporate_reference_relation(
-                rel, rel_name, item, ind, stored_value_map);
-          };
-          std::visit(f, r);
+    std::cerr << "here? " << rel_name << std::endl;
+    bool q = std::visit([&](auto rel) {return rel->get_data_r().at(class_name).contains(class_item);}, r);
+    if (q) {
+      const std::unordered_set<T_items, H_items>& items = std::visit(
+          [&](auto rel) {
+            return rel->get_data_r().at(class_name).at(class_item);
+          },
+          r);
+      std::cerr << "no" << std::endl;
+      for (const size_t ind : inds) {
+        for (const auto& item : items) {
+          if (item[ind] == class_item) {
+            auto f = [&](auto rel) {
+              logp_relations += unincorporate_reference_relation(
+                  rel, rel_name, item, ind, stored_value_map);
+            };
+            std::visit(f, r);
+          }
         }
       }
     }
+
   }
+  std::cerr << "done with fors" << std::endl;
 
   // Check if any entities need to be removed from IRM domain clusters (after
   // they've been unincorporated from relations) and compute the change in logp.
@@ -372,6 +380,7 @@ void GenDB::incorporate_reference_relation(
                                      trel->base_relation, stored_values);
     }
   }
+  std::cerr << "inc ref rel " << rel_name << std::endl;
   for (const auto& [items, value] : stored_values.at(rel_name)) {
     // A base relation may have already been reincorporated by a different noisy
     // relation.
@@ -575,17 +584,20 @@ void GenDB::transition_reference(std::mt19937* prng,
     int bcbax_size = std::visit([&](auto r) {return r->get_data().size();}, hirm->get_relation("B::CBAX"));
     assert(bbax_size == bcbax_size);
   };
-  // auto f = [&](auto r) {
-  //   auto d = r->get_data();
-  //   for (auto [its, v] : d) {
-  //     for (int i: its) {
-  //       std::cerr << i << " ";
-  //     }
-  //     std::cerr << std::endl;
-  //   }
-  // };
-  // std::visit(f, hirm->get_relation("B::BAX"));
-  // std::cerr << "BAX items" << std::endl;
+  auto f = [&](auto r) {
+    auto d = r->get_data();
+    for (auto [its, v] : d) {
+      for (int i: its) {
+        std::cerr << i << " ";
+      }
+      std::cerr << std::endl;
+    }
+  };
+  std::cerr << "B::CBAX items" << std::endl;
+  std::visit(f, hirm->get_relation("B::CBAX"));
+  std::cerr << "B::BAX items" << std::endl;
+  std::visit(f, hirm->get_relation("B::BAX"));
+  assert_size();
   // std::visit(f, hirm->get_relation("BAX"));
   // std::cerr << "CBAX items" << std::endl;
   // std::visit(f, hirm->get_relation("CBAX"));
@@ -609,6 +621,7 @@ void GenDB::transition_reference(std::mt19937* prng,
   // value being transitioned.
   std::map<std::string, std::vector<size_t>> domain_inds =
       get_domain_inds(class_name, ref_field);
+  std::cerr << "a" << std::endl;
 
   // Unincorporate and compute the logp for the current reference value,
   // accounting for relation cluster logps and IRM domain CRP logps. The Gibbs
@@ -622,6 +635,7 @@ void GenDB::transition_reference(std::mt19937* prng,
   double logp_current = unincorporate_reference(
       domain_inds, class_name, ref_field, class_item, stored_values,
       unincorporated_from_domains[init_refval]);
+  std::cerr << "b" << std::endl;
 
   std::vector<int> entities(crp_dist.size());
   std::vector<double> logps(crp_dist.size(), 0.);
@@ -682,6 +696,7 @@ void GenDB::transition_reference(std::mt19937* prng,
 
     // Handle the singleton entity, if it was not init_refval (i.e. it is
     // previously unseen).
+    std::cerr << "table is " << table << " class " << class_name << " ref " << ref_field << " item " << class_item << std::endl;
     std::cerr << "haidnlng singeton " << std::endl;
     if (table == singleton_entity) {
       // Sample and incorporate a new row into the ref_class table. Update

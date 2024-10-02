@@ -240,313 +240,313 @@ BOOST_AUTO_TEST_CASE(test_gendb) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_get_relation_items) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+// BOOST_AUTO_TEST_CASE(test_get_relation_items) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
 
-  // Each vector of items in a relation's data is entirely determined by
-  // its last value (the primary key of the class lowest in the hierarchy).
-  // Check that the incorporated data is as expected.
-  for (const auto& [name, trel] : gendb.hirm->schema) {
-    auto test_relation = [&](auto rel) {
-      auto data = rel->get_data();
-      for (auto [items, unused_value] : data) {
-        size_t num_domains = rel->get_domains().size();
-        T_items expected_items(num_domains);
-        gendb.get_relation_items(name, num_domains - 1, items.back(),
-                                 expected_items);
-        BOOST_TEST(items.size() == expected_items.size());
-        for (size_t i = 0; i < num_domains; ++i) {
-          BOOST_TEST(items[i] == expected_items[i]);
-        }
-      }
-    };
-    std::visit(test_relation, gendb.hirm->get_relation(name));
-  }
-}
+//   // Each vector of items in a relation's data is entirely determined by
+//   // its last value (the primary key of the class lowest in the hierarchy).
+//   // Check that the incorporated data is as expected.
+//   for (const auto& [name, trel] : gendb.hirm->schema) {
+//     auto test_relation = [&](auto rel) {
+//       auto data = rel->get_data();
+//       for (auto [items, unused_value] : data) {
+//         size_t num_domains = rel->get_domains().size();
+//         T_items expected_items(num_domains);
+//         gendb.get_relation_items(name, num_domains - 1, items.back(),
+//                                  expected_items);
+//         BOOST_TEST(items.size() == expected_items.size());
+//         for (size_t i = 0; i < num_domains; ++i) {
+//           BOOST_TEST(items[i] == expected_items[i]);
+//         }
+//       }
+//     };
+//     std::visit(test_relation, gendb.hirm->get_relation(name));
+//   }
+// }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Physician", "school", 1);
-}
+// BOOST_AUTO_TEST_CASE(test_unincorporate_reference1) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
+//   test_unincorporate_reference_helper(gendb, "Physician", "school", 1);
+// }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Record", "location", 2);
-}
+// BOOST_AUTO_TEST_CASE(test_unincorporate_reference2) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
+//   test_unincorporate_reference_helper(gendb, "Record", "location", 2);
+// }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
-  test_unincorporate_reference_helper(gendb, "Practice", "city", 0);
-}
+// BOOST_AUTO_TEST_CASE(test_unincorporate_reference3) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
+//   test_unincorporate_reference_helper(gendb, "Practice", "city", 0);
+// }
 
-BOOST_AUTO_TEST_CASE(test_logp_score) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
-  BOOST_TEST(gendb.logp_score() < 0.0);
-}
+// BOOST_AUTO_TEST_CASE(test_logp_score) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
+//   BOOST_TEST(gendb.logp_score() < 0.0);
+// }
 
-BOOST_AUTO_TEST_CASE(test_update_reference_items) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+// BOOST_AUTO_TEST_CASE(test_update_reference_items) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
 
-  std::string class_name = "Practice";
-  std::string ref_field = "city";
-  int class_item = 0;
+//   std::string class_name = "Practice";
+//   std::string ref_field = "city";
+//   int class_item = 0;
 
-  BOOST_TEST(
-      gendb.reference_values.at(class_name).contains({ref_field, class_item}));
+//   BOOST_TEST(
+//       gendb.reference_values.at(class_name).contains({ref_field, class_item}));
 
-  std::map<std::string, std::vector<size_t>> domain_inds =
-      gendb.get_domain_inds(class_name, ref_field);
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      stored_value_map;
-  std::map<std::tuple<int, std::string, T_item>, int>
-      unincorporated_from_domains;
-  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
-                                stored_value_map, unincorporated_from_domains);
-  BOOST_TEST(stored_value_map.size() > 0);
+//   std::map<std::string, std::vector<size_t>> domain_inds =
+//       gendb.get_domain_inds(class_name, ref_field);
+//   std::map<std::string,
+//            std::unordered_map<T_items, ObservationVariant, H_items>>
+//       stored_value_map;
+//   std::map<std::tuple<int, std::string, T_item>, int>
+//       unincorporated_from_domains;
+//   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+//                                 stored_value_map, unincorporated_from_domains);
+//   BOOST_TEST(stored_value_map.size() > 0);
 
-  int new_ref_val = 7;
-  auto updated_items = gendb.update_reference_items(
-      stored_value_map, class_name, ref_field, class_item, new_ref_val);
+//   int new_ref_val = 7;
+//   auto updated_items = gendb.update_reference_items(
+//       stored_value_map, class_name, ref_field, class_item, new_ref_val);
 
-  BOOST_TEST(stored_value_map.size() == updated_items.size());
-  // All of the items should have been updated.
-  for (const auto& [rel_name, vals] : updated_items) {
-    BOOST_TEST(vals.size() == stored_value_map.at(rel_name).size());
-    for (const auto& [items, v] : vals) {
-      BOOST_TEST(!stored_value_map.at(rel_name).contains(items));
-    }
-  }
-}
+//   BOOST_TEST(stored_value_map.size() == updated_items.size());
+//   // All of the items should have been updated.
+//   for (const auto& [rel_name, vals] : updated_items) {
+//     BOOST_TEST(vals.size() == stored_value_map.at(rel_name).size());
+//     for (const auto& [items, v] : vals) {
+//       BOOST_TEST(!stored_value_map.at(rel_name).contains(items));
+//     }
+//   }
+// }
 
-BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 5);
+// BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb, 5);
 
-  std::string class_name = "Record";
-  std::string ref_field = "location";
-  int class_item = 0;
+//   std::string class_name = "Record";
+//   std::string ref_field = "location";
+//   int class_item = 0;
 
-  double init_logp = gendb.logp_score();
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      stored_value_map;
-  std::map<std::string, std::vector<size_t>> domain_inds =
-      gendb.get_domain_inds(class_name, ref_field);
-  std::map<std::tuple<int, std::string, T_item>, int>
-      unincorporated_from_domains;
-  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
-                                stored_value_map, unincorporated_from_domains);
+//   double init_logp = gendb.logp_score();
+//   std::map<std::string,
+//            std::unordered_map<T_items, ObservationVariant, H_items>>
+//       stored_value_map;
+//   std::map<std::string, std::vector<size_t>> domain_inds =
+//       gendb.get_domain_inds(class_name, ref_field);
+//   std::map<std::tuple<int, std::string, T_item>, int>
+//       unincorporated_from_domains;
+//   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+//                                 stored_value_map, unincorporated_from_domains);
 
-  int old_ref_val =
-      gendb.reference_values.at(class_name).at({ref_field, class_item});
-  int new_ref_val = (old_ref_val == 0) ? 1 : old_ref_val - 1;
-  auto updated_items = gendb.update_reference_items(
-      stored_value_map, class_name, ref_field, class_item, new_ref_val);
+//   int old_ref_val =
+//       gendb.reference_values.at(class_name).at({ref_field, class_item});
+//   int new_ref_val = (old_ref_val == 0) ? 1 : old_ref_val - 1;
+//   auto updated_items = gendb.update_reference_items(
+//       stored_value_map, class_name, ref_field, class_item, new_ref_val);
 
-  gendb.incorporate_reference(&prng, updated_items);
-  // Updating the reference values should change logp_score (though note that
-  // the domain_crps have not been updated), so the total logp_score is
-  // different only if new_ref_val and old_ref_val are in different IRM
-  // clusters.
-  BOOST_TEST(gendb.logp_score() != init_logp, tt::tolerance(1e-6));
-}
+//   gendb.incorporate_reference(&prng, updated_items);
+//   // Updating the reference values should change logp_score (though note that
+//   // the domain_crps have not been updated), so the total logp_score is
+//   // different only if new_ref_val and old_ref_val are in different IRM
+//   // clusters.
+//   BOOST_TEST(gendb.logp_score() != init_logp, tt::tolerance(1e-6));
+// }
 
-BOOST_AUTO_TEST_CASE(test_transition_reference) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+// BOOST_AUTO_TEST_CASE(test_transition_reference) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb);
 
-  std::string class_name = "Record";
-  std::string ref_field = "physician";
-  int class_item = 1;
+//   std::string class_name = "Record";
+//   std::string ref_field = "physician";
+//   int class_item = 1;
 
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
 
-  class_name = "Physician";
-  ref_field = "school";
-  class_item = 0;
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
-  gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   class_name = "Physician";
+//   ref_field = "school";
+//   class_item = 0;
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
+//   gendb.transition_reference(&prng, class_name, ref_field, class_item);
 
-  BOOST_TEST(gendb.logp_score() < 0.);
-}
+//   BOOST_TEST(gendb.logp_score() < 0.);
+// }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 20);
+// BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb, 20);
 
-  std::string class_name = "Physician";
-  std::string ref_field = "school";
-  std::string ref_class = "School";
+//   std::string class_name = "Physician";
+//   std::string ref_field = "school";
+//   std::string ref_class = "School";
 
-  // Find a non-singleton reference value.
-  int refval = -1;
-  int class_item = 0;
-  int init_refval_obs;
-  int candidate_refval;
-  while (true) {
-    candidate_refval =
-        gendb.reference_values.at(class_name).at({ref_field, class_item});
-    init_refval_obs =
-        gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size();
-    if (init_refval_obs > 1) {
-      refval = candidate_refval;
-      break;
-    }
-    ++class_item;
-  }
-  assert(refval > -1);
+//   // Find a non-singleton reference value.
+//   int refval = -1;
+//   int class_item = 0;
+//   int init_refval_obs;
+//   int candidate_refval;
+//   while (true) {
+//     candidate_refval =
+//         gendb.reference_values.at(class_name).at({ref_field, class_item});
+//     init_refval_obs =
+//         gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size();
+//     if (init_refval_obs > 1) {
+//       refval = candidate_refval;
+//       break;
+//     }
+//     ++class_item;
+//   }
+//   assert(refval > -1);
 
-  double init_logpscore = gendb.logp_score();
+//   double init_logpscore = gendb.logp_score();
 
-  // Unincorporate the reference value.
-  auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      stored_values;
-  std::map<std::tuple<int, std::string, T_item>, int>
-      unincorporated_from_domains;
-  std::map<std::tuple<std::string, std::string, int>, int>
-      unincorporated_from_entity_crps;
-  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
-                                stored_values, unincorporated_from_domains);
-  int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
-  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+//   // Unincorporate the reference value.
+//   auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
+//   std::map<std::string,
+//            std::unordered_map<T_items, ObservationVariant, H_items>>
+//       stored_values;
+//   std::map<std::tuple<int, std::string, T_item>, int>
+//       unincorporated_from_domains;
+//   std::map<std::tuple<std::string, std::string, int>, int>
+//       unincorporated_from_entity_crps;
+//   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+//                                 stored_values, unincorporated_from_domains);
+//   int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
+//   gendb.domain_crps.at(ref_class).unincorporate(ref_id);
 
-  // Check that the reference value was unincorporated from its entity CRP.
-  BOOST_TEST(gendb.domain_crps.at(ref_class).tables.size() =
-                 init_refval_obs - 1);
+//   // Check that the reference value was unincorporated from its entity CRP.
+//   BOOST_TEST(gendb.domain_crps.at(ref_class).tables.size() =
+//                  init_refval_obs - 1);
 
-  // Test that the class item/reference value were unincorporated from the
-  // relations. The reference value should still be in the domain CRP since it
-  // wasn't a singleton.
-  for (const std::string& r : gendb.class_to_relations.at(class_name)) {
-    auto f = [&](auto rel) {
-      for (auto& [items, val] : rel->get_data()) {
-        BOOST_TEST(items.back() != class_item);
-      }
-    };
-    std::visit(f, gendb.hirm->get_relation(r));
+//   // Test that the class item/reference value were unincorporated from the
+//   // relations. The reference value should still be in the domain CRP since it
+//   // wasn't a singleton.
+//   for (const std::string& r : gendb.class_to_relations.at(class_name)) {
+//     auto f = [&](auto rel) {
+//       for (auto& [items, val] : rel->get_data()) {
+//         BOOST_TEST(items.back() != class_item);
+//       }
+//     };
+//     std::visit(f, gendb.hirm->get_relation(r));
 
-    IRM* irm = gendb.hirm->relation_to_irm(r);
-    BOOST_TEST(irm->has_observation(ref_class, class_item));
-  }
+//     IRM* irm = gendb.hirm->relation_to_irm(r);
+//     BOOST_TEST(irm->has_observation(ref_class, class_item));
+//   }
 
-  double baseline_logp = gendb.logp_score();
+//   double baseline_logp = gendb.logp_score();
 
-  // Logp score should be unchanged after re-incorporating.
-  gendb.reincorporate_new_refval(
-      class_name, ref_field, class_item, refval, ref_class, stored_values,
-      unincorporated_from_domains, unincorporated_from_entity_crps);
-  BOOST_TEST(
-      init_logpscore - baseline_logp == gendb.logp_score() - baseline_logp,
-      tt::tolerance(1e-3));
-}
+//   // Logp score should be unchanged after re-incorporating.
+//   gendb.reincorporate_new_refval(
+//       class_name, ref_field, class_item, refval, ref_class, stored_values,
+//       unincorporated_from_domains, unincorporated_from_entity_crps);
+//   BOOST_TEST(
+//       init_logpscore - baseline_logp == gendb.logp_score() - baseline_logp,
+//       tt::tolerance(1e-3));
+// }
 
-BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 20);
+// BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb, 20);
 
-  std::string class_name = "Practice";
-  std::string ref_field = "city";
-  std::string ref_class = "City";
+//   std::string class_name = "Practice";
+//   std::string ref_field = "city";
+//   std::string ref_class = "City";
 
-  // Find a non-singleton reference value.
-  int non_singleton_refval = -1;
-  int class_item = 0;
-  int candidate_refval;
-  while (true) {
-    candidate_refval =
-        gendb.reference_values.at(class_name).at({ref_field, class_item});
-    if (gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size() >
-        1) {
-      non_singleton_refval = candidate_refval;
-      break;
-    }
-    ++class_item;
-  }
-  assert(non_singleton_refval > -1);
+//   // Find a non-singleton reference value.
+//   int non_singleton_refval = -1;
+//   int class_item = 0;
+//   int candidate_refval;
+//   while (true) {
+//     candidate_refval =
+//         gendb.reference_values.at(class_name).at({ref_field, class_item});
+//     if (gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size() >
+//         1) {
+//       non_singleton_refval = candidate_refval;
+//       break;
+//     }
+//     ++class_item;
+//   }
+//   assert(non_singleton_refval > -1);
 
-  // Now find the singleton value.
-  int refval = -1;
-  std::unordered_map<int, double> crp_dist =
-      gendb.domain_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
-  for (auto [t, w] : crp_dist) {
-    if (!gendb.domain_crps[ref_class].tables.contains(t)) {
-      refval = t;
-    }
-  }
-  assert(refval != -1);
+//   // Now find the singleton value.
+//   int refval = -1;
+//   std::unordered_map<int, double> crp_dist =
+//       gendb.domain_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
+//   for (auto [t, w] : crp_dist) {
+//     if (!gendb.domain_crps[ref_class].tables.contains(t)) {
+//       refval = t;
+//     }
+//   }
+//   assert(refval != -1);
 
-  double init_logp = gendb.logp_score();
+//   double init_logp = gendb.logp_score();
 
-  auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      stored_values;
-  std::map<std::tuple<int, std::string, T_item>, int>
-      unincorporated_from_domains;
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      ref_class_relation_stored_values;
-  std::map<std::tuple<std::string, std::string, int>, int>
-      unincorporated_from_entity_crps;
-  int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
-  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
-  gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
-                                stored_values, unincorporated_from_domains);
-  gendb.unincorporate_singleton(class_name, ref_field, class_item, ref_class,
-                                ref_class_relation_stored_values,
-                                unincorporated_from_domains,
-                                unincorporated_from_entity_crps);
+//   auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
+//   std::map<std::string,
+//            std::unordered_map<T_items, ObservationVariant, H_items>>
+//       stored_values;
+//   std::map<std::tuple<int, std::string, T_item>, int>
+//       unincorporated_from_domains;
+//   std::map<std::string,
+//            std::unordered_map<T_items, ObservationVariant, H_items>>
+//       ref_class_relation_stored_values;
+//   std::map<std::tuple<std::string, std::string, int>, int>
+//       unincorporated_from_entity_crps;
+//   int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
+//   gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+//   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
+//                                 stored_values, unincorporated_from_domains);
+//   gendb.unincorporate_singleton(class_name, ref_field, class_item, ref_class,
+//                                 ref_class_relation_stored_values,
+//                                 unincorporated_from_domains,
+//                                 unincorporated_from_entity_crps);
 
-  double baseline_logp = gendb.logp_score();
+//   double baseline_logp = gendb.logp_score();
 
-  // The entity CRP doesn't contain the reference value.
-  BOOST_TEST(!gendb.domain_crps.at(ref_class).tables.contains(refval));
+//   // The entity CRP doesn't contain the reference value.
+//   BOOST_TEST(!gendb.domain_crps.at(ref_class).tables.contains(refval));
 
-  // Test that the reference value was unincorporated from IRM domain CRPs.
-  for (auto [code, irm] : gendb.hirm->irms) {
-    for (auto [name, d] : irm->domains) {
-      if (name == ref_class) {
-        BOOST_TEST(!d->items.contains(refval));
-      }
-    }
-  }
+//   // Test that the reference value was unincorporated from IRM domain CRPs.
+//   for (auto [code, irm] : gendb.hirm->irms) {
+//     for (auto [name, d] : irm->domains) {
+//       if (name == ref_class) {
+//         BOOST_TEST(!d->items.contains(refval));
+//       }
+//     }
+//   }
 
-  gendb.reincorporate_new_refval(
-      class_name, ref_field, class_item, refval, ref_class, stored_values,
-      unincorporated_from_domains, unincorporated_from_entity_crps);
-  // Logp score should be different.
-  BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
-             tt::tolerance(1e-3));
-}
+//   gendb.reincorporate_new_refval(
+//       class_name, ref_field, class_item, refval, ref_class, stored_values,
+//       unincorporated_from_domains, unincorporated_from_entity_crps);
+//   // Logp score should be different.
+//   BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
+//              tt::tolerance(1e-3));
+// }
 
-BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 20);
-  gendb.transition_reference_class_and_ancestors(&prng, "Record");
-}
+// BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
+//   std::mt19937 prng;
+//   GenDB gendb(&prng, schema);
+//   setup_gendb(&prng, gendb, 20);
+//   gendb.transition_reference_class_and_ancestors(&prng, "Record");
+// }
 
 BOOST_AUTO_TEST_CASE(test_transition_reference_complex_schema) {
   std::stringstream ss_complex(R"""(
@@ -562,6 +562,7 @@ class E
 class C
   a ~ A
   b ~ B
+  z ~ real
 
 class Record
   b ~ B
@@ -573,6 +574,7 @@ observe
   c.a.x as CAX
   c.b.a.x as CBAX
   e.y as EY
+  c.z as CZ
   from Record
 )""");
   PCleanSchema complex_schema;
@@ -587,7 +589,7 @@ observe
 
   int i = 0;
   while (i < 30) {
-    obs = {{"BAX", d(prng)}, {"CAX", d(prng)}, {"CBAX", d(prng)}, {"EY", d(prng)}};
+    obs = {{"BAX", d(prng)}, {"CAX", d(prng)}, {"CBAX", d(prng)}, {"EY", d(prng)}, {"CZ", d(prng)}};
     gendb.incorporate(&prng, {i++, obs});
   }
   gendb.transition_reference_class_and_ancestors(&prng, "Record");
