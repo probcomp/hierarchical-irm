@@ -10,27 +10,9 @@
 #include "hirm.hh"
 #include "observations.hh"
 #include "pclean/schema.hh"
-#include "pclean/schema_helper.hh"
 
 class GenDB {
  public:
-  const PCleanSchema& schema;
-
-  // TODO(emilyaf): Merge PCleanSchemaHelper and GenDB.
-  PCleanSchemaHelper schema_helper;
-
-  // This data structure contains entity sets and linkages. Semantics are
-  // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
-  // where primary_key and ref_val are (integer) entity IDs.
-  std::map<std::tuple<std::string, std::string, int>, int> reference_values;
-
-  HIRM* hirm;  // Owned by the GenDB instance.
-
-  // Map keys are class names. Values are CRPs for latent entities, where the
-  // "tables" are entity IDs and the "customers" are unique identifiers of
-  // observations of that class.
-  std::map<std::string, CRP> domain_crps;
-
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
 
@@ -110,6 +92,9 @@ class GenDB {
       const std::string& class_name, const std::string& ref_field,
       const int class_item, const int new_ref_val);
 
+  // Translate the PCleanSchema into an HIRM T_schema.
+  T_schema make_hirm_schema();
+
   // Incorporates the items and values from stored_values (generally an output
   // of update_reference_items).
   void incorporate_reference(
@@ -134,4 +119,64 @@ class GenDB {
   // Disable copying.
   GenDB& operator=(const GenDB&) = delete;
   GenDB(const GenDB&) = delete;
+
+  // The rest of these methods are conceptually private, but actually
+  // public for testing.
+
+  // For each class in the schema, set domains[class_name] to
+  // domains[cv1:class] + domains[cv2:class] + .... + [class_name]
+  // where cv1, cv2, ... are the class variables inside class class_name
+  // and cvi:class is the class associated to that class variable.
+  // This list will be used as the domains list for any HIRM relation
+  // created from a variable in class class_name.
+  void compute_domains_cache();
+
+  // Compute domains[name], recursively calling itself for any classes c
+  // that name depends on.
+  void compute_domains_for(const std::string& name);
+
+  // Compute the relation_reference_indices and class_reference_indices
+  // datastructures.  See below for a description of those.
+  void compute_reference_indices_cache();
+
+  // Compute relation_reference_indices and class_reference_indices for
+  // class name, recursively calling itself for any classes c that name
+  // depends on.
+  void compute_reference_indices_for(const std::string& name);
+
+  // Make the relations associated with QueryField f and put them into
+  // schema.
+  void make_relations_for_queryfield(
+      const QueryField& f, const PCleanClass& record_class, T_schema* schema);
+
+  // Member variables
+  const PCleanSchema& schema;
+
+  // This data structure contains entity sets and linkages. Semantics are
+  // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
+  // where primary_key and ref_val are (integer) entity IDs.
+  std::map<std::tuple<std::string, std::string, int>, int> reference_values;
+
+  HIRM* hirm;  // Owned by the GenDB instance.
+
+  // Map keys are class names. Values are CRPs for latent entities, where the
+  // "tables" are entity IDs and the "customers" are unique identifiers of
+  // observations of that class.
+  std::map<std::string, CRP> domain_crps;
+
+  bool only_final_emissions;
+  bool record_class_is_clean;
+  std::map<std::string, std::vector<std::string>> domains;
+
+  // Map keys are relation name, item index of a class, and reference field
+  // name. The values in the inner map are the item index of the reference
+  // class. (See tests for more intuition.)
+  std::map<std::string, std::map<int, std::map<std::string, int>>>
+      relation_reference_indices;
+
+  // Map keys are class name, item index of a class, and reference field
+  // name. The values in the inner map are the item index of the reference
+  // class. (See tests for more intuition.)
+  std::map<std::string, std::map<int, std::map<std::string, int>>>
+      class_reference_indices;
 };

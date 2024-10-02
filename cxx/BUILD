@@ -65,9 +65,9 @@ cc_library(
         ":irm",
         ":observations",
         "//distributions:crp",
+        "//pclean:get_joint_relations",
         "//pclean:io",
         "//pclean:schema",
-        "//pclean:schema_helper",
     ],
 )
 

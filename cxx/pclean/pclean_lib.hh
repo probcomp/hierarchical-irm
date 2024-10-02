@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "gendb.hh"
 #include "irm.hh"
 #include "util_io.hh"
 #include "pclean/csv.hh"
@@ -10,17 +11,14 @@
 #include "pclean/schema.hh"
 
 // For each non-missing value in the DataFrame df, create an
-// observation in the returned T_observations.  The column name of the value
+// observation and incorporate it into the GenDB.  The column name of the value
 // is used as the relation name, and each entity in each domain is given
 // its own unique value.
-T_observations translate_observations(
-    const DataFrame& df, const T_schema &schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relation);
+void incorporate_observations(std::mt19937* prng,
+                              GenDB *gendb,
+                              const DataFrame& df);
 
-// Return a dataframe of num_samples samples from the HIRM.
-DataFrame make_pclean_samples(
-    int num_samples, HIRM *hirm, const PCleanSchema& schema,
-    const std::map<std::string, std::vector<std::string>>
-    &annotated_domains_for_relation,
-    std::mt19937* prng);
+// Return a dataframe of num_samples samples from the GenDB.
+// All existing rows added to gendb should have ids < start_row.
+DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
+                              std::mt19937* prng);

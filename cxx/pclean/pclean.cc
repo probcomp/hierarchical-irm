@@ -9,6 +9,7 @@
 #include <random>
 
 #include "cxxopts.hpp"
+#include "gendb.hh"
 #include "irm.hh"
 #include "hirm.hh"
 #include "inference.hh"
@@ -17,7 +18,6 @@
 #include "pclean/io.hh"
 #include "pclean/pclean_lib.hh"
 #include "pclean/schema.hh"
-#include "pclean/schema_helper.hh"
 
 int main(int argc, char** argv) {
   cxxopts::Options options(
@@ -70,16 +70,13 @@ int main(int argc, char** argv) {
     std::cout << "Error reading schema file" << schema_fn << "\n";
   }
 
-  // Translate schema
-  std::cout << "Making schema helper ...\n";
-  PCleanSchemaHelper schema_helper(
+  // Make GenDB
+  std::cout << "Making GenDB model ...\n";
+  GenDB gendb(
+      &prng,
       pclean_schema,
       result["only_final_emissions"].as<bool>(),
       result["record_class_is_clean"].as<bool>());
-  std::cout << "Translating schema ...\n";
-  std::map<std::string, std::vector<std::string>> annotated_domains_for_relations;
-  T_schema hirm_schema = schema_helper.make_hirm_schema(
-      &annotated_domains_for_relations);
 
   // Read observations
   std::cout << "Reading observations ...\n";
@@ -87,51 +84,34 @@ int main(int argc, char** argv) {
   std::cout << "Reading observations file from " << obs_fn << "\n";
   DataFrame df = DataFrame::from_csv(obs_fn);
 
-  // Create model
-  std::cout << "Creating hirm ...\n";
-  HIRM hirm(hirm_schema, &prng);
-
   // Incorporate observations.
-  std::cout << "Translating observations ...\n";
-  T_observations observations = translate_observations(
-      df, hirm_schema, annotated_domains_for_relations);
-
-  std::string heldout_fn = result["heldout"].as<std::string>();
-  T_observations heldout_obs;
-  T_observations encoding_observations;
-  if (heldout_fn.empty()) {
-    encoding_observations = observations;
-  } else {
-    std::cout << "Loading held out observations from " << heldout_fn << std::endl;
-    DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
-    heldout_obs = translate_observations(
-        heldout_df, hirm_schema, annotated_domains_for_relations);
-    encoding_observations = merge_observations(observations, heldout_obs);
-  }
-
-  std::cout << "Encoding observations ...\n";
-  T_encoding encoding = calculate_encoding(hirm_schema, encoding_observations);
-
   std::cout << "Incorporating observations ...\n";
-  incorporate_observations(&prng, &hirm, encoding, observations);
+  incorporate_observations(&prng, &gendb, df);
 
   // Run inference
   std::cout << "Running inference ...\n";
-  inference_hirm(&prng, &hirm,
-                 result["iters"].as<int>(),
-                 result["timeout"].as<int>(),
-                 result["verbose"].as<bool>());
+  inference_gendb(&prng, &gendb,
+                  result["iters"].as<int>(),
+                  result["timeout"].as<int>(),
+                  result["verbose"].as<bool>());
 
   // Save results
   if (result.count("output") > 0) {
     std::string out_fn = result["output"].as<std::string>();
     std::cout << "Savings results to " << out_fn << "\n";
-    to_txt(out_fn, hirm, encoding);
+    // TODO(thomaswc): Fix this.
+    // to_txt(out_fn, gendb.hirm, encoding);
   }
 
+  std::string heldout_fn = result["heldout"].as<std::string>();
   if (!heldout_fn.empty()) {
-    double lp = logp(&prng, &hirm, encoding, heldout_obs);
-    std::cout << "Log likelihood of held out data is " << lp << std::endl;
+    std::cout << "Loading held out observations from " << heldout_fn << std::endl;
+    DataFrame heldout_df = DataFrame::from_csv(heldout_fn);
+    std::cout << "Incorporating held out observations ...\n";
+    double lp1 = gendb.logp_score();
+    incorporate_observations(&prng, &gendb, heldout_df);
+    double lp2 = gendb.logp_score();
+    std::cout << "Log likelihood of held out data is " << (lp2 - lp1) << std::endl;
   }
 
   int num_samples = result["samples"].as<int>();
@@ -139,8 +119,7 @@ int main(int argc, char** argv) {
     std::string samples_out = result["output"].as<std::string>() + ".samples";
     std::cout << "Generating " << num_samples << " samples\n";
     DataFrame samples_df = make_pclean_samples(
-        num_samples, &hirm, pclean_schema,
-        annotated_domains_for_relations, &prng);
+        num_samples, df.data.begin()->second.size(), &gendb, &prng);
     std::cout << "Writing samples to " << samples_out << " ...\n";
     samples_df.to_csv(samples_out);
   }

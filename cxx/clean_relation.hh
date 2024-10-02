@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -159,7 +160,10 @@ class CleanRelation : public Relation<T> {
   }
 
   std::vector<int> get_cluster_assignment(const T_items& items) const {
-    assert(items.size() == domains.size());
+    if (items.size() != domains.size()) {
+      printf("Warning: for relation %s, items.size=%ld and domains.size()=%ld\n", name.c_str(), items.size(), domains.size());
+      std::exit(1);
+    }
     std::vector<int> z(domains.size());
     for (int i = 0; i < std::ssize(domains); ++i) {
       z[i] = domains[i]->get_cluster_assignment(items[i]);
