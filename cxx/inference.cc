@@ -70,9 +70,19 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
   }
 }
 
-void inference_gendb(std::mt19937* prng, GenDB* gendb, int iters, int timeout,
+void inference_gendb(std::mt19937* prng, GenDB* gendb, int iters,
+                     int hirm_iters_per_entity_iter, int timeout,
                      bool verbose) {
-  inference_hirm(prng, gendb->hirm, iters, timeout, verbose);
-  gendb->transition_reference_class_and_ancestors(
-      prng, gendb->schema.query.record_class);
+  for (int i = 0; i < iters; ++i) {
+    // TRANSITION HIRM
+    printf("Starting iteration %d, model score = %f\n", i + 1,
+           gendb->logp_score());
+    inference_hirm(prng, gendb->hirm, hirm_iters_per_entity_iter, timeout,
+                   verbose);
+
+    // TRANSITION ENTITIES
+    gendb->transition_reference_class_and_ancestors(
+        prng, gendb->schema.query.record_class);
+    CHECK_TIMEOUT(timeout, t_begin);
+  }
 }

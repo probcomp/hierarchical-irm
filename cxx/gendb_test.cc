@@ -962,7 +962,25 @@ BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb, 20);
+  auto init_phys_assignments = gendb.domain_crps.at("Physician").assignments;
   gendb.transition_reference_class_and_ancestors(&prng, "Record");
+  auto final_phys_assignments = gendb.domain_crps.at("Physician").assignments;
+  // Check that at least some tables were updated.
+  bool is_same = false;
+  if (init_phys_assignments.size() == final_phys_assignments.size()) {
+    is_same = true;
+    for (auto [i, t] : init_phys_assignments) {
+      if (!final_phys_assignments.contains(i)) {
+        is_same = false;
+        break;
+      }
+      if (!(final_phys_assignments.at(i) != t)) {
+        is_same = false;
+        break;
+      }
+    }
+  }
+  BOOST_TEST(!is_same);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
