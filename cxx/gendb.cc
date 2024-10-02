@@ -3,7 +3,6 @@
 
 #include "gendb.hh"
 
-#include <iostream>
 #include <map>
 #include <random>
 #include <string>
@@ -137,12 +136,6 @@ void GenDB::sample_and_incorporate_reference(
   } else {
     new_val = domain_crps[ref_class].sample(prng);
   }
-=======
-    std::mt19937* prng, const std::string& class_name,
-    const std::pair<std::string, int>& ref_key, const std::string& ref_class) {
-  auto [ref_field, class_item] = ref_key;
-  int new_val = domain_crps[ref_class].sample(prng);
->>>>>>> 9358ed2 (Finish inference_gendb method.)
 
   // Generate a unique ID for the sample and incorporate it into the
   // domain CRP.
@@ -196,20 +189,12 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
       std::pair<std::string, int> ref_key = {name, class_item};
       if (!reference_values.at(class_name).contains(ref_key)) {
         assert(prng != nullptr);
-<<<<<<< HEAD
         sample_and_incorporate_reference(
             prng, class_name, ref_key, cv->class_name, new_rows_have_unique_entities);
       }
       T_items ref_items = sample_class_ancestors(
           prng, cv->class_name, reference_values.at(class_name).at(ref_key),
           new_rows_have_unique_entities);
-=======
-        sample_and_incorporate_reference(prng, class_name, ref_key,
-                                         cv->class_name);
-      }
-      T_items ref_items = sample_class_ancestors(
-          prng, cv->class_name, reference_values.at(class_name).at(ref_key));
->>>>>>> 9358ed2 (Finish inference_gendb method.)
       items.insert(items.end(), ref_items.begin(), ref_items.end());
     }
   }
@@ -447,7 +432,6 @@ double GenDB::unincorporate_from_domain_cluster_relation(
   unincorporated[{irm_code, ref_class, item}] = cluster_id;
 
   // Recursively check and unincorporate the entity's ancestors.
-<<<<<<< HEAD
   if (relation_reference_indices.contains(r) &&
       relation_reference_indices.at(r).contains(ind)) {
     for (auto [name, r_ind] : relation_reference_indices.at(r).at(ind)) {
@@ -569,10 +553,6 @@ double GenDB::unincorporate_singleton(
   std::mt19937* prng = nullptr;  // unused
   int ref_val = reference_values.at(class_name).at({ref_field, class_item});
   T_items base_items = sample_class_ancestors(prng, ref_class, ref_val, false);
-=======
-  int ref_val = reference_values.at(class_name).at({ref_field, class_item});
-  T_items base_items = sample_class_ancestors(prng, ref_class, ref_val);
->>>>>>> 9358ed2 (Finish inference_gendb method.)
   logp_refclass +=
       unincorporate_from_entity_cluster(class_name, ref_field, class_item,
                                         unincorporated_from_entity_crps, false);
@@ -598,11 +578,6 @@ void GenDB::transition_reference(std::mt19937* prng,
                                  const std::string& ref_field,
                                  const int class_item) {
   // Get the Gibbs probabilities for the entity CRP of the reference value.
-  std::cerr << "a" << std::endl;
-  auto x = schema.classes.at(class_name);
-  std::cerr << "aa" << std::endl;
-  std::cerr << "ref field " << ref_field << std::endl;
-  // for (auto [a, b] : )
   const std::string& ref_class =
       std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
           .class_name;
@@ -669,7 +644,6 @@ void GenDB::transition_reference(std::mt19937* prng,
                                 unincorporated_from_entity_crps);
   }
 
-  std::cerr << "starting loop " << std::endl;
   // Loop over the candidate reference values and compute the logp of each.
   int i = 0;
   for (const auto& [table, n_customers] : crp_dist) {
