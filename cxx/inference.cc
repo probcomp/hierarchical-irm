@@ -73,6 +73,7 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
 void inference_gendb(std::mt19937* prng, GenDB* gendb, int iters,
                      int hirm_iters_per_entity_iter, int timeout,
                      bool verbose) {
+  clock_t t_begin = clock();
   for (int i = 0; i < iters; ++i) {
     // TRANSITION HIRM
     printf("Starting iteration %d, model score = %f\n", i + 1,
