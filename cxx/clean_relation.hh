@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "distributions/get_distribution.hh"
 #include "domain.hh"
@@ -85,6 +86,11 @@ class CleanRelation : public Relation<T> {
 
   // Incorporates a new vector of items and returns their cluster assignments.
   T_items incorporate_items(std::mt19937* prng, const T_items& items) {
+    // std::cerr << "incorporating into " << name << std::endl;
+    // for (int i: items) {
+    //   std::cerr << i << " ";
+    // }
+    // std::cerr << std::endl;
     assert(!data.contains(items));
     for (int i = 0; i < std::ssize(domains); ++i) {
       domains[i]->incorporate(prng, items[i]);
@@ -483,6 +489,9 @@ class CleanRelation : public Relation<T> {
   const std::vector<Domain*>& get_domains() const { return domains; }
 
   const ValueType& get_value(const T_items& items) const {
+    if (!data.contains(items)) {
+      std::cerr << "oh no " << name << " doesnt contain " << items[0] << std::endl;
+    }
     assert(data.contains(items));
     return data.at(items);
   }

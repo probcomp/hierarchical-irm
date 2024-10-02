@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "clean_relation.hh"
 #include "distributions/get_distribution.hh"
@@ -140,6 +141,14 @@ class NoisyRelation : public Relation<T> {
   }
 
   const ValueType& get_value(const T_items& items) const {
+    if (!data.contains(items)) {
+      std::cerr << "on ho rel ls " << name << "first item is " << items[0]  << std::endl;
+      std::cerr << "items are ";
+      for (int i: items) {
+        std::cerr << i << " ";
+      }
+      std::cerr << std::endl;
+    }
     assert(data.contains(items));
     return data.at(items);
   }

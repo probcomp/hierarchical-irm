@@ -6,6 +6,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
+#include <iostream>
 
 #include "pclean/io.hh"
 
@@ -545,6 +546,53 @@ BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb, 20);
   gendb.transition_reference_class_and_ancestors(&prng, "Record");
+}
+
+BOOST_AUTO_TEST_CASE(test_transition_reference_complex_schema) {
+  std::stringstream ss_complex(R"""(
+class A
+  x ~ real
+
+class B
+  a ~ A
+
+class E
+  y ~ real
+
+class C
+  a ~ A
+  b ~ B
+
+class Record
+  b ~ B
+  c ~ C
+  e ~ E
+
+observe
+  b.a.x as BAX
+  c.a.x as CAX
+  c.b.a.x as CBAX
+  e.y as EY
+  from Record
+)""");
+  PCleanSchema complex_schema;
+  [[maybe_unused]] bool ok = read_schema(ss_complex, &complex_schema);
+  assert(ok);
+  
+  std::mt19937 prng;
+  GenDB gendb(&prng, complex_schema);
+
+  std::normal_distribution<double> d(0., 1.);
+  std::map<std::string, ObservationVariant> obs;
+
+  int i = 0;
+  while (i < 30) {
+    obs = {{"BAX", d(prng)}, {"CAX", d(prng)}, {"CBAX", d(prng)}, {"EY", d(prng)}};
+    gendb.incorporate(&prng, {i++, obs});
+  }
+  gendb.transition_reference_class_and_ancestors(&prng, "Record");
+
+  
 }
 
 BOOST_AUTO_TEST_SUITE_END()

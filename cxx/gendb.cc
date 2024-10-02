@@ -350,13 +350,11 @@ void GenDB::incorporate_reference(
     std::map<std::string,
              std::unordered_map<T_items, ObservationVariant, H_items>>&
         stored_values) {
-  for (const auto& [rel_name, query_field] : schema.query.fields) {
-    if (stored_values.contains(rel_name)) {
-      auto f = [&](auto rel) {
-        incorporate_reference_relation(prng, rel, rel_name, stored_values);
-      };
-      std::visit(f, hirm->get_relation(rel_name));
-    }
+  for (const auto& [rel_name, m] : stored_values) {
+    auto f = [&](auto rel) {
+      incorporate_reference_relation(prng, rel, rel_name, stored_values);
+    };
+    std::visit(f, hirm->get_relation(rel_name));
   }
 }
 
@@ -375,7 +373,11 @@ void GenDB::incorporate_reference_relation(
     }
   }
   for (const auto& [items, value] : stored_values.at(rel_name)) {
-    rel->incorporate(prng, items, std::get<T>(value));
+    // A base relation may have already been reincorporated by a different noisy
+    // relation.
+    if (!rel->get_data().contains(items)) {
+      rel->incorporate(prng, items, std::get<T>(value));
+    }
   }
 }
 
@@ -534,12 +536,16 @@ double GenDB::unincorporate_singleton(
 
   std::mt19937* prng = nullptr;  // unused
   int ref_val = reference_values.at(class_name).at({ref_field, class_item});
-  T_items base_items = sample_class_ancestors(prng, ref_class, ref_val);
   logp_refclass +=
       unincorporate_from_entity_cluster(class_name, ref_field, class_item,
                                         unincorporated_from_entity_crps, false);
 
   for (auto& rel : class_to_relations.at(ref_class)) {
+    // CLEAN UP
+    const std::vector<std::string>& domains = std::visit(
+        [&](auto tr) { return tr.domains; }, hirm->schema.at(rel));
+    T_items base_items(domains.size());
+    get_relation_items(rel, base_items.size() - 1, ref_val, base_items);
     logp_refclass += std::visit(
         [&](auto r) {
           return unincorporate_reference_relation_singleton(r, rel, base_items,
@@ -548,6 +554,11 @@ double GenDB::unincorporate_singleton(
         hirm->get_relation(rel));
   }
   for (auto& rel : class_to_relations.at(ref_class)) {
+    // CLEAN UP
+    const std::vector<std::string>& domains = std::visit(
+        [&](auto tr) { return tr.domains; }, hirm->schema.at(rel));
+    T_items base_items(domains.size());
+    get_relation_items(rel, base_items.size() - 1, ref_val, base_items);
     logp_refclass += unincorporate_from_domain_cluster_relation(
         rel, base_items.back(), base_items.size() - 1,
         unincorporated_from_domains);
@@ -559,16 +570,35 @@ void GenDB::transition_reference(std::mt19937* prng,
                                  const std::string& class_name,
                                  const std::string& ref_field,
                                  const int class_item) {
+  auto assert_size = [&]() {
+    int bbax_size = std::visit([&](auto r) {return r->get_data().size();}, hirm->get_relation("B::BAX"));
+    int bcbax_size = std::visit([&](auto r) {return r->get_data().size();}, hirm->get_relation("B::CBAX"));
+    assert(bbax_size == bcbax_size);
+  };
+  // auto f = [&](auto r) {
+  //   auto d = r->get_data();
+  //   for (auto [its, v] : d) {
+  //     for (int i: its) {
+  //       std::cerr << i << " ";
+  //     }
+  //     std::cerr << std::endl;
+  //   }
+  // };
+  // std::visit(f, hirm->get_relation("B::BAX"));
+  // std::cerr << "BAX items" << std::endl;
+  // std::visit(f, hirm->get_relation("BAX"));
+  // std::cerr << "CBAX items" << std::endl;
+  // std::visit(f, hirm->get_relation("CBAX"));
+  // assert_size();
   // Get the Gibbs probabilities for the entity CRP of the reference value.
-  std::cerr << "a" << std::endl;
-  auto x = schema.classes.at(class_name);
-  std::cerr << "aa" << std::endl;
-  std::cerr << "ref field " << ref_field << std::endl;
+  // std::cerr << "a" << std::endl;
+  // auto x = schema.classes.at(class_name);
+  // std::cerr << "aa" << std::endl;
+  // std::cerr << "ref field " << ref_field << std::endl;
   // for (auto [a, b] : )
   const std::string& ref_class =
       std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
           .class_name;
-  std::cerr << "b" << std::endl;
   int init_refval = reference_values.at(class_name).at({ref_field, class_item});
   std::cerr << "c" << std::endl;
   std::unordered_map<int, double> crp_dist =
@@ -604,6 +634,7 @@ void GenDB::transition_reference(std::mt19937* prng,
       singleton_entity = t;
     }
   }
+  std::cerr << "singleton entity is " << singleton_entity << std::endl;
 
   // Unincorporate the reference value from its entity CRP. It is important that
   // this is done before the call to unincorporate_singleton.
@@ -630,9 +661,15 @@ void GenDB::transition_reference(std::mt19937* prng,
   }
 
   std::cerr << "starting loop " << std::endl;
+  std::cerr << "TABLES ARE" << std::endl;
+  for (auto [t, n] : crp_dist) {
+    std::cerr << t << " ";
+  }
+  std::cerr << std::endl;
   // Loop over the candidate reference values and compute the logp of each.
   int i = 0;
   for (const auto& [table, n_customers] : crp_dist) {
+
     entities[i] = table;
     logps[i] += log(n_customers);
 
@@ -645,18 +682,34 @@ void GenDB::transition_reference(std::mt19937* prng,
 
     // Handle the singleton entity, if it was not init_refval (i.e. it is
     // previously unseen).
+    std::cerr << "haidnlng singeton " << std::endl;
     if (table == singleton_entity) {
       // Sample and incorporate a new row into the ref_class table. Update
       // reference_values and domain_crps.
-      T_items base_items = sample_class_ancestors(prng, ref_class, table);
+      T_items unused_base_items = sample_class_ancestors(prng, ref_class, table);
 
       // Sample and incorporate values into the relations corresponding to
       // the reference class. This may also incorporate new values into the IRM
       // domain clusters.
+      std::cerr << "samp and inc into singleton, base items are " << std::endl;
       for (auto& rel : class_to_relations.at(ref_class)) {
-        hirm->sample_and_incorporate_relation(prng, rel, base_items);
+        std::cerr << "entered loop " << std::endl;
+        const std::vector<std::string>& domains = std::visit(
+            [&](auto tr) { return tr.domains; }, hirm->schema.at(rel));
+        std::cerr << "entered loop 2 " << std::endl;
+        T_items base_items(domains.size());
+        std::cerr << "entered loop rel " << rel << " table " << table << std::endl;
+        get_relation_items(rel, base_items.size() - 1, table, base_items);
+        std::cerr << "done get relation " << std::endl;
+        bool c = std::visit([&](auto r) {return r->get_data().contains(base_items);}, hirm->get_relation(rel));
+        if (!c) {
+          hirm->sample_and_incorporate_relation(prng, rel, base_items);
+        }
       }
+      // c = std::visit([&](auto r) {return r->get_data().contains({0, 3});}, hirm->get_relation("B::BAX"));
+      // std::cerr << "AFTER BBAX CONTAINS 0 3? " << c << std::endl;
     }
+    std::cerr << "done singeton " << std::endl;
 
     // Get items and values with new entity linkages.
     decltype(stored_values) updated_values_i = update_reference_items(
@@ -667,10 +720,12 @@ void GenDB::transition_reference(std::mt19937* prng,
     // domain clusters.
     incorporate_reference(prng, updated_values_i);
 
+
     // Unincorporate the items containing the entity linkage from relations.
     // New entities may have been added to domain clusters in the IRMs;
     // unincorporate them, add up their logp, and store the cluster IDs
     // (so they can be re-incorporated if this table is chosen).
+    std::cerr << "uninc ref in loop " << std::endl;
     logps[i] += unincorporate_reference(domain_inds, class_name, ref_field,
                                         class_item, updated_values_i,
                                         unincorporated_from_domains[table]);
@@ -678,6 +733,7 @@ void GenDB::transition_reference(std::mt19937* prng,
     // If table is the singleton, unincorporate and store its references from
     // the entity CRPs. Unincorporate and store the items/values corresponding
     // to the added row in the reference class and their IRM domain clusters.
+    std::cerr << "final ston" << std::endl;
     if (table == singleton_entity) {
       logps[i] += unincorporate_singleton(
           class_name, ref_field, class_item, ref_class,
@@ -686,6 +742,7 @@ void GenDB::transition_reference(std::mt19937* prng,
     }
 
     ++i;
+    // assert(false);
   }
 
   // Sample a new reference value.
@@ -697,7 +754,7 @@ void GenDB::transition_reference(std::mt19937* prng,
   if (singleton_entity == new_refval) {
     updated_values_new.merge(ref_class_relation_stored_values);
   }
-
+  std::cerr << "reinc new refval" << std::endl;
   reincorporate_new_refval(class_name, ref_field, class_item, new_refval,
                            ref_class, updated_values_new,
                            unincorporated_from_domains.at(new_refval),
@@ -750,7 +807,9 @@ void GenDB::reincorporate_new_refval(
   domain_crps.at(ref_class).incorporate(ref_id, new_refval);
 
   // Incorporate the items/values with new entity linkages into the relations.
+  std::cerr << "incref finally" << std::endl;
   incorporate_reference(prng, stored_value_map);
+  std::cerr << "end incref finally" << std::endl;
 
   // Remove empty relation clusters.
   hirm->cleanup_relation_clusters();
