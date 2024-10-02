@@ -30,6 +30,11 @@ GenDB::GenDB(std::mt19937* prng, const PCleanSchema& schema_,
   for (const auto& [class_name, unused_class] : schema.classes) {
     domain_crps[class_name] = CRP();
   }
+  for (const auto& [rel_name, trel] : hirm->schema) {
+    const std::vector<std::string>& domains =
+        std::visit([&](auto tr) { return tr.domains; }, trel);
+    class_to_relations[domains.back()].push_back(rel_name);
+  }
 }
 
 double GenDB::logp_score() const {
@@ -87,11 +92,11 @@ T_items GenDB::sample_entities_relation(
 
   // These are noisy relation domains along the path from the latent cleanly-
   // observed class to the record class.
-  std::string ref_field = *class_path_start;
+  const std::string& ref_field = *class_path_start;
 
   // If the reference field isn't populated, sample a value from a CRP and
   // add it to reference_values.
-  std::string ref_class =
+  const std::string& ref_class =
       std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
           .class_name;
   std::tuple<std::string, std::string, int> ref_key = {class_name, ref_field,
@@ -109,6 +114,15 @@ T_items GenDB::sample_entities_relation(
   // list.
   items.push_back(class_item);
   return items;
+}
+
+int GenDB::get_reference_id(const std::string& class_name,
+                            const std::string& ref_field,
+                            const int class_item) {
+  std::stringstream new_id_str;
+  std::string sep = " ";  // Spaces are disallowed in class/variable names.
+  new_id_str << class_name << sep << class_item << sep << ref_field;
+  return std::hash<std::string>{}(new_id_str.str());
 }
 
 void GenDB::sample_and_incorporate_reference(
@@ -130,10 +144,7 @@ void GenDB::sample_and_incorporate_reference(
 
   // Generate a unique ID for the sample and incorporate it into the
   // domain CRP.
-  std::stringstream new_id_str;
-  std::string sep = " ";  // Spaces are disallowed in class/variable names.
-  new_id_str << class_name << sep << class_item << sep << ref_field;
-  int new_id = std::hash<std::string>{}(new_id_str.str());
+  int new_id = get_reference_id(class_name, ref_field, class_item);
   reference_values[ref_key] = new_val;
   domain_crps[ref_class].incorporate(new_id, new_val);
 }
@@ -183,6 +194,7 @@ T_items GenDB::sample_class_ancestors(std::mt19937* prng,
       std::tuple<std::string, std::string, int> ref_key = {class_name, name,
                                                            class_item};
       if (!reference_values.contains(ref_key)) {
+        assert(prng != nullptr);
         sample_and_incorporate_reference(
             prng, ref_key, cv->class_name, new_rows_have_unique_entities);
       }
@@ -218,19 +230,9 @@ void GenDB::get_relation_items(const std::string& rel_name, const int ind,
   }
 }
 
-// Unincorporates the value of class_name.ref_field where the primary key
-// equals class_item. If `from_cluster_only` is true, values are unincorporated
-// from the relation's clusters without deleting empty clusters. This is useful
-// for the Gibbs sampler.
-std::map<std::string, std::unordered_map<T_items, ObservationVariant, H_items>>
-GenDB::unincorporate_reference(const std::string& class_name,
-                               const std::string& ref_field,
-                               const int class_item,
-                               const bool from_cluster_only) {
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-      stored_value_map;
-
+std::map<std::string, std::vector<size_t>> GenDB::get_domain_inds(
+    const std::string& class_name, const std::string& ref_field) {
+  std::map<std::string, std::vector<size_t>> domain_inds;
   for (const auto& [rel_name, query_field] : schema.query.fields) {
     // Find relations that involve both the class and its reference field
     // (exclude relations that include the class only because it's a node in
@@ -238,24 +240,30 @@ GenDB::unincorporate_reference(const std::string& class_name,
     // observed attribute.)
     std::vector<std::string> domains = std::visit(
         [&](auto& trel) { return trel.domains; }, hirm->schema.at(rel_name));
-    std::vector<size_t> domain_inds;
     for (size_t i = 0; i < domains.size(); ++i) {
       if (domains[i] == class_name &&
           relation_reference_indices.at(rel_name).at(i).contains(
               ref_field)) {
-        domain_inds.push_back(i);
+        domain_inds[rel_name].push_back(i);
       }
     }
+  }
+  return domain_inds;
+}
 
-    // If this relation doesn't contain the relevant class/reference field, skip
-    // it. Either this relation doesn't have the given class as a domain, or it
-    // is a noisy relation where the class is noisily reporting observations of
-    // a different class and the DAG path from the observation doesn't contain
-    // the reference field.
-    if (domain_inds.size() == 0) {
-      continue;
-    }
-
+// Unincorporates the value of class_name.ref_field where the primary key
+// equals class_item.
+double GenDB::unincorporate_reference(
+    const std::map<std::string, std::vector<size_t>> domain_inds,
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_value_map,
+    std::map<std::tuple<int, std::string, T_item>, int>&
+        unincorporated_from_domains) {
+  double logp_relations = 0.;
+  for (auto [rel_name, inds] : domain_inds) {
     // Access the relation's items where the domain is class_name and the entity
     // value is class_item.
     RelationVariant r = hirm->get_relation(rel_name);
@@ -265,51 +273,56 @@ GenDB::unincorporate_reference(const std::string& class_name,
         },
         r);
 
-    for (const size_t ind : domain_inds) {
+    for (const size_t ind : inds) {
       for (const auto& item : items) {
         if (item[ind] == class_item) {
           auto f = [&](auto rel) {
-            unincorporate_reference_relation(
-                rel, rel_name, item, stored_value_map, ind, from_cluster_only);
+            logp_relations += unincorporate_reference_relation(
+                rel, rel_name, item, ind, stored_value_map);
           };
           std::visit(f, r);
         }
       }
     }
   }
-  return stored_value_map;
+
+  // Check if any entities need to be removed from IRM domain clusters (after
+  // they've been unincorporated from relations) and compute the change in logp.
+  double logp_domain_cluster = 0.;
+  int ref_val = reference_values.at({class_name, ref_field, class_item});
+  for (auto& [rel_name, inds] : domain_inds) {
+    for (int d_ind : inds) {
+      int r_ind = relation_reference_indices.at(rel_name).at(d_ind).at(ref_field);
+      logp_domain_cluster += unincorporate_from_domain_cluster_relation(
+          rel_name, ref_val, r_ind, unincorporated_from_domains);
+    }
+  }
+  return logp_relations + logp_domain_cluster;
 }
 
 // Recursively unincorporates from base relations and stores values.
 template <typename T>
-void GenDB::unincorporate_reference_relation(
+double GenDB::unincorporate_reference_relation(
     Relation<T>* rel, const std::string& rel_name, const T_items& items,
+    const size_t ind,
     std::map<std::string,
              std::unordered_map<T_items, ObservationVariant, H_items>>&
-        stored_value_map,
-    const size_t ind, bool from_cluster_only) {
-  bool should_unincorporate;
-  if (from_cluster_only) {
-    should_unincorporate = rel->clusters_contains(items);
-  } else {
-    should_unincorporate = rel->get_data().contains(items);
-  }
-
+        stored_value_map) {
   // We can stop unincorporating from base relations if the index of
   // the domain of interest is greater than the number of domains.
-  should_unincorporate = should_unincorporate && ind < items.size();
-  if (!should_unincorporate) {
-    return;
+  if (!rel->get_data().contains(items) || ind >= items.size()) {
+    return 0.;
   }
 
   // Store the items/value and unincorporate them.
   T value = rel->get_value(items);
   stored_value_map[rel_name][items] = value;
-  if (from_cluster_only) {
-    rel->unincorporate_from_cluster(items);
-  } else {
-    rel->unincorporate(items);
-  }
+
+  rel->unincorporate_from_cluster(items);
+  std::mt19937* prng = nullptr;  // unused
+  double logp_rel = rel->cluster_or_prior_logp_from_items(prng, items, value);
+  // Clean up data but leave empty clusters in case they are re-populated later.
+  rel->cleanup_data(items);
 
   // Recursively unincorporate from base relations.
   if (const T_noisy_relation* t_rel =
@@ -318,10 +331,10 @@ void GenDB::unincorporate_reference_relation(
     T_items base_items = noisy_rel->get_base_items(items);
     RelationVariant base_rel = hirm->get_relation(t_rel->base_relation);
     Relation<T>* base_rel_t = std::get<Relation<T>*>(base_rel);
-    unincorporate_reference_relation(base_rel_t, t_rel->base_relation,
-                                     base_items, stored_value_map, ind,
-                                     from_cluster_only);
+    logp_rel += unincorporate_reference_relation(
+        base_rel_t, t_rel->base_relation, base_items, ind, stored_value_map);
   }
+  return logp_rel;
 }
 
 std::map<std::string, std::unordered_map<T_items, ObservationVariant, H_items>>
@@ -352,17 +365,17 @@ GenDB::update_reference_items(
   return new_stored_values;
 }
 
+// Incorporates the data in stored_values (containing updated entity linkages)
+// into the relations. New IRM domain clusters may be added.
 void GenDB::incorporate_reference(
     std::mt19937* prng,
     std::map<std::string,
              std::unordered_map<T_items, ObservationVariant, H_items>>&
-        stored_values,
-    const bool to_cluster_only) {
+        stored_values) {
   for (const auto& [rel_name, query_field] : schema.query.fields) {
     if (stored_values.contains(rel_name)) {
       auto f = [&](auto rel) {
-        incorporate_reference_relation(prng, rel, rel_name, stored_values,
-                                       to_cluster_only);
+        incorporate_reference_relation(prng, rel, rel_name, stored_values);
       };
       std::visit(f, hirm->get_relation(rel_name));
     }
@@ -374,24 +387,386 @@ void GenDB::incorporate_reference_relation(
     std::mt19937* prng, Relation<T>* rel, const std::string& rel_name,
     std::map<std::string,
              std::unordered_map<T_items, ObservationVariant, H_items>>&
-        stored_values,
-    const bool to_cluster_only) {
+        stored_values) {
   if (const T_noisy_relation* trel =
           std::get_if<T_noisy_relation>(&hirm->schema.at(rel_name))) {
     if (stored_values.contains(trel->base_relation)) {
       NoisyRelation<T>* noisy_rel = reinterpret_cast<NoisyRelation<T>*>(rel);
       incorporate_reference_relation(prng, noisy_rel->base_relation,
-                                     trel->base_relation, stored_values,
-                                     to_cluster_only);
+                                     trel->base_relation, stored_values);
     }
   }
   for (const auto& [items, value] : stored_values.at(rel_name)) {
-    if (to_cluster_only) {
-      rel->incorporate_to_cluster(items, std::get<T>(value));
-    } else {
-      rel->incorporate(prng, items, std::get<T>(value));
+    rel->incorporate(prng, items, std::get<T>(value));
+  }
+}
+
+// After data has been unincorporated from relations, entities that no longer
+// appear in the data may still be incorporated into IRM domain clusters. This
+// method detects and unincorporates the entities, and stores their domain
+// cluster IDs (so that the entities can later be incorporated into the same
+// clusters, if sampled by transition_reference). It returns the CRP logp of any
+// unincorporated entities.
+double GenDB::unincorporate_from_domain_cluster_relation(
+    const std::string& r, const int item, const int ind,
+    std::map<std::tuple<int, std::string, T_item>, int>& unincorporated) {
+  double logp_adj = 0.;
+  int irm_code = hirm->relation_to_table(r);
+  IRM* irm = hirm->irms.at(irm_code);
+  const std::vector<std::string>& domains =
+      std::visit([&](auto trel) { return trel.domains; }, hirm->schema.at(r));
+  const std::string& ref_class = domains.at(ind);
+
+  // Return if we have already unincorporated this entity from the IRM domain
+  // cluster, or if we shouldn't unincorporate it because it still exists in
+  // the data.
+  if (unincorporated.contains({irm_code, ref_class, item}) ||
+      irm->has_observation(ref_class, item)) {
+    return logp_adj;
+  }
+
+  Domain* domain = irm->domains.at(ref_class);
+  CRP& crp = domain->crp;
+  int cluster_id = crp.assignments.at(item);
+  domain->unincorporate(item);
+  if (crp.tables.contains(cluster_id)) {
+    logp_adj += crp.logp(cluster_id);
+  } else {
+    logp_adj += crp.logp_new_table();
+  }
+  unincorporated[{irm_code, ref_class, item}] = cluster_id;
+
+  // Recursively check and unincorporate the entity's ancestors.
+  if (relation_reference_indices.contains(r) &&
+      relation_reference_indices.at(r).contains(ind)) {
+    for (auto [name, r_ind] : relation_reference_indices.at(r).at(ind)) {
+      int ref_item = reference_values.at({ref_class, name, item});
+      logp_adj += unincorporate_from_domain_cluster_relation(r, ref_item, r_ind,
+                                                             unincorporated);
     }
   }
+  return logp_adj;
+}
+
+// Loops over the reference fields of class_name at class_item and
+// unincorporates the reference values from their entity clusters (assuming
+// class_name at class_item will be unincorporated). Stores the unincorporated
+// values so that they maybe re-incorporated later, if sampled by
+// transition_reference. This storage isn't strictly necessary, since we could
+// use reference_values to deduce the values that were unincorporated from the
+// entity CRPs, but this is a bit more convenient. For the top-level call (from
+// transition_reference, is_ancestor_reference=false), we do not accumulate logp
+// or unincorporate from the entity CRP, since these are handled separately for
+// the reference that's being transitioned.
+double GenDB::unincorporate_from_entity_cluster(
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item,
+    std::map<std::tuple<std::string, std::string, int>, int>& unincorporated,
+    const bool is_ancestor_reference) {
+  double logp_adj = 0.;
+
+  int ref_id = get_reference_id(class_name, ref_field, class_item);
+  int ref_item = reference_values.at({class_name, ref_field, class_item});
+
+  const std::string& ref_class =
+      std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
+          .class_name;
+  CRP& crp = domain_crps.at(ref_class);
+  if (is_ancestor_reference) {
+    crp.unincorporate(ref_id);
+    unincorporated[{class_name, ref_field, class_item}] = ref_item;
+  }
+
+  if (crp.tables.contains(ref_item)) {
+    if (is_ancestor_reference) {
+      logp_adj += crp.logp(ref_item);
+    }
+
+    for (const auto& [name, var] : schema.classes.at(ref_class).vars) {
+      if (std::holds_alternative<ClassVar>(var.spec)) {
+        // If this reference value was the only one in its entity_crp table,
+        // then the entity is removed from its class and we need to
+        // recursively unincorporate *its* reference values.
+        logp_adj += unincorporate_from_entity_cluster(ref_class, name, ref_item,
+                                                      unincorporated);
+      }
+    }
+  } else {
+    if (is_ancestor_reference) {
+      logp_adj += crp.logp_new_table();
+    }
+  }
+  return logp_adj;
+}
+
+// Recursively unincorporates from base relations and stores values.
+template <typename T>
+double GenDB::unincorporate_reference_relation_singleton(
+    Relation<T>* rel, const std::string& rel_name, const T_items& items,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_value_map) {
+  // We can stop unincorporating from base relations if the index of
+  // the domain of interest is greater than the number of domains.
+  const std::vector<std::string>& domains = std::visit(
+      [&](auto tr) { return tr.domains; }, hirm->schema.at(rel_name));
+  if (!rel->get_data().contains(items) ||
+      domain_crps.at(domains.back()).tables.contains(items.back())) {
+    return 0.;
+  }
+
+  // Store the items/value and unincorporate them.
+  T value = rel->get_value(items);
+  stored_value_map[rel_name][items] = value;
+
+  rel->unincorporate_from_cluster(items);
+  // Unused prng, since the cluster should exist.
+  std::mt19937* prng = nullptr;
+  double logp_rel = rel->cluster_or_prior_logp_from_items(prng, items, value);
+  // Clean up data but leave empty clusters in case they are re-populated later.
+  rel->cleanup_data(items);
+
+  // Recursively unincorporate from base relations.
+  if (const T_noisy_relation* t_rel =
+          std::get_if<T_noisy_relation>(&hirm->schema.at(rel_name))) {
+    auto noisy_rel = reinterpret_cast<NoisyRelation<T>*>(rel);
+    T_items base_items = noisy_rel->get_base_items(items);
+    RelationVariant base_rel = hirm->get_relation(t_rel->base_relation);
+    Relation<T>* base_rel_t = std::get<Relation<T>*>(base_rel);
+    logp_rel += unincorporate_reference_relation_singleton(
+        base_rel_t, t_rel->base_relation, base_items, stored_value_map);
+  }
+  return logp_rel;
+}
+
+// When unincorporating the only reference to a given entity, we additionally
+// need to unincorporate data from relations corresponding to attributes of the
+// entity's class (or noisy observations of ancestor attributes by the entity's
+// class).
+double GenDB::unincorporate_singleton(
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item, const std::string& ref_class,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_value_map,
+    std::map<std::tuple<int, std::string, T_item>, int>&
+        unincorporated_from_domains,
+    std::map<std::tuple<std::string, std::string, int>, int>&
+        unincorporated_from_entity_crps) {
+  double logp_refclass = 0.;
+
+  std::mt19937* prng = nullptr;  // unused
+  int ref_val = reference_values.at({class_name, ref_field, class_item});
+  T_items base_items = sample_class_ancestors(prng, ref_class, ref_val, false);
+  logp_refclass +=
+      unincorporate_from_entity_cluster(class_name, ref_field, class_item,
+                                        unincorporated_from_entity_crps, false);
+
+  for (auto& rel : class_to_relations.at(ref_class)) {
+    logp_refclass += std::visit(
+        [&](auto r) {
+          return unincorporate_reference_relation_singleton(r, rel, base_items,
+                                                            stored_value_map);
+        },
+        hirm->get_relation(rel));
+  }
+  for (auto& rel : class_to_relations.at(ref_class)) {
+    logp_refclass += unincorporate_from_domain_cluster_relation(
+        rel, base_items.back(), base_items.size() - 1,
+        unincorporated_from_domains);
+  }
+  return logp_refclass;
+}
+
+void GenDB::transition_reference(std::mt19937* prng,
+                                 const std::string& class_name,
+                                 const std::string& ref_field,
+                                 const int class_item) {
+  // Get the Gibbs probabilities for the entity CRP of the reference value.
+  const std::string& ref_class =
+      std::get<ClassVar>(schema.classes.at(class_name).vars.at(ref_field).spec)
+          .class_name;
+  int init_refval = reference_values.at({class_name, ref_field, class_item});
+  std::unordered_map<int, double> crp_dist =
+      domain_crps[ref_class].tables_weights_gibbs(init_refval);
+
+  // For each relation, get the indices (in the items vector) of the reference
+  // value being transitioned.
+  std::map<std::string, std::vector<size_t>> domain_inds =
+      get_domain_inds(class_name, ref_field);
+
+  // Unincorporate and compute the logp for the current reference value,
+  // accounting for relation cluster logps and IRM domain CRP logps. The Gibbs
+  // probability of the reference value in its own entity CRP is handled
+  // separately. Additional work is done later for singleton reference values.
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      stored_values;  // Stores relation items and values.
+  std::map<int, std::map<std::tuple<int, std::string, T_item>, int>>
+      unincorporated_from_domains;  // Stores IRM domain cluster IDs.
+  double logp_current = unincorporate_reference(
+      domain_inds, class_name, ref_field, class_item, stored_values,
+      unincorporated_from_domains[init_refval]);
+
+  std::vector<int> entities(crp_dist.size());
+  std::vector<double> logps(crp_dist.size(), 0.);
+
+  // Find which entity represents the singleton CRP table -- this is either
+  // init_refval or a previously-unseen entity.
+  int singleton_entity = init_refval;
+  for (const auto [t, w] : crp_dist) {
+    if (!domain_crps.at(ref_class).tables.contains(t)) {
+      singleton_entity = t;
+    }
+  }
+
+  // Unincorporate the reference value from its entity CRP. It is important that
+  // this is done before the call to unincorporate_singleton.
+  int ref_id = get_reference_id(class_name, ref_field, class_item);
+  domain_crps.at(ref_class).unincorporate(ref_id);
+
+  // If the current reference value is a singleton (there are no other
+  // references to it, and it is the sole member of its entity CRP table), we
+  // need to unincorporate its row from the class that it references (including
+  // unincorporating all associated data from the relations associated with its
+  // attributes).
+  std::map<std::string,
+           std::unordered_map<T_items, ObservationVariant, H_items>>
+      ref_class_relation_stored_values;  // Stores data unincorporated from
+                                         // relations.
+  std::map<std::tuple<std::string, std::string, int>, int>
+      unincorporated_from_entity_crps;
+  if (singleton_entity == init_refval) {
+    logp_current +=
+        unincorporate_singleton(class_name, ref_field, class_item, ref_class,
+                                ref_class_relation_stored_values,
+                                unincorporated_from_domains[init_refval],
+                                unincorporated_from_entity_crps);
+  }
+
+  // Loop over the candidate reference values and compute the logp of each.
+  int i = 0;
+  for (const auto& [table, n_customers] : crp_dist) {
+    entities[i] = table;
+    logps[i] += log(n_customers);
+
+    reference_values.at({class_name, ref_field, class_item}) = table;
+
+    if (table == init_refval) {
+      logps[i++] += logp_current;
+      continue;
+    }
+
+    // Handle the singleton entity, if it was not init_refval (i.e. it is
+    // previously unseen).
+    if (table == singleton_entity) {
+      // Sample and incorporate a new row into the ref_class table. Update
+      // reference_values and domain_crps.
+      T_items base_items = sample_class_ancestors(prng, ref_class, table, false);
+
+      // Sample and incorporate values into the relations corresponding to
+      // the reference class. This may also incorporate new values into the IRM
+      // domain clusters.
+      for (auto& rel : class_to_relations.at(ref_class)) {
+        hirm->sample_and_incorporate_relation(prng, rel, base_items);
+      }
+    }
+
+    // Get items and values with new entity linkages.
+    decltype(stored_values) updated_values_i = update_reference_items(
+        stored_values, class_name, ref_field, class_item, table);
+
+    // Incorporate the items/values with new entity linkages into the
+    // relations. This may also incorporate new values into the IRM
+    // domain clusters.
+    incorporate_reference(prng, updated_values_i);
+
+    // Unincorporate the items containing the entity linkage from relations.
+    // New entities may have been added to domain clusters in the IRMs;
+    // unincorporate them, add up their logp, and store the cluster IDs
+    // (so they can be re-incorporated if this table is chosen).
+    logps[i] += unincorporate_reference(domain_inds, class_name, ref_field,
+                                        class_item, updated_values_i,
+                                        unincorporated_from_domains[table]);
+
+    // If table is the singleton, unincorporate and store its references from
+    // the entity CRPs. Unincorporate and store the items/values corresponding
+    // to the added row in the reference class and their IRM domain clusters.
+    if (table == singleton_entity) {
+      logps[i] += unincorporate_singleton(
+          class_name, ref_field, class_item, ref_class,
+          ref_class_relation_stored_values, unincorporated_from_domains[table],
+          unincorporated_from_entity_crps);
+    }
+
+    ++i;
+  }
+
+  // Sample a new reference value.
+  int new_ind = sample_from_logps(logps, prng);
+  int new_refval = entities.at(new_ind);
+
+  decltype(stored_values) updated_values_new = update_reference_items(
+      stored_values, class_name, ref_field, class_item, new_refval);
+  if (singleton_entity == new_refval) {
+    updated_values_new.merge(ref_class_relation_stored_values);
+  }
+
+  reincorporate_new_refval(class_name, ref_field, class_item, new_refval,
+                           ref_class, updated_values_new,
+                           unincorporated_from_domains.at(new_refval),
+                           unincorporated_from_entity_crps);
+}
+
+void GenDB::reincorporate_new_refval(
+    const std::string& class_name, const std::string& ref_field,
+    const int class_item, const int new_refval, const std::string& ref_class,
+    std::map<std::string,
+             std::unordered_map<T_items, ObservationVariant, H_items>>&
+        stored_value_map,
+    std::map<std::tuple<int, std::string, T_item>, int>&
+        unincorporated_from_domains,
+    std::map<std::tuple<std::string, std::string, int>, int>&
+        unincorporated_from_entity_crps) {
+  // Nothing is sampled anew in this method so prng is unused.
+  std::mt19937* prng = nullptr;
+
+  // Incorporate the chosen entities back into their previous domain CRPs.
+  for (auto [k, v] : unincorporated_from_domains) {
+    auto [irm_code, ref_class, item] = k;
+    hirm->irms.at(irm_code)->domains.at(ref_class)->incorporate(prng, item, v);
+  }
+
+  // Update reference_values.
+  reference_values.at({class_name, ref_field, class_item}) = new_refval;
+
+  // Check if the singleton was selected.
+  bool is_singleton = !domain_crps.at(ref_class).tables.contains(new_refval);
+  if (is_singleton) {
+    // Re-incorporate the references populating the new row in the reference's
+    // parent class.
+    for (auto [k, v] : unincorporated_from_entity_crps) {
+      auto [ref_class, field, item] = k;
+      const std::string& subref_class =
+          std::get<ClassVar>(schema.classes.at(ref_class).vars.at(field).spec)
+              .class_name;
+      int ref_id = get_reference_id(ref_class, field, item);
+      domain_crps.at(subref_class).incorporate(ref_id, v);
+    }
+  } else {
+    // Remove the singleton from reference_values if it was not selected.
+    for (auto [k, v] : unincorporated_from_entity_crps) {
+      reference_values.erase(k);
+    }
+  }
+  int ref_id = get_reference_id(class_name, ref_field, class_item);
+  domain_crps.at(ref_class).incorporate(ref_id, new_refval);
+
+  // Incorporate the items/values with new entity linkages into the relations.
+  incorporate_reference(prng, stored_value_map);
+
+  // Remove empty relation clusters.
+  hirm->cleanup_relation_clusters();
 }
 
 GenDB::~GenDB() { delete hirm; }

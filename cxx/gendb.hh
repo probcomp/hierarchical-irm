@@ -13,6 +13,7 @@
 
 class GenDB {
  public:
+
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
 
@@ -62,22 +63,40 @@ class GenDB {
   void get_relation_items(const std::string& rel_name, const int ind,
                           const int class_item, T_items& items) const;
 
+  // Returns a map of relation name to the indices (in the items vector) where
+  // the reference field appears.
+  std::map<std::string, std::vector<size_t>> get_domain_inds(
+      const std::string& class_name, const std::string& ref_field);
+
   // Unincorporates all data where class_name refers to ref_field amd has
   // primary key value class_item.
-  std::map<std::string,
-           std::unordered_map<T_items, ObservationVariant, H_items>>
-  unincorporate_reference(const std::string& class_name,
-                          const std::string& ref_field, const int class_item,
-                          const bool from_cluster_only = false);
-
-  // Unincorporates and stores items/values from a relation.
-  template <typename T>
-  void unincorporate_reference_relation(
-      Relation<T>* rel, const std::string& rel_name, const T_items& items,
+  double unincorporate_reference(
+      std::map<std::string, std::vector<size_t>> domain_inds,
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item,
       std::map<std::string,
                std::unordered_map<T_items, ObservationVariant, H_items>>&
           stored_value_map,
-      const size_t ind, const bool from_cluster_only);
+      std::map<std::tuple<int, std::string, T_item>, int>&
+          unincorporated_from_domains);
+
+  // Unincorporates and stores items/values from a relation.
+  template <typename T>
+  double unincorporate_reference_relation(
+      Relation<T>* rel, const std::string& rel_name, const T_items& items,
+      const size_t ind,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_value_map);
+
+  // Recursively unincorporates from base relations and stores values. Returns
+  // the logp of the unincorporated values.
+  template <typename T>
+  double unincorporate_reference_relation_singleton(
+      Relation<T>* rel, const std::string& rel_name, const T_items& items,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_value_map);
 
   // Returns a copy of stored_values, with the items updated to associate
   // class_name.ref_field at index class_item with new_ref_val. This update is
@@ -96,13 +115,12 @@ class GenDB {
   T_schema make_hirm_schema();
 
   // Incorporates the items and values from stored_values (generally an output
-  // of update_reference_items).
+  // of update_reference_items). New IRM domain clusters may be added.
   void incorporate_reference(
       std::mt19937* prng,
       std::map<std::string,
                std::unordered_map<T_items, ObservationVariant, H_items>>&
-          stored_values,
-      const bool to_cluster_only = false);
+          stored_values);
 
   // Recursively incorporates the items and values of stored_values for a single
   // relation (and its base relations).
@@ -111,8 +129,55 @@ class GenDB {
       std::mt19937* prng, Relation<T>* rel, const std::string& rel_name,
       std::map<std::string,
                std::unordered_map<T_items, ObservationVariant, H_items>>&
-          stored_values,
-      const bool to_cluster_only);
+          stored_values);
+
+  // Returns a unique identifier for a reference value.
+  int get_reference_id(const std::string& class_name,
+                       const std::string& ref_field, const int class_item);
+
+  // Unincorporates entities from IRM domain clusters and return the logp of the
+  // unincorporated entities.
+  double unincorporate_from_domain_cluster_relation(
+      const std::string& r, int item, const int ind,
+      std::map<std::tuple<int, std::string, T_item>, int>& unincorporated);
+
+  // Unincorporates reference values from their entity clusters and returns the
+  // logp of the unincorporated values.
+  double unincorporate_from_entity_cluster(
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item,
+      std::map<std::tuple<std::string, std::string, int>, int>& unincorporated,
+      const bool is_ancestor_reference = true);
+
+  // Unincorporates a singleton reference (including, recursively, the
+  // corresponding row in the table it points to).
+  double unincorporate_singleton(
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item, const std::string& ref_class,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_value_map,
+      std::map<std::tuple<int, std::string, T_item>, int>&
+          unincorporated_from_domains,
+      std::map<std::tuple<std::string, std::string, int>, int>&
+          unincorporated_from_entity_crps);
+
+  // Reincorporates a newly-sampled reference value before returning from the
+  // Gibbs kernel.
+  void reincorporate_new_refval(
+      const std::string& class_name, const std::string& ref_field,
+      const int class_item, const int new_refval, const std::string& ref_class,
+      std::map<std::string,
+               std::unordered_map<T_items, ObservationVariant, H_items>>&
+          stored_value_map,
+      std::map<std::tuple<int, std::string, T_item>, int>&
+          unincorporated_from_domains,
+      std::map<std::tuple<std::string, std::string, int>, int>&
+          unincorporated_from_entity_crps);
+
+  // Gibbs kernel for transitioning a reference value.
+  void transition_reference(std::mt19937* prng, const std::string& class_name,
+                            const std::string& ref_field, const int class_item);
 
   ~GenDB();
 
@@ -167,6 +232,10 @@ class GenDB {
   bool only_final_emissions;
   bool record_class_is_clean;
   std::map<std::string, std::vector<std::string>> domains;
+
+
+  // Maps class names to relations corresponding to attributes of the class.
+  std::map<std::string, std::vector<std::string>> class_to_relations;
 
   // Map keys are relation name, item index of a class, and reference field
   // name. The values in the inner map are the item index of the reference

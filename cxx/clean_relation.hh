@@ -97,6 +97,7 @@ class CleanRelation : public Relation<T> {
     }
     T_items z = get_cluster_assignment(items);
     if (!clusters.contains(z)) {
+      assert(prng != nullptr);
       clusters[z] = make_new_distribution(prng);
     }
     return z;
@@ -116,6 +117,32 @@ class CleanRelation : public Relation<T> {
     return value;
   }
 
+  // TODO: add a test.
+  void cleanup_data(const T_items& items) {
+    for (int i = 0; i < std::ssize(domains); ++i) {
+      const std::string& name = domains[i]->name;
+      if (data_r.at(name).contains(items[i])) {
+        data_r.at(name).at(items[i]).erase(items);
+        if (data_r.at(name).at(items[i]).size() == 0) {
+          data_r.at(name).erase(items[i]);
+        }
+      }
+    }
+    data.erase(items);
+  }
+
+  // TODO: add a test.
+  void cleanup_clusters() {
+    for (auto it = clusters.cbegin(); it != clusters.cend();) {
+      if (it->second->N == 0) {
+        delete it->second;
+        clusters.erase(it++);
+      } else {
+        ++it;
+      }
+    }
+  }
+
   void unincorporate(const T_items& items) {
     assert(data.contains(items));
     ValueType value = data.at(items);
@@ -125,18 +152,7 @@ class CleanRelation : public Relation<T> {
       delete clusters.at(z);
       clusters.erase(z);
     }
-    for (int i = 0; i < std::ssize(domains); ++i) {
-      const std::string& name = domains[i]->name;
-      if (data_r.at(name).contains(items[i])) {
-        data_r.at(name).at(items[i]).erase(items);
-        if (data_r.at(name).at(items[i]).size() == 0) {
-          // It's safe to unincorporate this element since no other data point
-          // refers to it.
-          data_r.at(name).erase(items[i]);
-        }
-      }
-    }
-    data.erase(items);
+    cleanup_data(items);
   }
 
   // incorporate_to_cluster and unincorporate_from_cluster should be used with
@@ -172,24 +188,48 @@ class CleanRelation : public Relation<T> {
   }
 
   bool clusters_contains(const T_items& items) const {
-    std::vector<int> z = get_cluster_assignment(items);
+    assert(items.size() == domains.size());
+    std::vector<int> z;
+    z.reserve(items.size());
+    for (int i = 0; i < std::ssize(domains); ++i) {
+      if (!domains[i]->items.contains(items[i])) {
+        return false;
+      }
+      z.push_back(domains[i]->get_cluster_assignment(items[i]));
+    }
     return clusters.contains(z);
   }
 
-  double cluster_or_prior_logp(std::mt19937* prng, const T_items& items,
-                               const ValueType& value) const {
-    if (clusters.contains(items)) {
-      return clusters.at(items)->logp(value);
-    }
+  double prior_logp(std::mt19937* prng, const ValueType& value) const {
+    assert(prng != nullptr);
     Distribution<ValueType>* prior = make_new_distribution(prng);
     double prior_logp = prior->logp(value);
     delete prior;
     return prior_logp;
   }
 
+  double cluster_or_prior_logp_from_items(std::mt19937* prng,
+                                          const T_items& items,
+                                          const ValueType& value) const {
+    if (clusters_contains(items)) {
+      T_items z = get_cluster_assignment(items);
+      return clusters.at(z)->logp(value);
+    }
+    return prior_logp(prng, value);
+  }
+
+  double cluster_or_prior_logp(std::mt19937* prng, const std::vector<int>& z,
+                               const ValueType& value) const {
+    if (clusters.contains(z)) {
+      return clusters.at(z)->logp(value);
+    }
+    return prior_logp(prng, value);
+  }
+
   ValueType sample_at_items(std::mt19937* prng, const T_items& items) const {
-    if (clusters.contains(items)) {
-      return clusters.at(items)->sample(prng);
+    if (clusters_contains(items)) {
+      T_items z = get_cluster_assignment(items);
+      return clusters.at(z)->sample(prng);
     }
     Distribution<ValueType>* prior = make_new_distribution(prng);
     ValueType prior_sample = prior->sample(prng);

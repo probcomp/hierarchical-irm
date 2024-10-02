@@ -2,12 +2,10 @@
 // Apache License, Version 2.0, refer to LICENSE.txt
 
 #include "util_io.hh"
-#include "util_parse.hh"
 
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
@@ -16,52 +14,57 @@
 #include <unordered_set>
 #include <vector>
 
+#include "util_parse.hh"
+
 void verify_noisy_relation_domains(const T_schema& schema) {
   for (const auto& [relname, trelation] : schema) {
     std::visit(
         [&](const auto& trel) {
           using T = std::decay_t<decltype(trel)>;
           if constexpr (std::is_same_v<T, T_noisy_relation>) {
-            std::vector<std::string> base_domains = std::visit(
-                [&](const auto& brel) { return brel.domains; },
-                schema.at(trel.base_relation));
+            std::vector<std::string> base_domains =
+                std::visit([&](const auto& brel) { return brel.domains; },
+                           schema.at(trel.base_relation));
             for (size_t i = 0; i != base_domains.size(); ++i) {
               assert(base_domains[i] == trel.domains[i] &&
                      "The first domains of a noisy relation must be the same "
                      "as the domains of the base relation.");
             }
           }
-        }, trelation);
+        },
+        trelation);
   }
 }
 
-#define TYPE_CHECK(i, expected_type) \
-    if (i >= tokens.size()) { \
-      printf("Error parsing schema line %s: expected at least %ld tokens\n", \
-             line.c_str(), i+1); \
-      assert(false); \
-    } \
-    if (tokens[i].type != TokenType::expected_type) { \
-      printf("Error parsing schema line %s:  expected expected_type for %ld-th token\n", \
-            line.c_str(), i+1); \
-      printf("Got %s of type %d instead\n", \
-             tokens[0].val.c_str(), (int)(tokens[0].type)); \
-      assert(false); \
-    }
+#define TYPE_CHECK(i, expected_type)                                        \
+  if (i >= tokens.size()) {                                                 \
+    printf("Error parsing schema line %s: expected at least %ld tokens\n",  \
+           line.c_str(), i + 1);                                            \
+    assert(false);                                                          \
+  }                                                                         \
+  if (tokens[i].type != TokenType::expected_type) {                         \
+    printf(                                                                 \
+        "Error parsing schema line %s:  expected expected_type for %ld-th " \
+        "token\n",                                                          \
+        line.c_str(), i + 1);                                               \
+    printf("Got %s of type %d instead\n", tokens[0].val.c_str(),            \
+           (int)(tokens[0].type));                                          \
+    assert(false);                                                          \
+  }
 
-#define VAL_CHECK(i, expected_val) \
-    if (i >= tokens.size()) { \
-      printf("Error parsing schema line %s: expected at least %ld tokens\n", \
-             line.c_str(), i+1); \
-      assert(false); \
-    } \
-    if (tokens[i].val != expected_val ) { \
-      printf("Error parsing schema line %s:  expected %s for %ld-th token\n", \
-            line.c_str(), expected_val, i+1); \
-      printf("Got %s of type %d instead\n", \
-             tokens[0].val.c_str(), (int)(tokens[0].type)); \
-      assert(false); \
-    }
+#define VAL_CHECK(i, expected_val)                                          \
+  if (i >= tokens.size()) {                                                 \
+    printf("Error parsing schema line %s: expected at least %ld tokens\n",  \
+           line.c_str(), i + 1);                                            \
+    assert(false);                                                          \
+  }                                                                         \
+  if (tokens[i].val != expected_val) {                                      \
+    printf("Error parsing schema line %s:  expected %s for %ld-th token\n", \
+           line.c_str(), expected_val, i + 1);                              \
+    printf("Got %s of type %d instead\n", tokens[0].val.c_str(),            \
+           (int)(tokens[0].type));                                          \
+    assert(false);                                                          \
+  }
 
 T_schema load_schema(const std::string& path) {
   std::ifstream fp(path, std::ifstream::in);
@@ -92,7 +95,7 @@ T_schema load_schema(const std::string& path) {
 
     i = 3;
     std::map<std::string, std::string> params;
-    if (tokens[i].val == "[") { // Handle parameters
+    if (tokens[i].val == "[") {  // Handle parameters
       do {
         ++i;
         TYPE_CHECK(i, identifier);
@@ -104,9 +107,12 @@ T_schema load_schema(const std::string& path) {
         params[param_name] = tokens[i++].val;
 
         if ((tokens[i].val != ",") && (tokens[i].val != "]")) {
-          printf("Error parsing schema line %s: expected ',' or ']' after parameter definition\n", line.c_str());
-          printf("Got %s of type %d instead\n",
-                 tokens[i].val.c_str(), (int)(tokens[i].type));
+          printf(
+              "Error parsing schema line %s: expected ',' or ']' after "
+              "parameter definition\n",
+              line.c_str());
+          printf("Got %s of type %d instead\n", tokens[i].val.c_str(),
+                 (int)(tokens[i].type));
           std::exit(1);
         }
 
@@ -123,7 +129,7 @@ T_schema load_schema(const std::string& path) {
 
     TYPE_CHECK(i, identifier);
 
-    if (tokens[i+1].val == ";") {  // We have an emission!
+    if (tokens[i + 1].val == ";") {  // We have an emission!
       base_relation = tokens[i].val;
       i += 2;
     }
@@ -132,14 +138,16 @@ T_schema load_schema(const std::string& path) {
       domains.push_back(tokens[i++].val);
 
       if ((tokens[i].val != ",") && (tokens[i].val != ")")) {
-        printf("Error parsing schema line %s: expected ',' or ')' after domain\n", line.c_str());
-        printf("Got %s of type %d instead\n",
-               tokens[i].val.c_str(), (int)(tokens[i].type));
+        printf(
+            "Error parsing schema line %s: expected ',' or ')' after domain\n",
+            line.c_str());
+        printf("Got %s of type %d instead\n", tokens[i].val.c_str(),
+               (int)(tokens[i].type));
         std::exit(1);
       }
     } while (tokens[i++].val == ",");
 
-    if (base_relation.empty()) { // Clean relation
+    if (base_relation.empty()) {  // Clean relation
       T_clean_relation relation;
       relation.domains = domains;
       assert(relation.domains.size() > 0);
@@ -192,7 +200,7 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
     }
 
     std::string word;
-    while(getline(stream, word, ',')) {
+    while (getline(stream, word, ',')) {
       items.push_back(word);
     }
     assert((items.size() > 0) && "No Domain values specified.");
@@ -209,16 +217,17 @@ T_observations load_observations(const std::string& path, T_schema& schema) {
   return observations;
 }
 
-void write_observations(
-    std::ostream& fp, const T_encoded_observations& observations,
-    const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm) {
+void write_observations(std::ostream& fp,
+                        const T_encoded_observations& observations,
+                        const T_encoding& encoding,
+                        std::variant<IRM*, HIRM*> h_irm) {
   const T_encoding_r& reverse_encoding = std::get<1>(encoding);
-  for (const auto& [rel, obs_for_rel]: observations) {
-    T_relation trel = std::visit(
-        [&](const auto& m) { return m->schema.at(rel); }, h_irm);
+  for (const auto& [rel, obs_for_rel] : observations) {
+    T_relation trel =
+        std::visit([&](const auto& m) { return m->schema.at(rel); }, h_irm);
     std::vector<std::string> domains =
         std::visit([&](const auto& tr) { return tr.domains; }, trel);
-    for (const auto& [entities, value_str]: obs_for_rel) {
+    for (const auto& [entities, value_str] : obs_for_rel) {
       fp << value_str << "," << rel;
       for (size_t i = 0; i < entities.size(); ++i) {
         fp << ",";
@@ -235,9 +244,10 @@ void write_observations(
   }
 }
 
-void write_observations(
-    const std::string& path, const T_encoded_observations& observations,
-    const T_encoding& encoding, std::variant<IRM*, HIRM*> h_irm) {
+void write_observations(const std::string& path,
+                        const T_encoded_observations& observations,
+                        const T_encoding& encoding,
+                        std::variant<IRM*, HIRM*> h_irm) {
   std::ofstream fp(path);
   assert(fp.good());
   write_observations(fp, observations, encoding, h_irm);
@@ -245,8 +255,8 @@ void write_observations(
 }
 
 // Assumes that T_item is integer.
-T_encoding calculate_encoding(
-    const T_schema& schema, const T_observations& observations) {
+T_encoding calculate_encoding(const T_schema& schema,
+                              const T_observations& observations) {
   // Counter and encoding maps.
   std::map<std::string, int> domain_item_counter;
   T_encoding_f item_to_code;
@@ -284,9 +294,9 @@ T_encoding calculate_encoding(
   return std::make_pair(item_to_code, code_to_item);
 }
 
-T_encoded_observations encode_observations(
-    const T_observations& observations, const T_encoding& encoding,
-    std::variant<IRM*, HIRM*> h_irm) {
+T_encoded_observations encode_observations(const T_observations& observations,
+                                           const T_encoding& encoding,
+                                           std::variant<IRM*, HIRM*> h_irm) {
   T_encoded_observations encoded_observations;
   T_encoding_f item_to_code = std::get<0>(encoding);
 
@@ -349,10 +359,9 @@ void incorporate_observations_relation(
   if (observations.contains(relation)) {
     // If this relation is observed, incorporate its observations.
     for (const auto& [items, value] : observations.at(relation)) {
-      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
-      std::visit([&](auto& m) {
-        m->incorporate(prng, relation, items, ov);
-      }, h_irm);
+      std::visit([&](const auto& r) { ov = r->from_string(value); }, rel_var);
+      std::visit([&](auto& m) { m->incorporate(prng, relation, items, ov); },
+                 h_irm);
     }
   } else {
     // If this relation is not observed, incorporate samples from the prior.
@@ -394,7 +403,10 @@ void incorporate_observations(std::mt19937* prng,
     for (const std::string& noisy_name : noisy_names) {
       if (!base_to_noisy.contains(noisy_name)) {
         if (!observations.contains(noisy_name)) {
-          printf("Relation %s has no observations and is not the base of a noisy relation.\n", noisy_name.c_str());
+          printf(
+              "Relation %s has no observations and is not the base of a noisy "
+              "relation.\n",
+              noisy_name.c_str());
           std::exit(1);
         }
       }
@@ -707,31 +719,30 @@ void from_txt(std::mt19937* prng, HIRM* const hirm,
 T_observations merge_observations(const T_observations& obs1,
                                   const T_observations& obs2) {
   T_observations merged;
-  for (const auto &it : obs1) {
+  for (const auto& it : obs1) {
     merged[it.first] = it.second;
   }
-  for (const auto &it : obs2) {
-    merged[it.first].insert(merged[it.first].end(),
-                            it.second.begin(), it.second.end());
+  for (const auto& it : obs2) {
+    merged[it.first].insert(merged[it.first].end(), it.second.begin(),
+                            it.second.end());
   }
   return merged;
 }
 
 double logp(std::mt19937* prng, std::variant<IRM*, HIRM*> h_irm,
-            const T_encoding& encoding,
-            const T_observations& observations) {
-  T_encoded_observations encoded_obs = encode_observations(
-      observations, encoding, h_irm);
+            const T_encoding& encoding, const T_observations& observations) {
+  T_encoded_observations encoded_obs =
+      encode_observations(observations, encoding, h_irm);
   std::vector<std::tuple<std::string, T_items, ObservationVariant>> logp_obs;
-  for (const auto& [relation, obs_for_rel]: encoded_obs) {
+  for (const auto& [relation, obs_for_rel] : encoded_obs) {
     RelationVariant rel_var =
-      std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
-    for (const auto& [items, value]: obs_for_rel) {
+        std::visit([&](auto m) { return m->get_relation(relation); }, h_irm);
+    for (const auto& [items, value] : obs_for_rel) {
       ObservationVariant ov;
-      std::visit([&](const auto &r) {ov = r->from_string(value); }, rel_var);
+      std::visit([&](const auto& r) { ov = r->from_string(value); }, rel_var);
       logp_obs.push_back(make_tuple(relation, items, ov));
     }
   }
-  return std::visit(
-      [&](const auto& m) { return m->logp(logp_obs, prng); }, h_irm);
+  return std::visit([&](const auto& m) { return m->logp(logp_obs, prng); },
+                    h_irm);
 }

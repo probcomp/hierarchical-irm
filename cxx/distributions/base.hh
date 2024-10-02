@@ -1,5 +1,6 @@
 #pragma once
-#include<random>
+#include <cassert>
+#include <random>
 
 template <typename T>
 class Distribution {
@@ -18,6 +19,9 @@ class Distribution {
   // have been previously passed to incorporate().
   virtual void unincorporate(const T& x) {
     incorporate(x, -1.0);
+    // TODO: Debug why this fails sometimes, e.g. for the bigram_string
+    // emission. 
+    // assert(N >= 0);
   }
 
   // The log probability of x according to the posterior predictive
