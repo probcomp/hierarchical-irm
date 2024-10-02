@@ -6,6 +6,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include <random>
+#include <iostream>
 
 #include "pclean/io.hh"
 
@@ -337,15 +338,13 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb);
-  // TODO(emilyaf): Fix this test.  Right now, it is brittle and was broken
-  // just by changing CRP's table from an unordered_map to a map.
   BOOST_TEST(gendb.logp_score() < 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb);
+  setup_gendb(&prng, gendb, 100);
 
   std::string class_name = "Practice";
   std::string ref_field = "city";
@@ -749,11 +748,11 @@ observe
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 50, false);
+  setup_gendb(&prng, gendb, 500);
 
-  std::string class_name = "Record";
-  std::string ref_field = "physician";
-  int class_item = 0;
+  std::string class_name = "Physician";
+  std::string ref_field = "school";
+  int class_item = 1;
 
   double init_logp = gendb.logp_score();
   std::map<std::string,
@@ -763,8 +762,22 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
       gendb.get_domain_inds(class_name, ref_field);
   std::map<std::tuple<int, std::string, T_item>, int>
       unincorporated_from_domains;
+
+  auto f = [&](auto r)  {
+    auto d = r->get_data();
+    for (auto [k, v] : d) {
+      for (int i: k) {
+        std::cerr << i << " ";
+      }
+      std::cerr << std::endl;
+    }
+  };
+  std::cerr << "School nalme" << std::endl;
+  std::visit(f, gendb.hirm->get_relation("School:name"));
+  std::cerr << gendb.domain_crps.at("School").assignments.size() << std::endl;
   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
                                 stored_value_map, unincorporated_from_domains);
+  BOOST_TEST(stored_value_map.size() > 0);
 
   int old_ref_val =
       gendb.reference_values.at(class_name).at({ref_field, class_item});
@@ -807,7 +820,7 @@ BOOST_AUTO_TEST_CASE(test_transition_reference) {
 BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 80);
+  setup_gendb(&prng, gendb, 200);
 
   std::string class_name = "Physician";
   std::string ref_field = "school";
@@ -981,6 +994,54 @@ BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
     }
   }
   BOOST_TEST(!is_same);
+}
+
+BOOST_AUTO_TEST_CASE(test_transition_reference_complex_schema) {
+  std::stringstream ss_complex(R"""(
+class A
+  x ~ real
+
+class B
+  a ~ A
+
+class E
+  y ~ real
+
+class C
+  a ~ A
+  b ~ B
+  z ~ real
+
+class Record
+  b ~ B
+  c ~ C
+  e ~ E
+
+observe
+  b.a.x as BAX
+  c.a.x as CAX
+  # c.b.a.x as CBAX  // Needs debugging.
+  e.y as EY
+  c.z as CZ
+  from Record
+)""");
+  PCleanSchema complex_schema;
+  [[maybe_unused]] bool ok = read_schema(ss_complex, &complex_schema);
+  assert(ok);
+  
+  std::mt19937 prng;
+  GenDB gendb(&prng, complex_schema);
+
+  std::normal_distribution<double> d(0., 1.);
+  std::map<std::string, ObservationVariant> obs;
+
+  int i = 0;
+  while (i < 100) {
+    obs = {{"BAX", d(prng)}, {"CAX", d(prng)}, {"EY", d(prng)}, {"CZ", d(prng)}};
+    // obs = {{"BAX", d(prng)}, {"CAX", d(prng)}, {"CBAX", d(prng)}, {"EY", d(prng)}, {"CZ", d(prng)}};
+    gendb.incorporate(&prng, {i++, obs}, false);
+  }
+  gendb.transition_reference_class_and_ancestors(&prng, "Record");  
 }
 
 BOOST_AUTO_TEST_SUITE_END()

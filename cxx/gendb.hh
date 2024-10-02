@@ -53,6 +53,8 @@ class GenDB {
       std::vector<std::string>::const_iterator class_path_end, int class_item,
       bool new_rows_have_unique_entities);
 
+  void sample_and_incorporate_for_class(std::mt19937* prng, const std::string& class_name, const T_items& items);
+
   // Sample items from a class' ancestors (recursive reference fields).
   T_items sample_class_ancestors(std::mt19937* prng,
                                  const std::string& class_name, int class_item,
