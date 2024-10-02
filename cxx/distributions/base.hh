@@ -48,5 +48,11 @@ class Distribution {
   // NonconjugateDistribution need define this.
   virtual void transition_theta(std::mt19937* prng) {};
 
+  // Return the value nearest to x that is given non-zero probability by
+  // this distribution.
+  virtual T nearest(const T& x) const {
+    return x;
+  }
+
   virtual ~Distribution() = default;
 };

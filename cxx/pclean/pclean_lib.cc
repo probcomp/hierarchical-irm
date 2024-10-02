@@ -46,7 +46,11 @@ void incorporate_observations(std::mt19937* prng,
       std::visit([&](const auto &r) { ov = r->from_string(val); }, rv);
       row_values[col_name] = ov;
     }
-    gendb->incorporate(prng, std::make_pair(i, row_values));
+    // Incorporate into the gendb with new_rows_have_unique_entities=true.
+    // TODO(emilyaf): Consider using new_rows_have_unique_entities=false
+    // after entity transitions are allowed and numeric stability issues
+    // are addressed.
+    gendb->incorporate(prng, std::make_pair(i, row_values), true);
   }
 }
 
@@ -59,7 +63,7 @@ void make_pclean_sample(
     T_items entities = gendb->sample_entities_relation(
         prng, gendb->schema.query.record_class,
         query_field.class_path.begin(), query_field.class_path.end(),
-        class_item);
+        class_item, false);
 
     (*query_values)[query_field.name] = gendb->hirm->sample_and_incorporate_relation(
         prng, query_field.name, entities);

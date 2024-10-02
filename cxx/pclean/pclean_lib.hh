@@ -19,5 +19,6 @@ void incorporate_observations(std::mt19937* prng,
                               const DataFrame& df);
 
 // Return a dataframe of num_samples samples from the GenDB.
+// All existing rows added to gendb should have ids < start_row.
 DataFrame make_pclean_samples(int num_samples, int start_row, GenDB *gendb,
                               std::mt19937* prng);

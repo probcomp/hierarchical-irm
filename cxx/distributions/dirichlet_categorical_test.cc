@@ -162,3 +162,11 @@ BOOST_AUTO_TEST_CASE(test_sample_and_log_prob) {
     BOOST_TEST(abs(probs[i] - approx_p) <= 3 * stddev);
   }
 }
+
+BOOST_AUTO_TEST_CASE(test_nearest) {
+  DirichletCategorical dc(12);
+
+  BOOST_TEST(dc.nearest(-5) == 0);
+  BOOST_TEST(dc.nearest(99) == 11);
+  BOOST_TEST(dc.nearest(7) == 7);
+}

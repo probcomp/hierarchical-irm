@@ -31,4 +31,6 @@ class StringCat : public Distribution<std::string> {
   void set_alpha(double alphat);
 
   void transition_hyperparameters(std::mt19937* prng);
+
+  std::string nearest(const std::string& x) const;
 };
