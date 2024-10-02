@@ -32,6 +32,8 @@ class CRP {
 
   double logp_score() const;
 
+  int max_table() const;
+
   std::unordered_map<int, double> tables_weights() const;
 
   std::unordered_map<int, double> tables_weights_gibbs(int table) const;

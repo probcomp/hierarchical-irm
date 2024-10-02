@@ -16,6 +16,8 @@ namespace bm = boost::math;
 BOOST_AUTO_TEST_CASE(test_simple) {
   CRP crp;
 
+  BOOST_TEST(crp.max_table() == 0);
+
   T_item cat = 1;
   T_item dog = 2;
   T_item fish = 3;
@@ -30,6 +32,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   crp.incorporate(hamster, 0);
   crp.incorporate(snake, 1);
   BOOST_TEST(crp.N == 6);
+  BOOST_TEST(crp.max_table() == 3);
 
   crp.unincorporate(cat);
   BOOST_TEST(crp.N == 5);

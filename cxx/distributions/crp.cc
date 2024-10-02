@@ -69,18 +69,23 @@ double CRP::logp_score() const {
   return out;
 }
 
+int CRP::max_table() const {
+  if (N == 0) {
+    return 0;
+  }
+  return tables.rbegin()->first;
+}
+
 std::unordered_map<int, double> CRP::tables_weights() const {
   std::unordered_map<int, double> dist;
   if (N == 0) {
     dist[0] = 1;
     return dist;
   }
-  int t_max = 0;
   for (const auto& [table, customers] : tables) {
     dist[table] = customers.size();
-    t_max = std::max(table, t_max);
   }
-  dist[t_max + 1] = alpha;
+  dist[max_table() + 1] = alpha;
   return dist;
 }
 
@@ -91,11 +96,7 @@ std::unordered_map<int, double> CRP::tables_weights_gibbs(int table) const {
   --dist.at(table);
   if (dist.at(table) == 0) {
     dist.at(table) = alpha;
-    int t_max = 0;
-    for (const auto& [table, weight] : dist) {
-      t_max = std::max(table, t_max);
-    }
-    dist.erase(t_max);
+    dist.erase(max_table());
   }
   return dist;
 }

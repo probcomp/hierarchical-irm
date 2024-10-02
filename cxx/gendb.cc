@@ -132,12 +132,7 @@ void GenDB::sample_and_incorporate_reference(
   auto [class_name, ref_field, class_item] = ref_key;
   int new_val;
   if (new_rows_have_unique_entities) {
-    auto it = domain_crps[ref_class].tables.rbegin();
-    if (it == domain_crps[ref_class].tables.rend()) {
-      new_val = 0;
-    } else {
-      new_val = it->first + 1;
-    }
+    new_val = domain_crps[ref_class].max_table() + 1;
   } else {
     new_val = domain_crps[ref_class].sample(prng);
   }
