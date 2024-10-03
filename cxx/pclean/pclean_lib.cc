@@ -63,7 +63,7 @@ void make_pclean_sample(
     T_items entities = gendb->sample_entities_relation(
         prng, gendb->schema.query.record_class,
         query_field.class_path.begin(), query_field.class_path.end(),
-        class_item, false);
+        class_item);
 
     (*query_values)[query_field.name] = gendb->hirm->sample_and_incorporate_relation(
         prng, query_field.name, entities);
