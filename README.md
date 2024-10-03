@@ -35,7 +35,7 @@ it is heavily based) reads in tabular data and a schema describing the entities
 that generated it, and converts the data and schema into their HIRM equivalents.
 
 
-## Installation (C++)
+## Installation
 
 First obtain a GNU C++ compiler, version 7.5.0 or higher.
 The underlying code can be built and installed via bazel. To install bazel:
@@ -197,6 +197,28 @@ listed in this section as well.
 Please see the file `cxx/integration_tests.sh` for more examples of using
 the hirm binary, and run `./bazel-bin/hirm --help` for more information
 about its options.
+
+# Visualizing HIRM's output
+
+The clusters created by HIRM can be visualized using the `make_plots.py`
+program in the `/py` subdirectory.
+
+To use this program, you will first need to install numpy and matplotlib.
+On Debian systems, this can be done by running `./py/install.sh`.
+
+Then simply run `make_plots.py` and pass it the locations of your observations,
+schema, and HIRM clusters:
+
+    $ cd py
+    $ ./make_plots.py --schema=../cxx/assets/animals.unary.schema --observations=../cxx/assets/animals.unary.obs --clusters=../cxx/assets/animals.unary.hirm --output=/tmp/vis.html
+
+The visualization is written to the HTML file `/tmp/vis.html`, which can be
+viewed by pointing your web browser to `file:///tmp/vis.html`.
+
+Currently, `make_plots` only produces visualizations for unary and binary
+relations, and only for numeric-valued relations (including boolean
+valued relations like `bernoulli` and categorical relations like
+`categorical`).
 
 ## Usage: PClean
 
