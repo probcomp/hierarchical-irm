@@ -57,8 +57,8 @@ Pediatrics,Harvard,MD,Seattle,WA
   DataFrame df = DataFrame::from_csv(ss2);
 
   incorporate_observations(&prng, &gendb, df);
-  BOOST_TEST(gendb.domain_crps["Practice"].N == 5);
-  BOOST_TEST(gendb.domain_crps["Physician"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Practice"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Physician"].N == 5);
 }
 
 BOOST_AUTO_TEST_CASE(test_incorporate_observations_diagonal) {
@@ -114,10 +114,10 @@ Pediatrics,Harvard,Cambridge,MD,Seattle,WA
   DataFrame df = DataFrame::from_csv(ss2);
 
   incorporate_observations(&prng, &gendb, df);
-  BOOST_TEST(gendb.domain_crps["Practice"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Practice"].N == 5);
   // TODO(thomaswc): Figure out why the next BOOST_TEST is failing.
   // (.N == 4 instead of the expected 10).
-  // BOOST_TEST(gendb.domain_crps["City"].N == 10);
+  // BOOST_TEST(gendb.entity_crps["City"].N == 10);
 }
 
 BOOST_AUTO_TEST_CASE(test_make_pclean_samples) {

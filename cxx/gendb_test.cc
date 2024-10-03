@@ -268,23 +268,23 @@ BOOST_AUTO_TEST_CASE(test_new_rows_have_unique_entities) {
   setup_gendb(&prng, gendb, 30, true);
 
   // incorporate is called 32 times in setup_gendb.
-  BOOST_TEST(gendb.domain_crps["School"].N == 32);
-  BOOST_TEST(gendb.domain_crps["Physician"].N == 32);
-  BOOST_TEST(gendb.domain_crps["City"].N == 32);
-  BOOST_TEST(gendb.domain_crps["Practice"].N == 32);
+  BOOST_TEST(gendb.entity_crps["School"].N == 32);
+  BOOST_TEST(gendb.entity_crps["Physician"].N == 32);
+  BOOST_TEST(gendb.entity_crps["City"].N == 32);
+  BOOST_TEST(gendb.entity_crps["Practice"].N == 32);
 
   // Each "customer" (entity) gets its own table.
-  BOOST_TEST(gendb.domain_crps["School"].tables.size() == 32);
-  BOOST_TEST(gendb.domain_crps["Physician"].tables.size() == 32);
-  BOOST_TEST(gendb.domain_crps["City"].tables.size() == 32);
-  BOOST_TEST(gendb.domain_crps["Practice"].tables.size() == 32);
+  BOOST_TEST(gendb.entity_crps["School"].tables.size() == 32);
+  BOOST_TEST(gendb.entity_crps["Physician"].tables.size() == 32);
+  BOOST_TEST(gendb.entity_crps["City"].tables.size() == 32);
+  BOOST_TEST(gendb.entity_crps["Practice"].tables.size() == 32);
 
   // And each table has just a single customer.  (We only check the first
   // table.)
-  BOOST_TEST(gendb.domain_crps["School"].tables.begin()->second.size() == 1);
-  BOOST_TEST(gendb.domain_crps["Physician"].tables.begin()->second.size() == 1);
-  BOOST_TEST(gendb.domain_crps["City"].tables.begin()->second.size() == 1);
-  BOOST_TEST(gendb.domain_crps["Practice"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.entity_crps["School"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.entity_crps["Physician"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.entity_crps["City"].tables.begin()->second.size() == 1);
+  BOOST_TEST(gendb.entity_crps["Practice"].tables.begin()->second.size() == 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_relation_items) {
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_logp_score) {
 BOOST_AUTO_TEST_CASE(test_update_reference_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 100);
+  setup_gendb(&prng, gendb, 40);
 
   std::string class_name = "Practice";
   std::string ref_field = "city";
@@ -774,7 +774,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   };
   std::cerr << "School nalme" << std::endl;
   std::visit(f, gendb.hirm->get_relation("School:name"));
-  std::cerr << gendb.domain_crps.at("School").assignments.size() << std::endl;
+  std::cerr << gendb.entity_crps.at("School").assignments.size() << std::endl;
   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
                                 stored_value_map, unincorporated_from_domains);
   BOOST_TEST(stored_value_map.size() > 0);
@@ -787,7 +787,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
 
   gendb.incorporate_reference(&prng, updated_items);
   // Updating the reference values should change logp_score (though note that
-  // the domain_crps have not been updated), so the total logp_score is
+  // the entity_crps have not been updated), so the total logp_score is
   // different only if new_ref_val and old_ref_val are in different IRM
   // clusters.
   BOOST_TEST(gendb.logp_score() != init_logp, tt::tolerance(1e-6));
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
 BOOST_AUTO_TEST_CASE(test_transition_reference) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 40);
+  setup_gendb(&prng, gendb, 100);
 
   std::string class_name = "Record";
   std::string ref_field = "physician";
@@ -835,7 +835,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
     candidate_refval =
         gendb.reference_values.at(class_name).at({ref_field, class_item});
     init_refval_obs =
-        gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size();
+        gendb.entity_crps.at(ref_class).tables.at(candidate_refval).size();
     if (init_refval_obs > 1) {
       refval = candidate_refval;
       break;
@@ -858,10 +858,10 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_existing) {
   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
                                 stored_values, unincorporated_from_domains);
   int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
-  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+  gendb.entity_crps.at(ref_class).unincorporate(ref_id);
 
   // Check that the reference value was unincorporated from its entity CRP.
-  BOOST_TEST(gendb.domain_crps.at(ref_class).tables.size() =
+  BOOST_TEST(gendb.entity_crps.at(ref_class).tables.size() =
                  init_refval_obs - 1);
 
   // Test that the class item/reference value were unincorporated from the
@@ -907,7 +907,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   while (true) {
     candidate_refval =
         gendb.reference_values.at(class_name).at({ref_field, class_item});
-    if (gendb.domain_crps.at(ref_class).tables.at(candidate_refval).size() >
+    if (gendb.entity_crps.at(ref_class).tables.at(candidate_refval).size() >
         1) {
       non_singleton_refval = candidate_refval;
       break;
@@ -919,15 +919,15 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   // Now find the singleton value.
   int refval = -1;
   std::map<int, double> crp_dist =
-      gendb.domain_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
+      gendb.entity_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
   for (auto [t, w] : crp_dist) {
-    if (!gendb.domain_crps[ref_class].tables.contains(t)) {
+    if (!gendb.entity_crps[ref_class].tables.contains(t)) {
       refval = t;
     }
   }
   assert(refval != -1);
 
-  // double init_logp = gendb.logp_score();
+  double init_logp = gendb.logp_score();
 
   auto domain_inds = gendb.get_domain_inds(class_name, ref_field);
   std::map<std::string,
@@ -941,7 +941,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   std::map<std::tuple<std::string, std::string, int>, int>
       unincorporated_from_entity_crps;
   int ref_id = gendb.get_reference_id(class_name, ref_field, class_item);
-  gendb.domain_crps.at(ref_class).unincorporate(ref_id);
+  gendb.entity_crps.at(ref_class).unincorporate(ref_id);
   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
                                 stored_values, unincorporated_from_domains);
   gendb.unincorporate_singleton(class_name, ref_field, class_item, ref_class,
@@ -949,10 +949,10 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
                                 unincorporated_from_domains,
                                 unincorporated_from_entity_crps);
 
-  // double baseline_logp = gendb.logp_score();
+  double baseline_logp = gendb.logp_score();
 
   // The entity CRP doesn't contain the reference value.
-  BOOST_TEST(!gendb.domain_crps.at(ref_class).tables.contains(refval));
+  BOOST_TEST(!gendb.entity_crps.at(ref_class).tables.contains(refval));
 
   // Test that the reference value was unincorporated from IRM domain CRPs.
   for (auto [code, irm] : gendb.hirm->irms) {
@@ -966,18 +966,18 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
   gendb.reincorporate_new_refval(
       class_name, ref_field, class_item, refval, ref_class, stored_values,
       unincorporated_from_domains, unincorporated_from_entity_crps);
-  // Logp score should be different. TODO: debug numerics.
-  // BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
-  //            tt::tolerance(1e-3));
+  // Logp score should be different.
+  BOOST_TEST(gendb.logp_score() - baseline_logp != init_logp - baseline_logp,
+             tt::tolerance(1e-3));
 }
 
 BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
   setup_gendb(&prng, gendb, 20);
-  auto init_phys_assignments = gendb.domain_crps.at("Physician").assignments;
+  auto init_phys_assignments = gendb.entity_crps.at("Physician").assignments;
   gendb.transition_reference_class_and_ancestors(&prng, "Record");
-  auto final_phys_assignments = gendb.domain_crps.at("Physician").assignments;
+  auto final_phys_assignments = gendb.entity_crps.at("Physician").assignments;
   // Check that at least some tables were updated.
   bool is_same = false;
   if (init_phys_assignments.size() == final_phys_assignments.size()) {
@@ -1020,7 +1020,7 @@ class Record
 observe
   b.a.x as BAX
   c.a.x as CAX
-  # c.b.a.x as CBAX  // Needs debugging.
+  # c.b.a.x as CBAX  # Needs debugging.
   e.y as EY
   c.z as CZ
   from Record
