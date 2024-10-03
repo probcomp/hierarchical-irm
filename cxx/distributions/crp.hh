@@ -32,9 +32,12 @@ class CRP {
 
   double logp_score() const;
 
-  std::unordered_map<int, double> tables_weights() const;
+  // Returns the highest table entry in tables, or -1 if tables is empty.
+  int max_table() const;
 
-  std::unordered_map<int, double> tables_weights_gibbs(int table) const;
+  std::map<int, double> tables_weights() const;
+
+  std::map<int, double> tables_weights_gibbs(int table) const;
 
   void transition_alpha(std::mt19937* prng);
 };

@@ -920,7 +920,7 @@ BOOST_AUTO_TEST_CASE(test_unincorporate_reincorporate_new) {
 
   // Now find the singleton value.
   int refval = -1;
-  std::unordered_map<int, double> crp_dist =
+  std::map<int, double> crp_dist =
       gendb.domain_crps[ref_class].tables_weights_gibbs(non_singleton_refval);
   for (auto [t, w] : crp_dist) {
     if (!gendb.domain_crps[ref_class].tables.contains(t)) {
