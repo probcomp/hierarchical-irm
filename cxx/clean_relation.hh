@@ -86,11 +86,6 @@ class CleanRelation : public Relation<T> {
 
   // Incorporates a new vector of items and returns their cluster assignments.
   T_items incorporate_items(std::mt19937* prng, const T_items& items) {
-    // std::cerr << "incorporating into " << name << std::endl;
-    // for (int i: items) {
-    //   std::cerr << i << " ";
-    // }
-    // std::cerr << std::endl;
     assert(!data.contains(items));
     for (int i = 0; i < std::ssize(domains); ++i) {
       domains[i]->incorporate(prng, items[i]);
