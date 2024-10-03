@@ -51,8 +51,15 @@ void transition_latent_value(
   std::vector<ValueType> latent_value_candidates;
   for (auto [name, rel] : noisy_relations) {
     for (const auto& [i, em] : rel->get_emission_clusters()) {
-      latent_value_candidates.push_back(
-          em->propose_clean(all_noisy_observations, prng));
+      auto candidate = em->propose_clean(all_noisy_observations, prng);
+      // The candidate returned by propose_clean might not be in the support
+      // of the distribution (i.e., assigned zero probability).  So we use
+      // the base_relation's nearest method to get the closest value with
+      // > 0 probability.  A better solution would involve rewritting the
+      // propose_clean methods to take the base_relation's Distribution as
+      // a parameter.
+      candidate = base_relation->nearest(candidate, base_items, prng);
+      latent_value_candidates.push_back(candidate);
     }
   }
 
