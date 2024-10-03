@@ -28,7 +28,6 @@ class TestHirmIo(unittest.TestCase):
     self.assertEqual(relations["has_type"].name, "has_type")
     self.assertEqual(relations["has_type"].distribution, "stringcat")
     self.assertEqual(len(relations["has_type"].parameters), 1)
-    print(relations["has_type"].parameters)
     self.assertEqual(relations["has_type"].parameters["strings"],
                      '"1br 2br 3br 4br studio"')
     self.assertEqual(relations["has_type"].domains, ["record", "County", "State"])
