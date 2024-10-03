@@ -218,7 +218,10 @@ BOOST_AUTO_TEST_CASE(test_nearest) {
   Domain D2("D2");
   DistributionSpec spec("string_nat");
   CleanRelation<std::string> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 0}, "111");
+  R1.incorporate(&prng, {1, 1}, "911");
+  R1.incorporate(&prng, {2, 2}, "8675309");
 
-  BOOST_TEST(R1.nearest("1234", {1, 2}, &prng) == "1234");
+  BOOST_TEST(R1.nearest("1234", {0, 1}, &prng) == "1234");
   BOOST_TEST(R1.nearest("jj9jddd322", {1, 2}, &prng) == "9322");
 }
