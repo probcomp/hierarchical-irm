@@ -167,7 +167,7 @@ observe
   BOOST_TEST(samples.data["State"].size() == 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_make_pclean_samples) {
+BOOST_AUTO_TEST_CASE(test_make_dummy_encoding_from_gendb) {
   std::mt19937 prng;
 
   std::stringstream ss(R"""(
@@ -217,10 +217,26 @@ observe
     {"City", "Cambridge"},
     {"State", "MA"}};
 
-  gendb.incorporate(prng, {0, obs}, true);
+  gendb.incorporate(&prng, {0, obs}, true);
+  T_encoding enc2 = make_dummy_encoding_from_gendb(gendb);
 
-  BOOST_TEST(enc.second["School"][0] == "School:0");
-  BOOST_TEST(enc.second["Physician"][0] == "Physician:0");
-  BOOST_TEST(enc.second["City"][0] == "City:0");
-  BOOST_TEST(enc.second["Practice"][0] == "Practice:0");
+  BOOST_TEST(enc2.second["School"][0] == "School:0");
+  BOOST_TEST(enc2.second["Physician"][0] == "Physician:0");
+  BOOST_TEST(enc2.second["City"][0] == "City:0");
+  BOOST_TEST(enc2.second["Practice"][0] == "Practice:0");
+
+  BOOST_TEST(enc2.second["School"].size() == 1);
+
+  for (int i = 1; i < 6; ++i) {
+    gendb.incorporate(&prng, {i, obs}, true);
+  }
+
+  T_encoding enc3 = make_dummy_encoding_from_gendb(gendb);
+  BOOST_TEST(enc3.second["School"].size() == 6);
+  BOOST_TEST(enc3.second["School"][0] == "School:0");
+  BOOST_TEST(enc3.second["School"][1] == "School:1");
+  BOOST_TEST(enc3.second["School"][2] == "School:2");
+  BOOST_TEST(enc3.second["School"][3] == "School:3");
+  BOOST_TEST(enc3.second["School"][4] == "School:4");
+  BOOST_TEST(enc3.second["School"][5] == "School:5");
 }

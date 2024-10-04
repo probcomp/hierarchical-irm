@@ -8,7 +8,7 @@
 
 typedef std::map<std::string, std::map<std::string, T_item>> T_encoding_f;
 typedef std::map<std::string, std::map<T_item, std::string>> T_encoding_r;
-typedef std::tuple<T_encoding_f, T_encoding_r> T_encoding;
+typedef std::pair<T_encoding_f, T_encoding_r> T_encoding;
 
 // Load the schema file from path.  Exits if the schema file can't be parsed.
 T_schema load_schema(const std::string& path);
