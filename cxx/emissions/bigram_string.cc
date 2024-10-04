@@ -118,6 +118,7 @@ double BigramStringEmission::log_prob_distance(const StrAlignment& alignment, do
 
 void BigramStringEmission::incorporate(
     const std::pair<std::string, std::string>& x, double weight) {
+  std::cerr << "calling incorporate " << x.first << " " << x.second << std::endl;
   N += weight;
 
   std::vector<StrAlignment> alignments;
@@ -136,12 +137,14 @@ void BigramStringEmission::incorporate(
   }
 
   for (const auto& a : alignments) {
-    double w = weight * a.cost / total_prob;
+    // double w = weight * a.cost / total_prob;
+    double w = weight * exp(a.cost) / total_prob;
     std::string insertion_context = "";
     for (auto it = a.align_pieces.begin();
          it != a.align_pieces.end();
          ++it) {
       size_t icontext = get_index(insertion_context);
+      std::cerr << "index is" << it->index() << std::endl;
       switch (it->index()) {
         case 0:  // Deletion
           // which is actually no insertion, then a deletion.
