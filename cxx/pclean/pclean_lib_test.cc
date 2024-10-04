@@ -239,4 +239,12 @@ observe
   BOOST_TEST(enc3.second["School"][3] == "School:3");
   BOOST_TEST(enc3.second["School"][4] == "School:4");
   BOOST_TEST(enc3.second["School"][5] == "School:5");
+
+  // Test that we got all the entities.
+  for (const auto& [domain, crp] : gendb.domain_crps) {
+    for (int i = 0; i <= crp.max_table(); ++i) {
+      BOOST_TEST(enc3.second[domain].contains(i));
+    }
+  }
+
 }
