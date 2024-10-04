@@ -27,8 +27,8 @@ class DataFrame {
   bool to_csv(const std::string& filename);
   bool to_csv(std::ostream& os);
 
+  std::vector<std::string> columns;
+
   // data['column_name'] holds the data for that column.
-  // TODO(thomaswc): Also hold the column names in a vector so we can preserve
-  // their order when reading & writing.
   std::map<std::string, std::vector<std::string>> data;
 };
