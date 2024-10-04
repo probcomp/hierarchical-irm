@@ -518,7 +518,7 @@ class CleanRelation : public Relation<T> {
     }
   }
 
-  ValueType nearest(const ValueType& x, const T_items& items, std::mt19937* prng) const {
+  ValueType nearest(std::mt19937* prng, const ValueType& x, const T_items& items) const {
     std::vector<int> z = get_cluster_assignment(items);
     if (clusters.contains(z)) {
       return clusters.at(z)->nearest(x);

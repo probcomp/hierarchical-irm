@@ -133,7 +133,7 @@ class Relation {
 
   // Return the value nearest to x that has non-zero probability under the
   // Relation's distribution for the items.
-  virtual ValueType nearest(const ValueType& x, const T_items& items, std::mt19937* prng) const {
+  virtual ValueType nearest(std::mt19937* prng, const ValueType& x, const T_items& items) const {
     return x;
   };
 

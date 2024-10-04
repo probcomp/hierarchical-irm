@@ -58,7 +58,7 @@ void transition_latent_value(
       // > 0 probability.  A better solution would involve rewritting the
       // propose_clean methods to take the base_relation's Distribution as
       // a parameter.
-      candidate = base_relation->nearest(candidate, base_items, prng);
+      candidate = base_relation->nearest(prng, candidate, base_items);
       latent_value_candidates.push_back(candidate);
     }
   }
