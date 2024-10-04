@@ -290,10 +290,6 @@ std::map<std::string, std::vector<size_t>> GenDB::get_domain_inds(
 // Unincorporates the value of class_name.ref_field where the primary key
 // equals class_item. For singleton references, recursively unincorporates
 // from the reference class as well.
-// TODO there is a known issue where an entity with a value that is perfectly
-// correlated with the value of another entity (without the two entities sharing
-// a DAG path) will NOT have its value unincorporated when the other entity's
-// is.
 double GenDB::unincorporate_reference(
     const std::map<std::string, std::vector<size_t>> domain_inds,
     const std::string& class_name, const std::string& ref_field,
@@ -356,7 +352,7 @@ double GenDB::unincorporate_reference_relation(
              std::unordered_map<T_items, ObservationVariant, H_items>>&
         stored_value_map) {
   // We can stop unincorporating from base relations if the index of
-  // the domain of interest is greater than the max index.
+  // the domain of interest is greater than or equal to the number of domains.
   if (!rel->get_data().contains(items) || ind >= items.size()) {
     return 0.;
   }
