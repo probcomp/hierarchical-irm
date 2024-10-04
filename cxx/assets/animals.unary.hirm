@@ -1,0 +1,23 @@
+0 quadrapedal strainteeth oldworld ocean coastal hairless flippers black flys skimmer buckteeth plankton walks plains fish blue swims arctic forager ground patches furry fields smelly water white
+5 paws tunnels muscle longleg group newworld brown nocturnal agility hibernate active bulbous fast lean inactive small stripes chewteeth strong tail toughskin weak big slow
+7 pads vegetation meatteeth hooves longneck hunter smart claws insects meat hops timid horns grazer orange gray scavenger spots stalker yellow fierce tusks
+8 mountains jungle nestspot hands domestic bush bipedal red desert solitary forest cave tree
+
+irm=0
+animal 0 antelope bat bobcat buffalo chihuahua chimpanzee collie cow dalmatian deer elephant fox germanshepherd giantpanda giraffe gorilla grizzlybear hamster horse leopard lion mole moose mouse ox persiancat pig rabbit raccoon rat rhinoceros sheep siamesecat skunk spidermonkey squirrel tiger weasel wolf zebra
+animal 1 bluewhale dolphin humpbackwhale killerwhale seal walrus
+animal 2 beaver hippopotamus otter polarbear
+
+irm=5
+animal 4 antelope chimpanzee dalmatian deer dolphin germanshepherd giraffe gorilla horse killerwhale leopard lion seal spidermonkey tiger wolf zebra
+animal 5 bluewhale buffalo cow elephant giantpanda grizzlybear hippopotamus humpbackwhale moose ox pig polarbear rhinoceros sheep walrus
+animal 6 bat beaver bobcat chihuahua collie fox hamster mole mouse otter persiancat rabbit raccoon rat siamesecat skunk squirrel weasel
+
+irm=7
+animal 0 antelope beaver bluewhale buffalo chimpanzee cow deer dolphin elephant giantpanda giraffe hamster hippopotamus horse humpbackwhale mole moose mouse ox pig rabbit rhinoceros seal sheep skunk spidermonkey squirrel walrus zebra
+animal 1 bat bobcat chihuahua collie dalmatian fox germanshepherd gorilla grizzlybear killerwhale leopard lion otter persiancat polarbear raccoon rat siamesecat tiger weasel wolf
+
+irm=8
+animal 0 antelope beaver bluewhale buffalo chihuahua collie cow dalmatian deer dolphin elephant fox germanshepherd giraffe hamster hippopotamus horse humpbackwhale killerwhale mole moose mouse otter ox persiancat pig polarbear rabbit rat rhinoceros seal sheep siamesecat skunk tiger walrus weasel zebra
+animal 9 bat chimpanzee giantpanda gorilla spidermonkey squirrel
+animal 12 bobcat grizzlybear leopard lion raccoon wolf

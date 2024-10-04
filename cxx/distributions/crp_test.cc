@@ -16,6 +16,8 @@ namespace bm = boost::math;
 BOOST_AUTO_TEST_CASE(test_simple) {
   CRP crp;
 
+  BOOST_TEST(crp.max_table() == -1);
+
   T_item cat = 1;
   T_item dog = 2;
   T_item fish = 3;
@@ -30,6 +32,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   crp.incorporate(hamster, 0);
   crp.incorporate(snake, 1);
   BOOST_TEST(crp.N == 6);
+  BOOST_TEST(crp.max_table() == 3);
 
   crp.unincorporate(cat);
   BOOST_TEST(crp.N == 5);
@@ -61,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(crp.tables.at(3).contains(dog));
 
   // Table weights are as expected.
-  std::unordered_map<int, double> tw = crp.tables_weights();
+  std::map<int, double> tw = crp.tables_weights();
   BOOST_TEST(tw.size() == 4);  // Three populated tables and one new one.
   BOOST_TEST(tw[0] == crp.tables.at(0).size());
   BOOST_TEST(tw[1] == crp.tables.at(1).size());
@@ -69,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_simple) {
   BOOST_TEST(tw[4] == crp.alpha);
 
   // Table weights gibbs is as expected.
-  std::unordered_map<int, double> twg = crp.tables_weights_gibbs(1);
+  std::map<int, double> twg = crp.tables_weights_gibbs(1);
   BOOST_TEST(tw[0] == twg[0]);
   BOOST_TEST(tw[1] == twg[1] + 1.);
   BOOST_TEST(tw[3] == twg[3]);

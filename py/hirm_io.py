@@ -22,8 +22,7 @@ def load_schema(path):
   """Load the schema from path, and return it as a dict of Relations."""
   relations = {}
   comment_line_re = re.compile(r'\s*#.*')
-  # TODO(thomaswc): Handle distribution parameters in brackets
-  line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*\(\s*([^\)]+)\s*\)\s*(#.*)?')
+  line_re = re.compile(r'\s*(\w+)\s*~\s*(\w+)\s*(\[[^\]]*\])?\(\s*([^\)]+)\s*\)\s*(#.*)?')
   with open(path, 'r') as f:
     for line in f:
       if comment_line_re.match(line):
@@ -33,10 +32,18 @@ def load_schema(path):
         print(f"Could not parse schema line\n{line}\n")
         sys.exit(1)
       name = m.group(1)
-      domains = re.split(r'\s*,\s*', m.group(3))
+      parameters = {}
+      if m.group(3):
+        param_string = m.group(3)[1:-1]
+        ps = re.split(r'\s*,\s*', param_string)
+        for p in ps:
+          kv = re.split(r'\s*=\s*', p)
+          assert len(kv) == 2
+          parameters[kv[0]] = kv[1]
+      domains = re.split(r'\s*,\s*', m.group(4))
       relations[name] = Relation(name=name,
                                  distribution=m.group(2),
-                                 parameters={},
+                                 parameters=parameters,
                                  domains=domains)
   return relations
 
