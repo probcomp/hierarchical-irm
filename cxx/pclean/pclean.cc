@@ -30,8 +30,11 @@ int main(int argc, char** argv) {
        cxxopts::value<std::string>())
       ("heldout", "Filename of heldout observations",
        cxxopts::value<std::string>()->default_value(""))
-      ("i,iters", "Number of inference iterations",
+      ("i,iters", "Number of GenDB iterations",
        cxxopts::value<int>()->default_value("10"))
+      ("inference_iters",
+       "Number of HIRM inference iterations per GenDB iteration",
+       cxxopts::value<int>()->default_value("1"))
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
       ("samples", "Number of samples to generate",
        cxxopts::value<int>()->default_value("0"))
@@ -92,7 +95,7 @@ int main(int argc, char** argv) {
   std::cout << "Running inference ...\n";
   inference_gendb(&prng, &gendb,
                   result["iters"].as<int>(),
-                  1,
+                  result["inference_iters"].as<int>(),
                   result["timeout"].as<int>(),
                   result["verbose"].as<bool>());
 
