@@ -13,7 +13,6 @@
 
 class GenDB {
  public:
-
   GenDB(std::mt19937* prng, const PCleanSchema& schema,
         bool _only_final_emissions = false, bool _record_class_is_clean = true);
 
@@ -41,22 +40,23 @@ class GenDB {
   // Samples a reference value and stores it in reference_values and the
   // relevant domain CRP.
   void sample_and_incorporate_reference(
-      std::mt19937* prng,
-      const std::tuple<std::string, std::string, int>& ref_key,
-      const std::string& ref_class, bool new_rows_have_unique_entities);
+
+      std::mt19937* prng, const std::string& class_name,
+      const std::pair<std::string, int>& ref_key, const std::string& ref_class,
+      bool new_rows_have_unique_entities);
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.
   T_items sample_entities_relation(
       std::mt19937* prng, const std::string& class_name,
       std::vector<std::string>::const_iterator class_path_start,
-      std::vector<std::string>::const_iterator class_path_end,
-      int class_item, bool new_rows_have_unique_entities);
+      std::vector<std::string>::const_iterator class_path_end, int class_item,
+      bool new_rows_have_unique_entities);
 
   // Sample items from a class' ancestors (recursive reference fields).
-  T_items sample_class_ancestors(
-      std::mt19937* prng, const std::string& class_name, int class_item,
-      bool new_rows_have_unique_entities);
+  T_items sample_class_ancestors(std::mt19937* prng,
+                                 const std::string& class_name, int class_item,
+                                 bool new_rows_have_unique_entities);
 
   // Populates "items" with entities by walking the DAG of reference indices,
   // starting with "ind".
@@ -179,6 +179,10 @@ class GenDB {
   void transition_reference(std::mt19937* prng, const std::string& class_name,
                             const std::string& ref_field, const int class_item);
 
+  // Transitions all reference fields and rows for a class and its ancestors.
+  void transition_reference_class_and_ancestors(std::mt19937* prng,
+                                                const std::string& class_name);
+
   ~GenDB();
 
   // Disable copying.
@@ -211,16 +215,18 @@ class GenDB {
 
   // Make the relations associated with QueryField f and put them into
   // schema.
-  void make_relations_for_queryfield(
-      const QueryField& f, const PCleanClass& record_class, T_schema* schema);
+  void make_relations_for_queryfield(const QueryField& f,
+                                     const PCleanClass& record_class,
+                                     T_schema* schema);
 
   // Member variables
   const PCleanSchema& schema;
 
   // This data structure contains entity sets and linkages. Semantics are
-  // map<tuple<class_name, reference_field_name, class_primary_key> ref_val>>,
-  // where primary_key and ref_val are (integer) entity IDs.
-  std::map<std::tuple<std::string, std::string, int>, int> reference_values;
+  // map<class_name, map<pair<reference_field_name, class_primary_key>
+  // ref_val>>, where primary_key and ref_val are (integer) entity IDs.
+  std::map<std::string, std::map<std::pair<std::string, int>, int>>
+      reference_values;
 
   HIRM* hirm;  // Owned by the GenDB instance.
 
@@ -232,7 +238,6 @@ class GenDB {
   bool only_final_emissions;
   bool record_class_is_clean;
   std::map<std::string, std::vector<std::string>> domains;
-
 
   // Maps class names to relations corresponding to attributes of the class.
   std::map<std::string, std::vector<std::string>> class_to_relations;
