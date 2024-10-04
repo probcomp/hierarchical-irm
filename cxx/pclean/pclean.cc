@@ -38,6 +38,9 @@ int main(int argc, char** argv) {
       ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
       ("samples", "Number of samples to generate",
        cxxopts::value<int>()->default_value("0"))
+      ("transition_entities",
+       "If false, only the HIRM model will be trained",
+       cxxopts::value<bool>()->default_value("true"))
       ("only_final_emissions", "Only create one layer of emissions",
        cxxopts::value<bool>()->default_value("false"))
       ("record_class_is_clean",
@@ -93,11 +96,16 @@ int main(int argc, char** argv) {
 
   // Run inference
   std::cout << "Running inference ...\n";
-  inference_gendb(&prng, &gendb,
-                  result["iters"].as<int>(),
-                  result["inference_iters"].as<int>(),
-                  result["timeout"].as<int>(),
-                  result["verbose"].as<bool>());
+  int iters = result["iters"].as<int>();
+  int timeout = result["timeout"].as<int>();
+  bool verbose = result["verbose"].as<bool>();
+  if (result["transition_entities"].as<bool>()) {
+    inference_gendb(&prng, &gendb, iters,
+                    result["inference_iters"].as<int>(),
+                    timeout, verbose);
+  } else {
+    inference_hirm(&prng, gendb.hirm, iters, timeout, verbose);
+  }
 
   // Save results
   if (result.count("output") > 0) {
