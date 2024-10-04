@@ -7,7 +7,6 @@
 #include <random>
 #include <string>
 #include <unordered_map>
-#include <iostream>
 
 #include "emissions/base.hh"
 #include "noisy_relation.hh"
@@ -34,11 +33,6 @@ void transition_latent_value(
   // We incorporate to/unincorporate from clusters themselves rather than
   // relations. Empty clusters are not deleted, because observations will be
   // re-incorporated to them.
-  std::cerr << "base items: " << std::endl;
-  for (int it : base_items) {
-    std::cerr << it << " "; 
-  }
-  std::cerr << std::endl;
   T_noisy_observations<ValueType> noisy_observations =
       unincorporate_and_store_values(base_items, base_relation,
                                      noisy_relations);

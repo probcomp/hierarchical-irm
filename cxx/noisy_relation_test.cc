@@ -219,3 +219,30 @@ BOOST_AUTO_TEST_CASE(test_sample_and_incorporate) {
   BOOST_TEST(NR1.data.size() == 3);
   BOOST_TEST(R1.data.size() == 1);
 }
+
+BOOST_AUTO_TEST_CASE(test_cleanup_data) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  Domain D3("D3");
+
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  
+  EmissionSpec em_spec("sometimes_gaussian");
+  NoisyRelation<double> NR1("NR1", em_spec, {&D1, &D2, &D3}, &R1);
+
+  R1.incorporate(&prng, {0, 1}, 3.);
+  R1.incorporate(&prng, {0, 2}, 2.8);
+  NR1.incorporate(&prng, {0, 1, 2}, 2.);
+  NR1.incorporate(&prng, {0, 2, 3}, 2.1);
+  BOOST_TEST(R1.data.contains({0, 2}));
+  BOOST_TEST(NR1.data.contains({0, 2, 3}));
+  BOOST_TEST(NR1.base_to_noisy_items.at({0, 2}).contains({0, 2, 3}));
+
+  NR1.unincorporate_from_cluster({0, 2, 3});
+  NR1.cleanup_data({0, 2, 3});
+  BOOST_TEST(R1.data.contains({0, 2}));
+  BOOST_TEST(!NR1.data.contains({0, 2, 3}));
+  BOOST_TEST(!NR1.base_to_noisy_items.contains({0, 2}));
+}

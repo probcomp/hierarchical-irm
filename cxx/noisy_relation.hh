@@ -71,8 +71,10 @@ class NoisyRelation : public Relation<T> {
   ValueType sample_and_incorporate(std::mt19937* prng, const T_items& items) {
     T_items z = emission_relation.incorporate_items(prng, items);
     const ValueType& base_val = get_base_value(items);
+    T_items base_items = get_base_items(items);
     ValueType value = sample_at_items(prng, items);
     data[items] = value;
+    base_to_noisy_items[base_items].insert(items);
     emission_relation.clusters.at(z)->incorporate(
         std::make_pair(base_val, value));
     emission_relation.data[items] = {base_val, value};
@@ -91,9 +93,18 @@ class NoisyRelation : public Relation<T> {
                                              std::make_pair(base_val, value));
   }
 
+  void cleanup_base_to_noisy(const T_items& items) {
+    T_items base_items = get_base_items(items);
+    base_to_noisy_items.at(base_items).erase(items);
+    if (base_to_noisy_items.at(base_items).empty()) {
+      base_to_noisy_items.erase(base_items);
+    }
+  }
+
   void cleanup_data(const T_items& items) {
     emission_relation.cleanup_data(items);
     data.erase(items);
+    cleanup_base_to_noisy(items);
   }
 
   void cleanup_clusters() { emission_relation.cleanup_clusters(); }
@@ -106,6 +117,7 @@ class NoisyRelation : public Relation<T> {
     assert(data.contains(items));
     emission_relation.unincorporate(items);
     data.erase(items);
+    cleanup_base_to_noisy(items);
   }
 
   double logp_gibbs_approx(const Domain& domain, const T_item& item, int table,
