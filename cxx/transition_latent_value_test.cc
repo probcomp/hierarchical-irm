@@ -107,3 +107,37 @@ BOOST_AUTO_TEST_CASE(test_transition_latent_value_noisy_base) {
   BOOST_TEST(NR1.get_data().size() == 2);
   BOOST_TEST(NR2.get_data().size() == 3);
 }
+
+BOOST_AUTO_TEST_CASE(test_transition_latent_value_propose_clean_is_zeroprob) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  DistributionSpec base_spec("string_nat");
+  EmissionSpec em_spec("bigram");
+
+  std::vector<int> base_items = {0};
+
+  CleanRelation<std::string> base_relation("base", base_spec, {&D1});
+  base_relation.incorporate(&prng, {0}, "111");
+  base_relation.incorporate(&prng, {1}, "222");
+  base_relation.incorporate(&prng, {2}, "333");
+
+  NoisyRelation<std::string> NR1("NR1", em_spec, {&D1}, &base_relation);
+  NR1.incorporate(&prng, {0}, "h5ll0");
+  NR1.incorporate(&prng, {1}, "a2z");
+  NR1.incorporate(&prng, {2}, "q4d9j4");
+
+  NoisyRelation<std::string> NR2("NR2", em_spec, {&D1}, &base_relation);
+  NR2.incorporate(&prng, {0}, "123?");
+  NR2.incorporate(&prng, {1}, "~51!");
+  NR2.incorporate(&prng, {2}, "(800)-555-5555");
+
+  transition_latent_value(&prng, base_items, &base_relation,
+                          {{"NR1", &NR1}, {"NR2", &NR2}});
+
+  BOOST_TEST(base_relation.get_value(base_items) != "111");
+  BOOST_TEST(base_relation.get_value(base_items) != "h5ll0");
+  BOOST_TEST(base_relation.get_value(base_items) != "123?");
+  BOOST_TEST(base_relation.get_value({1}) == "222");
+  BOOST_TEST(NR1.get_value(base_items) == "h5ll0");
+  BOOST_TEST(NR2.get_value(base_items) == "123?");
+}

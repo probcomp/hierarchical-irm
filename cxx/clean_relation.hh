@@ -518,6 +518,17 @@ class CleanRelation : public Relation<T> {
     }
   }
 
+  ValueType nearest(std::mt19937* prng, const ValueType& x, const T_items& items) const {
+    std::vector<int> z = get_cluster_assignment(items);
+    if (clusters.contains(z)) {
+      return clusters.at(z)->nearest(x);
+    }
+    Distribution<ValueType>* d = make_new_distribution(prng);
+    ValueType n = d->nearest(x);
+    delete d;
+    return n;
+  };
+
   // Disable copying.
   CleanRelation& operator=(const CleanRelation&) = delete;
   CleanRelation(const CleanRelation&) = delete;

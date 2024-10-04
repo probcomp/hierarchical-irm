@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(test_clean_relation) {
   BOOST_TEST(z1[0] == 0);
   BOOST_TEST(z1[1] == 0);
   BOOST_TEST(z1[2] == 0);
+  BOOST_TEST(R1.nearest(&prng, 1, {1, 1, 3}) == 1);
 
   auto z2 = R1.get_cluster_assignment_gibbs({0, 1, 3}, D2, 1, 191);
   BOOST_TEST(z2.size() == 3);
@@ -209,4 +210,18 @@ BOOST_AUTO_TEST_CASE(test_sample_and_incorporate) {
   BOOST_TEST(s < 100.0);
 
   BOOST_TEST(R1.data.size() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(test_nearest) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("string_nat");
+  CleanRelation<std::string> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 0}, "111");
+  R1.incorporate(&prng, {1, 1}, "911");
+  R1.incorporate(&prng, {2, 2}, "8675309");
+
+  BOOST_TEST(R1.nearest(&prng, "1234", {0, 1}) == "1234");
+  BOOST_TEST(R1.nearest(&prng, "jj9jddd322", {1, 2}) == "9322");
 }
