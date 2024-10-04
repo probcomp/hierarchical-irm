@@ -307,7 +307,6 @@ std::string BigramStringEmission::propose_clean_with_weights(
   // voters than with two.
   if (corrupted.empty()) {
     printf("Warning!  propose_clean called with empty corrupted list\n");
-    assert(false);
     return "";
   }
   if (corrupted.size() == 1) {

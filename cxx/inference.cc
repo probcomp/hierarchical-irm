@@ -49,24 +49,10 @@ void inference_hirm(std::mt19937* prng, HIRM* hirm, int iters, int timeout,
            hirm->logp_score());
     CHECK_TIMEOUT(timeout, t_begin);
     // TRANSITION LATENT VALUES.
-    auto f = [&](auto r) {
-      auto data = r->get_data();
-      for (auto [it, v] : data) {
-        std::cerr << "items " << std::endl;
-        for (int i : it) {
-          std::cerr << i << " ";
-          std::cerr << std::endl;
-        }
-        std::cerr << "value " << v << std::endl;
-      }
-    };
-    std::visit(f, hirm->get_relation("Time:time"));
-    hirm->transition_latent_values_relation(prng, "Time:time");
     for (const auto& [rel, nrels] : hirm->base_to_noisy_relations) {
       if (std::visit([](const auto& s) { return !s.is_observed; },
                      hirm->schema.at(rel))) {
         clock_t t = clock();
-        std::cerr << "Transitioning " << rel << std::endl;
         hirm->transition_latent_values_relation(prng, rel);
         REPORT_SCORE(verbose, t, t_total, hirm);
       }
