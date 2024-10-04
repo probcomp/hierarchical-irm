@@ -23,10 +23,9 @@ DataFrame DataFrame::from_csv(
 DataFrame DataFrame::from_csv(
     std::istream& is, const std::vector<std::string>& column_names) {
   DataFrame df;
-  std::vector<std::string> col_names;
 
   if (!column_names.empty()) {
-    col_names = column_names;
+    df.columns = column_names;
     for (const auto& c : column_names) {
       df.data[c] = {};
     }
@@ -50,21 +49,21 @@ DataFrame DataFrame::from_csv(
         part.pop_back();
       }
       if (first_line && column_names.empty()) {
-        col_names.push_back(part);
+        df.columns.push_back(part);
         df.data[part] = {};
         continue;
       }
 
-      df.data[col_names[i++]].push_back(part);
+      df.data[df.columns[i++]].push_back(part);
     }
     if (!first_line) {
       if (line.back() == ',') {
         // std::getline is broken and won't let the last field be empty.
-        df.data[col_names[i++]].push_back("");
+        df.data[df.columns[i++]].push_back("");
       }
-      if (i != col_names.size()) {
+      if (i != df.columns.size()) {
         printf("Only found %ld out of %ld expected columns in line\n%s\n",
-               i, col_names.size(), line.c_str());
+               i, df.columns.size(), line.c_str());
         assert(false);
       }
     }
@@ -86,24 +85,24 @@ bool DataFrame::to_csv(const std::string& filename) {
 
 bool DataFrame::to_csv(std::ostream& os) {
   // TODO(thomaswc): Quote column names or data items that contain commas.
-  auto it = data.begin();
-  if (it == data.end()) {
+  if (columns.size() == 0) {
     return true;
   }
-  os << it->first;
-  size_t num_rows = it->second.size();
-  ++it;
-  for (; it != data.end(); ++it) {
-     os << "," << it->first;
+  for (size_t j = 0; j < columns.size(); ++j) {
+    if (j != 0) {
+      os << ",";
+    }
+    os << columns[j];
   }
   os << "\n";
 
+  size_t num_rows = data[columns[0]].size();
   for (size_t i = 0; i < num_rows; ++i) {
-    for (auto it = data.begin(); it != data.end(); ++it) {
-      if (it != data.begin()) {
+    for (size_t j = 0; j < columns.size(); ++j) {
+      if (j != 0) {
         os << ",";
       }
-      os << it->second[i];
+      os << data[columns[j]][i];
     }
     os << "\n";
   }
