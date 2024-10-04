@@ -225,3 +225,55 @@ BOOST_AUTO_TEST_CASE(test_nearest) {
   BOOST_TEST(R1.nearest(&prng, "1234", {0, 1}) == "1234");
   BOOST_TEST(R1.nearest(&prng, "jj9jddd322", {1, 2}) == "9322");
 }
+
+BOOST_AUTO_TEST_CASE(test_cleanup_data) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  R1.incorporate(&prng, {0, 1}, 3.);
+  R1.incorporate(&prng, {0, 2}, 2.8);
+  R1.incorporate(&prng, {5, 2}, 2.3);
+
+  R1.unincorporate_from_cluster({5, 2});
+  BOOST_TEST(R1.data.contains({5, 2}));
+  BOOST_TEST(R1.data_r.at("D1").contains(5));
+  BOOST_TEST(R1.data_r.at("D2").contains(2));
+  R1.cleanup_data({5, 2});
+  BOOST_TEST(!R1.data.contains({5, 2}));
+  BOOST_TEST(R1.data.contains({0, 2}));
+  BOOST_TEST(!R1.data_r.at("D1").contains(5));
+  BOOST_TEST(R1.data_r.at("D1").contains(0));
+  BOOST_TEST(R1.data_r.at("D2").contains(2));
+}
+
+BOOST_AUTO_TEST_CASE(test_cleanup_clusters) {
+  std::mt19937 prng;
+  Domain D1("D1");
+  Domain D2("D2");
+  DistributionSpec spec("normal");
+  CleanRelation<double> R1("R1", spec, {&D1, &D2});
+  D1.incorporate(&prng, 0, 0);
+  D1.incorporate(&prng, 5, 0);
+  D2.incorporate(&prng, 1, 0);
+  D2.incorporate(&prng, 2, 1);
+  D2.incorporate(&prng, 3, 4);
+
+  R1.incorporate_items(&prng, {0, 1});
+  R1.incorporate_items(&prng, {0, 2});
+  R1.incorporate_items(&prng, {5, 2});
+  R1.incorporate_to_cluster({0, 1}, 3.);
+  R1.incorporate_to_cluster({0, 2}, 2.8);
+  BOOST_TEST(R1.clusters_contains({0, 1}));
+  BOOST_TEST(R1.clusters_contains({0, 2}));
+  BOOST_TEST(R1.clusters_contains({5, 2}));
+
+  R1.data[{0, 2}] = 2.8;
+  R1.unincorporate_from_cluster({0, 2});
+  R1.cleanup_clusters();
+  BOOST_TEST(R1.clusters_contains({0, 1}));
+  BOOST_TEST(R1.clusters_contains({5, 1}));
+  BOOST_TEST(!R1.clusters_contains({0, 2}));
+  BOOST_TEST(!R1.clusters_contains({5, 2}));
+}
