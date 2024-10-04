@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "distributions/get_distribution.hh"
 #include "domain.hh"
@@ -323,15 +324,26 @@ class CleanRelation : public Relation<T> {
       ValueType x = data.at(items);
       // assert(z == get_cluster_assignment(items));
       cluster->unincorporate(x);
+      // std::cerr << "uninc (" << x.first << ", " << x.second << ")" << std::endl;
     }
     double logp1 = cluster->logp_score();
     for (const T_items& items : items_list) {
       ValueType x = data.at(items);
       cluster->incorporate(x);
+      // std::cerr << "reinc (" << x.first << ", " << x.second << ")" << std::endl;
     }
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) <=
-           std::numeric_limits<double>::epsilon() * abs(logp0));
+    // assert(abs(cluster->logp_score() - logp0) <=
+    //        std::numeric_limits<double>::epsilon() * abs(logp0));
+
+    float actual = abs(cluster->logp_score() - logp0); 
+    float expected = std::numeric_limits<double>::epsilon() * abs(logp0);
+    if (actual > expected) {
+      std::cerr << "in relation " << name << std::endl;
+      std::cerr << "oh no should be less than " << expected << " but is " << actual << std::endl;
+      std::cerr << "logp0 is " << logp0 << ", logp score is " << cluster->logp_score() << std::endl;
+      assert(false);
+    }
     return logp0 - logp1;
   }
 

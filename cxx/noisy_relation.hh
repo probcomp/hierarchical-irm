@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "clean_relation.hh"
 #include "distributions/get_distribution.hh"
@@ -128,6 +129,19 @@ class NoisyRelation : public Relation<T> {
   std::vector<double> logp_gibbs_exact(const Domain& domain, const T_item& item,
                                        std::vector<int> tables,
                                        std::mt19937* prng) {
+    if (emission_relation.name == "act_arr_time_emission") {
+      std::cerr << "calling logp gibbs exact on act_arr_time" << std::endl;
+      auto cluster_to_items_list = emission_relation.get_cluster_to_items_list(domain, item);
+      int table_current = domain.get_cluster_assignment(item);
+      for (const int& table : tables) {
+        for (const auto& [z, items_list] : cluster_to_items_list) {
+          if (table==table_current) {
+            auto v = emission_relation.data.at(items_list[0]);
+            std::cerr << "true is " << v.first << " noisy is " << v.second << std::endl;
+          }
+        }
+      }
+    }
     return emission_relation.logp_gibbs_exact(domain, item, tables, prng);
   }
 
