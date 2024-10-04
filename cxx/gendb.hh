@@ -47,8 +47,6 @@ class GenDB {
 
   void get_unique_entities_relation(const std::string& rel_name, const int ind,
                                     const int class_item, T_items& items);
-      const std::pair<std::string, int>& ref_key, const std::string& ref_class,
-      bool new_rows_have_unique_entities);
 
   // Samples a set of entities in the domains of the relation corresponding to
   // class_path.

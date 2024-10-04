@@ -1032,11 +1032,4 @@ observe
   gendb.transition_reference_class_and_ancestors(&prng, "Record");  
 }
 
-BOOST_AUTO_TEST_CASE(test_transition_reference_class) {
-  std::mt19937 prng;
-  GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 20);
-  gendb.transition_reference_class_and_ancestors(&prng, "Record");
-}
-
 BOOST_AUTO_TEST_SUITE_END()
