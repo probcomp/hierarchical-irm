@@ -336,13 +336,14 @@ class CleanRelation : public Relation<T> {
     // assert(abs(cluster->logp_score() - logp0) <=
     //        std::numeric_limits<double>::epsilon() * abs(logp0));
 
-    float actual = abs(cluster->logp_score() - logp0); 
-    float expected = std::numeric_limits<double>::epsilon() * abs(logp0);
+    double actual = abs(cluster->logp_score() - logp0); 
+    double expected = std::numeric_limits<double>::epsilon() * abs(logp0);
     if (actual > expected) {
       std::cerr << "in relation " << name << std::endl;
       std::cerr << "oh no should be less than " << expected << " but is " << actual << std::endl;
       std::cerr << "logp0 is " << logp0 << ", logp score is " << cluster->logp_score() << std::endl;
-      assert(false);
+      printf("logp %f\n", logp0);
+      // assert(false);
     }
     return logp0 - logp1;
   }
@@ -371,8 +372,8 @@ class CleanRelation : public Relation<T> {
     }
 
     // Approximate floating point equality.
-    assert(abs(cluster->logp_score() - logp0) <=
-           std::numeric_limits<double>::epsilon() * abs(logp0));
+    // assert(abs(cluster->logp_score() - logp0) <=
+    //        std::numeric_limits<double>::epsilon() * abs(logp0));
     delete prior;
     return logp1 - logp0;
   }

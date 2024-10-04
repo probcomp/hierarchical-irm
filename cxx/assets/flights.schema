@@ -5,7 +5,7 @@ class TrackingWebsite
   name ~ stringcat(strings="aa airtravelcenter allegiantair boston businesstravellogue CO den dfw flightarrival flightaware flightexplorer flights flightstats flightview flightwise flylouisville flytecomm foxbusiness gofox helloflight iad ifly mco mia myrateplan mytripandmore orbitz ord panynj phl quicktrip sfo src travelocity ua usatoday weather world-flight-tracker wunderground")
 
 class Time
-  time ~ string(maxlength=40)
+  time ~ string(maxlength=30)
 
 class Flight
   flight_id ~ string(maxlength=20)

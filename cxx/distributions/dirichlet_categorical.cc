@@ -4,6 +4,7 @@
 #include "distributions/dirichlet_categorical.hh"
 
 #include <algorithm>
+#include <iostream>
 #include <cassert>
 #include <random>
 
@@ -23,9 +24,9 @@ double DirichletCategorical::logp(const int& x) const {
 }
 
 double DirichletCategorical::logp_score() const {
-  const size_t k = counts.size();
+  const size_t k = double(counts.size());
   const double a = alpha * k;
-  double lg = 0;
+  double lg = 0.;
   for (double x : counts) {
     lg += lgamma(x + alpha);
   }
@@ -52,6 +53,11 @@ void DirichletCategorical::transition_hyperparameters(std::mt19937* prng) {
     }
   }
   if (alphas.empty()) {
+    std::cerr << "counts in dirichlet cat is " << std::endl;
+    for (auto c : counts) {
+      std::cerr << c << " ";
+    }
+    std::cerr << std::endl;
     printf("Warning: all Dirichlet hyperparameters give nans!\n");
     assert(false);
   } else {

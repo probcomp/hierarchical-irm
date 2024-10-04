@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <iostream>
 
 #include "emissions/bigram_string.hh"
 #include "emissions/string_alignment.hh"
@@ -204,12 +205,18 @@ double BigramStringEmission::logp_score() const {
 }
 
 void BigramStringEmission::transition_hyperparameters(std::mt19937* prng) {
+  std::cerr << "Transitioning bigram" << std::endl;
   for (auto &i : insertions) {
+    std::cerr << "Transitioning bigram insertions" << std::endl;
     i.transition_hyperparameters(prng);
+    std::cerr << "Done bigram insertions" << std::endl;
   }
   for (auto &s : substitutions) {
+    std::cerr << "Transitioning bigram substitutions" << std::endl;
     s.transition_hyperparameters(prng);
+    std::cerr << "Done bigram substitutions" << std::endl;
   }
+  std::cerr << "Done Transitioning bigram" << std::endl;
 }
 
 std::string BigramStringEmission::sample_corrupted(

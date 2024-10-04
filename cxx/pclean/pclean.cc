@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
       ("inference_iters",
        "Number of HIRM inference iterations per GenDB iteration",
        cxxopts::value<int>()->default_value("1"))
-      ("seed", "Random seed", cxxopts::value<int>()->default_value("10"))
+      ("seed", "Random seed", cxxopts::value<int>()->default_value("8"))
       ("samples", "Number of samples to generate",
        cxxopts::value<int>()->default_value("0"))
       ("only_final_emissions", "Only create one layer of emissions",
