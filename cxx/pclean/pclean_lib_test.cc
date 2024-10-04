@@ -166,3 +166,85 @@ observe
   BOOST_TEST(samples.data["City"].size() == 10);
   BOOST_TEST(samples.data["State"].size() == 10);
 }
+
+BOOST_AUTO_TEST_CASE(test_make_dummy_encoding_from_gendb) {
+  std::mt19937 prng;
+
+  std::stringstream ss(R"""(
+class School
+  name ~ string
+  degree_dist ~ categorical(k=100)
+
+class Physician
+  school ~ School
+  degree ~ stringcat(strings="MD PT NP DO PHD")
+  specialty ~ stringcat(strings="Family Med:Internal Med:Physical Therapy", delim=":")
+  # observed_degree ~ maybe_swap(degree)
+
+class City
+  name ~ string
+  state ~ stringcat(strings="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY")
+
+class Practice
+  city ~ City
+
+class Record
+  physician ~ Physician
+  location ~ Practice
+
+observe
+  physician.specialty as Specialty
+  physician.school.name as School
+  physician.degree as Degree
+  location.city.name as City
+  location.city.state as State
+  from Record
+)""");
+
+  PCleanSchema pclean_schema;
+  BOOST_TEST(read_schema(ss, &pclean_schema));
+
+  GenDB gendb(&prng, pclean_schema);
+
+  T_encoding enc = make_dummy_encoding_from_gendb(gendb);
+
+  BOOST_TEST(enc.second.size() == 0);
+
+  std::map<std::string, ObservationVariant> obs = {
+    {"Specialty", "Internal Med"},
+    {"School", "Harvard"},
+    {"Degree", "MD"},
+    {"City", "Cambridge"},
+    {"State", "MA"}};
+
+  gendb.incorporate(&prng, {0, obs}, true);
+  T_encoding enc2 = make_dummy_encoding_from_gendb(gendb);
+
+  BOOST_TEST(enc2.second["School"][0] == "School:0");
+  BOOST_TEST(enc2.second["Physician"][0] == "Physician:0");
+  BOOST_TEST(enc2.second["City"][0] == "City:0");
+  BOOST_TEST(enc2.second["Practice"][0] == "Practice:0");
+
+  BOOST_TEST(enc2.second["School"].size() == 1);
+
+  for (int i = 1; i < 6; ++i) {
+    gendb.incorporate(&prng, {i, obs}, true);
+  }
+
+  T_encoding enc3 = make_dummy_encoding_from_gendb(gendb);
+  BOOST_TEST(enc3.second["School"].size() == 6);
+  BOOST_TEST(enc3.second["School"][0] == "School:0");
+  BOOST_TEST(enc3.second["School"][1] == "School:1");
+  BOOST_TEST(enc3.second["School"][2] == "School:2");
+  BOOST_TEST(enc3.second["School"][3] == "School:3");
+  BOOST_TEST(enc3.second["School"][4] == "School:4");
+  BOOST_TEST(enc3.second["School"][5] == "School:5");
+
+  // Test that we got all the entities.
+  for (const auto& [domain, crp] : gendb.domain_crps) {
+    for (int i = 0; i <= crp.max_table(); ++i) {
+      BOOST_TEST(enc3.second[domain].contains(i));
+    }
+  }
+
+}

@@ -100,8 +100,8 @@ int main(int argc, char** argv) {
   if (result.count("output") > 0) {
     std::string out_fn = result["output"].as<std::string>();
     std::cout << "Savings results to " << out_fn << "\n";
-    // TODO(thomaswc): Fix this.
-    // to_txt(out_fn, gendb.hirm, encoding);
+    T_encoding encoding = make_dummy_encoding_from_gendb(gendb);
+    to_txt(out_fn, *(gendb.hirm), encoding);
   }
 
   std::string heldout_fn = result["heldout"].as<std::string>();
