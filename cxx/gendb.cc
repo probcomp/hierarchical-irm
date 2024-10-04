@@ -812,6 +812,7 @@ void GenDB::reincorporate_new_refval(
   // Incorporate the chosen entities back into their previous domain CRPs.
   for (auto [k, v] : unincorporated_from_domains) {
     auto [irm_code, r_class, item] = k;
+    // TODO: Debug. This check shouldn't be necessary.
     if (!hirm->irms.at(irm_code)->domains.at(r_class)->items.contains(item)) {
       hirm->irms.at(irm_code)->domains.at(r_class)->incorporate(&prng, item, v);
     }
