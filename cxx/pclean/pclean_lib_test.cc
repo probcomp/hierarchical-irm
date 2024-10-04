@@ -57,8 +57,8 @@ Pediatrics,Harvard,MD,Seattle,WA
   DataFrame df = DataFrame::from_csv(ss2);
 
   incorporate_observations(&prng, &gendb, df);
-  BOOST_TEST(gendb.domain_crps["Practice"].N == 5);
-  BOOST_TEST(gendb.domain_crps["Physician"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Practice"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Physician"].N == 5);
 }
 
 BOOST_AUTO_TEST_CASE(test_incorporate_observations_diagonal) {
@@ -114,10 +114,10 @@ Pediatrics,Harvard,Cambridge,MD,Seattle,WA
   DataFrame df = DataFrame::from_csv(ss2);
 
   incorporate_observations(&prng, &gendb, df);
-  BOOST_TEST(gendb.domain_crps["Practice"].N == 5);
+  BOOST_TEST(gendb.entity_crps["Practice"].N == 5);
   // TODO(thomaswc): Figure out why the next BOOST_TEST is failing.
   // (.N == 4 instead of the expected 10).
-  // BOOST_TEST(gendb.domain_crps["City"].N == 10);
+  // BOOST_TEST(gendb.entity_crps["City"].N == 10);
 }
 
 BOOST_AUTO_TEST_CASE(test_make_pclean_samples) {
@@ -241,7 +241,7 @@ observe
   BOOST_TEST(enc3.second["School"][5] == "School:5");
 
   // Test that we got all the entities.
-  for (const auto& [domain, crp] : gendb.domain_crps) {
+  for (const auto& [domain, crp] : gendb.entity_crps) {
     for (int i = 0; i <= crp.max_table(); ++i) {
       BOOST_TEST(enc3.second[domain].contains(i));
     }

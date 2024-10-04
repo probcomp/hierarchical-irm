@@ -53,6 +53,13 @@ class GenDB {
       std::vector<std::string>::const_iterator class_path_end, int class_item,
       bool new_rows_have_unique_entities);
 
+  // Samples and incorporates a value into all relations belonging to class_name
+  // (including class attributes and noisy observations of ancestor class
+  // attributes).
+  void sample_and_incorporate_for_class(std::mt19937* prng,
+                                        const std::string& class_name,
+                                        const T_item& item);
+
   // Sample items from a class' ancestors (recursive reference fields).
   T_items sample_class_ancestors(std::mt19937* prng,
                                  const std::string& class_name, int class_item,
@@ -233,7 +240,7 @@ class GenDB {
   // Map keys are class names. Values are CRPs for latent entities, where the
   // "tables" are entity IDs and the "customers" are unique identifiers of
   // observations of that class.
-  std::map<std::string, CRP> domain_crps;
+  std::map<std::string, CRP> entity_crps;
 
   bool only_final_emissions;
   bool record_class_is_clean;
