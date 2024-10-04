@@ -658,7 +658,6 @@ void GenDB::transition_reference(std::mt19937* prng,
     return;
   }
 
-  std::cerr << "just got gibbs probs" << std::endl;
   // For each relation, get the indices (in the items vector) of the reference
   // value being transitioned.
   std::map<std::string, std::vector<size_t>> domain_inds =

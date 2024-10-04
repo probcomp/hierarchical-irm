@@ -748,11 +748,11 @@ observe
 BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::mt19937 prng;
   GenDB gendb(&prng, schema);
-  setup_gendb(&prng, gendb, 500);
+  setup_gendb(&prng, gendb, 100);
 
-  std::string class_name = "Physician";
-  std::string ref_field = "school";
-  int class_item = 1;
+  std::string class_name = "Practice";
+  std::string ref_field = "city";
+  int class_item = 0;
 
   double init_logp = gendb.logp_score();
   std::map<std::string,
@@ -763,18 +763,6 @@ BOOST_AUTO_TEST_CASE(test_incorporate_stored_items) {
   std::map<std::tuple<int, std::string, T_item>, int>
       unincorporated_from_domains;
 
-  auto f = [&](auto r)  {
-    auto d = r->get_data();
-    for (auto [k, v] : d) {
-      for (int i: k) {
-        std::cerr << i << " ";
-      }
-      std::cerr << std::endl;
-    }
-  };
-  std::cerr << "School nalme" << std::endl;
-  std::visit(f, gendb.hirm->get_relation("School:name"));
-  std::cerr << gendb.entity_crps.at("School").assignments.size() << std::endl;
   gendb.unincorporate_reference(domain_inds, class_name, ref_field, class_item,
                                 stored_value_map, unincorporated_from_domains);
   BOOST_TEST(stored_value_map.size() > 0);
